@@ -110,8 +110,11 @@ public final class Core {
 							% EXTRA_LIFE_FRECUENCY == 0
 							&& gameState.getLivesRemaining() < MAX_LIVES;
 					//add variation
-					gameSetting = gameSetting.LevelSettings(gameSetting.getFormationWidth(), gameSetting.getFormationHeight(),
-							gameSetting.getBaseSpeed(), gameSetting.getShootingFrecuency(), gameState.getLevel(), 3); //difficulty -> LevelSetting
+					gameSetting = gameSetting.LevelSettings(gameSetting.getFormationWidth(),
+							gameSetting.getFormationHeight(),
+							gameSetting.getBaseSpeed(),
+							gameSetting.getShootingFrecuency(),
+							gameState.getLevel(), 3); //difficulty -> LevelSetting
 
 					currentScreen = new GameScreen(gameState,
 							gameSetting,
