@@ -8,12 +8,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import screen.GameScreen;
-import screen.AchievementScreen;
-import screen.ScoreScreen;
-import screen.Screen;
-import screen.TitleScreen;
-import screen.*;
 
 import entity.Wallet;
 import screen.*;
@@ -42,7 +36,7 @@ public final class Core {
 	private static final int NUM_LEVELS = 7;
 	/** FIRST Level */
 	private static final GameSettings upSettings = new GameSettings(4, 4, 60, 2500);
-	
+
 	/** Frame to draw the screen on. */
 	private static Frame frame;
 	/** Screen currently shown. */
@@ -98,7 +92,6 @@ public final class Core {
 			MAX_LIVES = wallet.getLives_lv()+2;
 			gameState = new GameState(1, 0, MAX_LIVES, 0, 0);
 			GameSettings gameSetting = upSettings;
-			int LevelSetting = 0; // <- setting EASY(1), NORMAL(2), HARD(3);
 			switch (returnCode) {
 			case 1:
 				// Main menu.
@@ -121,7 +114,7 @@ public final class Core {
 							gameSetting.getFormationHeight(),
 							gameSetting.getBaseSpeed(),
 							gameSetting.getShootingFrecuency(),
-							gameState.getLevel(), 3); //difficulty -> LevelSetting
+							gameState.getLevel(), LevelSetting); //difficulty -> LevelSetting
 
 					currentScreen = new GameScreen(gameState,
 							gameSetting,
