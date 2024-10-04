@@ -202,8 +202,9 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		int movementY = 0;
 		double remainingProportion = (double) this.shipCount
 				/ (this.nShipsHigh * this.nShipsWide);
-		this.movementSpeed = (int) (Math.pow(remainingProportion, 2)
-				* this.baseSpeed);
+//		this.movementSpeed = (int) (Math.pow(remainingProportion, 2)
+//				* this.baseSpeed);
+		this.movementSpeed = this.baseSpeed;
 		this.movementSpeed += MINIMUM_SPEED;
 		
 		movementInterval++;
