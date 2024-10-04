@@ -1,7 +1,5 @@
 package engine;
 
-import java.util.logging.Logger;
-
 /**
  * Implements an object that stores a single game's difficulty settings.
  * 
