@@ -99,7 +99,6 @@ public final class Core {
 				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
 						+ " title screen at " + FPS + " fps.");
 				returnCode = frame.setScreen(currentScreen);
-				gameSetting = upSettings;
 				LOGGER.info("Closing title screen.");
 				break;
 			case 2:
