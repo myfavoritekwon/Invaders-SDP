@@ -5,6 +5,7 @@ import java.awt.Color;
 import engine.Cooldown;
 import engine.Core;
 import engine.DrawManager.SpriteType;
+import engine.GameState;
 import engine.Sound;
 import engine.SoundManager;
 
@@ -35,6 +36,7 @@ public class EnemyShip extends Entity {
 	/** Singleton instance of SoundManager */
 	private final SoundManager soundManager = SoundManager.getInstance();
 
+	private GameState gameState;
 	/**
 	 * Constructor, establishes the ship's properties.
 	 * 
@@ -56,15 +58,15 @@ public class EnemyShip extends Entity {
 		switch (this.spriteType) {
 		case EnemyShipA1:
 		case EnemyShipA2:
-			this.pointValue = A_TYPE_POINTS;
+			this.pointValue = (int) (A_TYPE_POINTS+(GameState.level*0.1));
 			break;
 		case EnemyShipB1:
 		case EnemyShipB2:
-			this.pointValue = B_TYPE_POINTS;
+			this.pointValue = (int) (B_TYPE_POINTS+(GameState.level*0.1));
 			break;
 		case EnemyShipC1:
 		case EnemyShipC2:
-			this.pointValue = C_TYPE_POINTS;
+			this.pointValue = (int) (C_TYPE_POINTS+(GameState.level*0.1));
 			break;
 		default:
 			this.pointValue = 0;
