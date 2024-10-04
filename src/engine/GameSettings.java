@@ -129,7 +129,7 @@ public class GameSettings {
 				}
                 yield new GameSettings(formationWidth, formationHeight, baseSpeed, shootingFrecuency);
 			}
-			case 2 -> {
+			case 3 -> {
 				if(level%2 == 0 && level < 5){
 					if(formationWidth == formationHeight){
 						if(formationWidth < 14) formationWidth += 1;
