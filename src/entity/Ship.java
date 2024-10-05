@@ -31,6 +31,8 @@ public class Ship extends Entity {
 	/** Singleton instance of SoundManager */
 	private final SoundManager soundManager = SoundManager.getInstance();
 
+	private Web web;
+
 	/**
 	 * Constructor, establishes the ship's properties.
 	 * 
@@ -52,8 +54,14 @@ public class Ship extends Entity {
 	 * reached.
 	 */
 	public final void moveRight() {
-		this.positionX += SPEED;
-		soundManager.playSound(Sound.PLAYER_MOVE);
+		if(web.threadWeb){
+			this.positionX += SPEED / 2;
+            soundManager.playSound(Sound.PLAYER_MOVE);
+		}
+		else{
+			this.positionX += SPEED;
+            soundManager.playSound(Sound.PLAYER_MOVE);
+		}
 	}
 
 	/**
@@ -61,8 +69,14 @@ public class Ship extends Entity {
 	 * reached.
 	 */
 	public final void moveLeft() {
-		this.positionX -= SPEED;
-		soundManager.playSound(Sound.PLAYER_MOVE);
+		if(web.threadWeb){
+			this.positionY += SPEED / 2;
+            soundManager.playSound(Sound.PLAYER_MOVE);
+		}
+		else{
+			this.positionY += SPEED;
+            soundManager.playSound(Sound.PLAYER_MOVE);
+		}
 	}
 
 	/**
