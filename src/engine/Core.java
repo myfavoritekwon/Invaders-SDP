@@ -232,7 +232,7 @@ public final class Core {
 
 	/**
 	 * Controls access to the input manager.
-	 * 
+	 *
 	 * @return Application input manager.
 	 */
 	public static InputManager getInputManager() {
@@ -241,7 +241,7 @@ public final class Core {
 
 	/**
 	 * Controls access to the file manager.
-	 * 
+	 *
 	 * @return Application file manager.
 	 */
 	public static FileManager getFileManager() {
@@ -250,7 +250,7 @@ public final class Core {
 
 	/**
 	 * Controls creation of new cooldowns.
-	 * 
+	 *
 	 * @param milliseconds
 	 *            Duration of the cooldown.
 	 * @return A new cooldown.
