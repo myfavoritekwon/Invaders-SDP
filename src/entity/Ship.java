@@ -27,6 +27,8 @@ public class Ship extends Entity {
 	/** Time spent inactive between hits. */
 	private Cooldown destructionCooldown;
 
+	private Web web;
+
 	/**
 	 * Constructor, establishes the ship's properties.
 	 * 
@@ -48,7 +50,12 @@ public class Ship extends Entity {
 	 * reached.
 	 */
 	public final void moveRight() {
-		this.positionX += SPEED;
+		if(web.threadWeb){
+			this.positionX += SPEED / 2;
+		}
+		else{
+			this.positionX += SPEED;
+		}
 	}
 
 	/**
@@ -56,7 +63,12 @@ public class Ship extends Entity {
 	 * reached.
 	 */
 	public final void moveLeft() {
-		this.positionX -= SPEED;
+		if(web.threadWeb){
+			this.positionY += SPEED / 2;
+		}
+		else{
+			this.positionY += SPEED;
+		}
 	}
 
 	/**
