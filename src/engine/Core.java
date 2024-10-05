@@ -53,6 +53,9 @@ public final class Core {
 	/** Initialize singleton instance of SoundManager and return that */
 	private static final SoundManager soundManager = SoundManager.getInstance();
 
+	private static int LevelSetting;// <- setting EASY(1), NORMAL(2), HARD(3);
+
+
 	/**
 	 * Test implementation.
 	 * 
@@ -93,27 +96,28 @@ public final class Core {
 			gameState = new GameState(1, 0, MAX_LIVES, 0, 0);
 			GameSettings gameSetting = upSettings;
 			switch (returnCode) {
-			case 1:
-				// Main menu.
-				currentScreen = new TitleScreen(width, height, FPS, wallet);
-				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
-						+ " title screen at " + FPS + " fps.");
-				returnCode = frame.setScreen(currentScreen);
-				LOGGER.info("Closing title screen.");
-				break;
-			case 2:
-				// Game & score.
-				do {
-					// One extra live every few levels.
-					boolean bonusLife = gameState.getLevel()
-							% EXTRA_LIFE_FRECUENCY == 0
-							&& gameState.getLivesRemaining() < MAX_LIVES;
-					//add variation
-					gameSetting = gameSetting.LevelSettings(gameSetting.getFormationWidth(),
-							gameSetting.getFormationHeight(),
-							gameSetting.getBaseSpeed(),
-							gameSetting.getShootingFrecuency(),
-							gameState.getLevel(), LevelSetting); //difficulty -> LevelSetting
+				case 1:
+					// Main menu.
+					currentScreen = new TitleScreen(width, height, FPS, wallet);
+					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+							+ " title screen at " + FPS + " fps.");
+					returnCode = frame.setScreen(currentScreen);
+					LOGGER.info("Closing title screen.");
+					break;
+				case 2:
+					// Game & score.
+					do {
+						// One extra live every few levels.
+						boolean bonusLife = gameState.getLevel()
+								% EXTRA_LIFE_FRECUENCY == 0
+								&& gameState.getLivesRemaining() < MAX_LIVES;
+						LOGGER.info("Level is " + LevelSetting);
+						//add variation
+						gameSetting = gameSetting.LevelSettings(gameSetting.getFormationWidth(),
+								gameSetting.getFormationHeight(),
+								gameSetting.getBaseSpeed(),
+								gameSetting.getShootingFrecuency(),
+								gameState.getLevel(), LevelSetting); //difficulty -> LevelSetting
 
 					currentScreen = new GameScreen(gameState,
 							gameSetting,
@@ -268,5 +272,10 @@ public final class Core {
 	public static Cooldown getVariableCooldown(final int milliseconds,
 			final int variance) {
 		return new Cooldown(milliseconds, variance);
+	}
+
+
+	public static void setLevelSetting(final int level) {
+		LevelSetting = level;
 	}
 }
