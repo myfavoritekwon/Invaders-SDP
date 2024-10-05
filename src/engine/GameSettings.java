@@ -1,5 +1,7 @@
 package engine;
 
+import java.util.logging.Logger;
+
 /**
  * Implements an object that stores a single game's difficulty settings.
  * 
@@ -8,6 +10,8 @@ package engine;
  */
 public class GameSettings {
 
+
+	private static int difficulty;
 	/** Width of the level's enemy formation. */
 	private int formationWidth;
 	/** Height of the level's enemy formation. */
@@ -63,6 +67,92 @@ public class GameSettings {
 	 */
 	public final int getShootingFrecuency() {
 		return shootingFrecuency;
+	}
+
+	public GameSettings LevelSettings(int formationWidth, int formationHeight,
+									  int baseSpeed, int shootingFrecuency, int level, int difficulty) {
+		GameSettings.difficulty = difficulty;
+		return switch (difficulty) {
+			case 1 -> {
+				if(level%3 == 0 && level < 5){
+					if(formationWidth == formationHeight){
+						if(formationWidth < 14) formationWidth += 1;
+                    } else {
+						if(formationHeight < 10) formationHeight += 1;
+                    }
+                    if(baseSpeed-10 > -150)baseSpeed -= 10;
+					else baseSpeed = -150;
+                    if(shootingFrecuency-100 > 100) shootingFrecuency -= 100;
+					else shootingFrecuency = 100;
+                }else if(level % 2 == 0){
+					if(formationWidth == formationHeight){
+						if(formationWidth < 14) formationWidth += 1;
+					} else {
+						if(formationHeight < 10) formationHeight += 1;
+					}
+					if(baseSpeed-10 > -150)baseSpeed -= 10;
+					else baseSpeed = -150;
+					if(shootingFrecuency-100 > 100) shootingFrecuency -= 100;
+					else shootingFrecuency = 100;
+				}
+                yield new GameSettings(formationWidth, formationHeight, baseSpeed, shootingFrecuency);
+			}
+			case 2 -> {
+				if(level%2 == 0 && level < 5){
+					if(formationWidth == formationHeight){
+						if(formationWidth < 14) formationWidth += 1;
+					} else {
+						if(formationHeight < 10) formationHeight += 1;
+					}
+					if(baseSpeed-10 > -150)baseSpeed -= 10;
+					else baseSpeed = -150;
+					if(shootingFrecuency-200 > 200) shootingFrecuency -= 200;
+					else shootingFrecuency = 100;
+				}else if(level >= 5){
+					if(formationWidth == formationHeight){
+						if(formationWidth < 14) formationWidth += 1;
+					} else {
+						if(formationHeight < 10) formationHeight += 1;
+					}
+					if(baseSpeed-20 > -150)baseSpeed -= 20; //스피드 조절
+					else baseSpeed = -150;
+					if(shootingFrecuency-300 > 300) shootingFrecuency -= 300; //발사 간격 조절
+					else shootingFrecuency = 100;
+				}
+                yield new GameSettings(formationWidth, formationHeight, baseSpeed, shootingFrecuency);
+			}
+			case 3 -> {
+				if(level%2 == 0 && level < 5){
+					if(formationWidth == formationHeight){
+						if(formationWidth < 14) formationWidth += 1;
+					} else {
+						if(formationHeight < 10) formationHeight += 1;
+					}
+					if(baseSpeed-20 > -150)baseSpeed -= 20;
+					else baseSpeed = -150;
+					if(shootingFrecuency-300 > 300) shootingFrecuency -= 300;
+					else shootingFrecuency = 100;
+				}else if(level >= 5){
+					if(formationWidth == formationHeight){
+						if(formationWidth < 14) formationWidth += 2;
+					} else {
+						if(formationHeight < 10) formationHeight += 2;
+					}
+					if(baseSpeed-20 > -150)baseSpeed -= 20;
+					else baseSpeed = -150;
+					if(shootingFrecuency-400 > 400) shootingFrecuency -= 400;
+					else shootingFrecuency = 100;
+				}
+                yield new GameSettings(formationWidth, formationHeight, baseSpeed, shootingFrecuency);
+			}
+			default -> {
+				yield null;
+			}
+		};
+	}
+
+	public static int getDifficulty() {
+		return difficulty;
 	}
 
 }

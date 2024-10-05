@@ -5,6 +5,8 @@ import java.awt.Color;
 import engine.Cooldown;
 import engine.Core;
 import engine.DrawManager.SpriteType;
+import engine.GameSettings;
+import engine.GameState;
 
 /**
  * Implements a enemy ship, to be destroyed by the player.
@@ -29,7 +31,7 @@ public class EnemyShip extends Entity {
 	private boolean isDestroyed;
 	/** Values of the ship, in points, when destroyed. */
 	private int pointValue;
-
+	private GameState gameState;
 	/**
 	 * Constructor, establishes the ship's properties.
 	 * 
@@ -51,15 +53,15 @@ public class EnemyShip extends Entity {
 		switch (this.spriteType) {
 		case EnemyShipA1:
 		case EnemyShipA2:
-			this.pointValue = A_TYPE_POINTS;
+			this.pointValue = (int) (A_TYPE_POINTS+(GameState.level*0.1)+GameSettings.getDifficulty());
 			break;
 		case EnemyShipB1:
 		case EnemyShipB2:
-			this.pointValue = B_TYPE_POINTS;
+			this.pointValue = (int) (B_TYPE_POINTS+(GameState.level*0.1)+GameSettings.getDifficulty());
 			break;
 		case EnemyShipC1:
 		case EnemyShipC2:
-			this.pointValue = C_TYPE_POINTS;
+			this.pointValue = (int) (C_TYPE_POINTS+(GameState.level*0.1)+GameSettings.getDifficulty());
 			break;
 		default:
 			this.pointValue = 0;
