@@ -36,7 +36,6 @@ public final class Core {
 	private static final int NUM_LEVELS = 7;
 	/** FIRST Level */
 	private static final GameSettings upSettings = new GameSettings(4, 4, 60, 2500);
-
 	/** Frame to draw the screen on. */
 	private static Frame frame;
 	/** Screen currently shown. */
@@ -126,13 +125,13 @@ public final class Core {
 					frame.setScreen(currentScreen);
 					LOGGER.info("Closing game screen.");
 
-				gameState = ((GameScreen) currentScreen).getGameState();
+					gameState = ((GameScreen) currentScreen).getGameState();
 
-				gameState = new GameState(gameState.getLevel() + 1,
-						gameState.getScore(),
-						gameState.getLivesRemaining(),
-						gameState.getBulletsShot(),
-						gameState.getShipsDestroyed());
+					gameState = new GameState(gameState.getLevel() + 1,
+							gameState.getScore(),
+							gameState.getLivesRemaining(),
+							gameState.getBulletsShot(),
+							gameState.getShipsDestroyed());
 
 				} while (gameState.getLivesRemaining() > 0);
 
