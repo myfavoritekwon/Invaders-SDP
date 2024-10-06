@@ -1,11 +1,10 @@
 package entity;
 
+import engine.DrawManager.SpriteType;
+
 import java.awt.*;
 
 public class Web extends Entity{
-
-    private static boolean threadWeb = false;
-
     /**
      * Constructor, establishes the entity's generic properties.
      *
@@ -13,14 +12,9 @@ public class Web extends Entity{
      * @param positionY Initial position of the entity in the Y axis.
      */
     public Web(int positionX, int positionY) {
-        super(positionX, positionY, 13 * 2, 8 * 2, Color.WHITE);
+        super(positionX, positionY, 12 * 2, 8 * 2, Color.WHITE);
+        this.spriteType = SpriteType.Web;
     }
 
-    public void threadWeb(){
-        threadWeb = true;
-    }
 
-    public static boolean isThreadWeb() {
-        return threadWeb;
-    }
 }
