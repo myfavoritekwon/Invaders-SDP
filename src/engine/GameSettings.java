@@ -67,6 +67,16 @@ public class GameSettings {
 		return shootingFrecuency;
 	}
 
+	/**
+	 *
+	 * @param formationWidth control Enemy width
+	 * @param formationHeight control Enemy height
+	 * @param baseSpeed control Enemy speed
+	 * @param shootingFrecuency control Enemy shooting Frequency
+	 * @param level Level
+	 * @param difficulty set difficulty
+	 * @return return type GameSettings
+	 */
 	public GameSettings LevelSettings(int formationWidth, int formationHeight,
 									  int baseSpeed, int shootingFrecuency, int level, int difficulty) {
 		GameSettings.difficulty = difficulty;
@@ -149,6 +159,9 @@ public class GameSettings {
 		};
 	}
 
+	/**
+	 * @return difficulty
+	 */
 	public static int getDifficulty() {
 		return difficulty;
 	}
