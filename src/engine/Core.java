@@ -51,7 +51,7 @@ public final class Core {
 	/** Logger handler for printing to console. */
 	private static ConsoleHandler consoleHandler;
 
-	private static int LevelSetting;// <- setting EASY(1), NORMAL(2), HARD(3);
+	private static int LevelSetting;// <- setting EASY(0), NORMAL(1), HARD(2);
 
 
 	/**
@@ -108,13 +108,13 @@ public final class Core {
 						boolean bonusLife = gameState.getLevel()
 								% EXTRA_LIFE_FRECUENCY == 0
 								&& gameState.getLivesRemaining() < MAX_LIVES;
-						LOGGER.info("Level is " + LevelSetting);
+						LOGGER.info("difficulty is " + LevelSetting);
 						//add variation
 						gameSetting = gameSetting.LevelSettings(gameSetting.getFormationWidth(),
 								gameSetting.getFormationHeight(),
 								gameSetting.getBaseSpeed(),
 								gameSetting.getShootingFrecuency(),
-								gameState.getLevel(), LevelSetting); //difficulty -> LevelSetting
+								gameState.getLevel(), LevelSetting);
 
 						currentScreen = new GameScreen(gameState,
 								gameSetting,
@@ -260,7 +260,9 @@ public final class Core {
 		return new Cooldown(milliseconds, variance);
 	}
 
-
+	/**
+	 * @param level set LevelSetting from GameSettingScreen
+	 */
 	public static void setLevelSetting(final int level) {
 		LevelSetting = level;
 	}
