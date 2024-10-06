@@ -54,7 +54,7 @@ public class Ship extends Entity {
 	 * reached.
 	 */
 	public final void moveRight() {
-		if(web.threadWeb){
+		if(web.isThreadWeb()){
 			this.positionX += SPEED / 2;
             soundManager.playSound(Sound.PLAYER_MOVE);
 		}
@@ -69,7 +69,7 @@ public class Ship extends Entity {
 	 * reached.
 	 */
 	public final void moveLeft() {
-		if(web.threadWeb){
+		if(web.isThreadWeb()){
 			this.positionY += SPEED / 2;
             soundManager.playSound(Sound.PLAYER_MOVE);
 		}

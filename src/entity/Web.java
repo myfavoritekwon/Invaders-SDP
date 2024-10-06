@@ -4,11 +4,7 @@ import java.awt.*;
 
 public class Web extends Entity{
 
-    public static boolean isThreadWeb() {
-        return threadWeb;
-    }
-
-    public static boolean threadWeb = false;
+    private static boolean threadWeb = false;
 
     /**
      * Constructor, establishes the entity's generic properties.
@@ -22,5 +18,9 @@ public class Web extends Entity{
 
     public void threadWeb(){
         threadWeb = true;
+    }
+
+    public static boolean isThreadWeb() {
+        return threadWeb;
     }
 }
