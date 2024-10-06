@@ -15,9 +15,9 @@ import screen.*;
 
 /**
  * Implements core game logic.
- *
+ * 
  * @author <a href="mailto:RobertoIA1987@gmail.com">Roberto Izquierdo Amo</a>
- *
+ * 
  */
 public final class Core {
 
@@ -53,10 +53,12 @@ public final class Core {
 
 	private static int LevelSetting;// <- setting EASY(0), NORMAL(1), HARD(2);
 
+	/** Initialize singleton instance of SoundManager and return that */
+	private static final SoundManager soundManager = SoundManager.getInstance();
 
 	/**
 	 * Test implementation.
-	 *
+	 * 
 	 * @param args
 	 *            Program args, ignored.
 	 */
@@ -124,71 +126,74 @@ public final class Core {
 						frame.setScreen(currentScreen);
 						LOGGER.info("Closing game screen.");
 
-						gameState = ((GameScreen) currentScreen).getGameState();
+					gameState = ((GameScreen) currentScreen).getGameState();
 
-						gameState = new GameState(gameState.getLevel() + 1,
-								gameState.getScore(),
-								gameState.getLivesRemaining(),
-								gameState.getBulletsShot(),
-								gameState.getShipsDestroyed());
+					gameState = new GameState(gameState.getLevel() + 1,
+							gameState.getScore(),
+							gameState.getLivesRemaining(),
+							gameState.getBulletsShot(),
+							gameState.getShipsDestroyed());
 
 					} while (gameState.getLivesRemaining() > 0);
 
-					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
-							+ " score screen at " + FPS + " fps, with a score of "
-							+ gameState.getScore() + ", "
-							+ gameState.getLivesRemaining() + " lives remaining, "
-							+ gameState.getBulletsShot() + " bullets shot and "
-							+ gameState.getShipsDestroyed() + " ships destroyed.");
-					currentScreen = new ScoreScreen(width, height, FPS, gameState, wallet);
+				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+						+ " score screen at " + FPS + " fps, with a score of "
+						+ gameState.getScore() + ", "
+						+ gameState.getLivesRemaining() + " lives remaining, "
+						+ gameState.getBulletsShot() + " bullets shot and "
+						+ gameState.getShipsDestroyed() + " ships destroyed.");
+				currentScreen = new ScoreScreen(width, height, FPS, gameState, wallet);
 
-					returnCode = frame.setScreen(currentScreen);
-					LOGGER.info("Closing score screen.");
-					break;
-				case 3:
-					//Shop
+				returnCode = frame.setScreen(currentScreen);
+				LOGGER.info("Closing score screen.");
+				break;
 
-					currentScreen = new ShopScreen(width, height, FPS, wallet);
-					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
-							+ " Shop screen at " + FPS + " fps.");
-					returnCode = frame.setScreen(currentScreen);
-					LOGGER.info("Closing Shop screen.");
-					break;
+			case 3:
+				//Shop
 
-				case 4:
-					// Achievement
-					currentScreen = new AchievementScreen(width, height, FPS);
-					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
-							+ " achievement screen at " + FPS + " fps.");
-					returnCode = frame.setScreen(currentScreen);
-					LOGGER.info("Closing Achievement screen.");
-					break;
+				currentScreen = new ShopScreen(width, height, FPS, wallet);
+				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+						+ " Shop screen at " + FPS + " fps.");
+				returnCode = frame.setScreen(currentScreen);
+				LOGGER.info("Closing Shop screen.");
+				break;
 
-				case 5:
-					//Setting
+			case 4:
+				// Achievement
+				currentScreen = new AchievementScreen(width, height, FPS);
+				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+						+ " achievement screen at " + FPS + " fps.");
+				returnCode = frame.setScreen(currentScreen);
+				LOGGER.info("Closing Achievement screen.");
+				break;
 
-					/* Please fill in this case state as you finish your work on Setting Screen.*/
+			case 5:
+				//Setting
 
-					LOGGER.warning("Setting screen has to come out. Please implement setting screen.");
-					returnCode = 1;
-					break;
+				/* Please fill in this case state as you finish your work on Setting Screen.*/
 
-				case 6:
-					//Game Setting
-					currentScreen = new GameSettingScreen(width, height, FPS);
-					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
-							+ " game setting screen at " + FPS + " fps.");
-					returnCode = frame.setScreen(currentScreen);
-					LOGGER.info("Closing game setting screen.");
+				LOGGER.warning("Setting screen has to come out. Please implement setting screen.");
+				returnCode = 1;
+				break;
 
-				default:
-					break;
+			case 6:
+				//Game Setting
+				currentScreen = new GameSettingScreen(width, height, FPS);
+				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+						+ " game setting screen at " + FPS + " fps.");
+				returnCode = frame.setScreen(currentScreen);
+				LOGGER.info("Closing game setting screen.");
+
+			default:
+				break;
 			}
 
 		} while (returnCode != 0);
 
 		fileHandler.flush();
 		fileHandler.close();
+		soundManager.closeAllSounds();
+
 		System.exit(0);
 	}
 
@@ -201,7 +206,7 @@ public final class Core {
 
 	/**
 	 * Controls access to the logger.
-	 *
+	 * 
 	 * @return Application logger.
 	 */
 	public static Logger getLogger() {
@@ -210,7 +215,7 @@ public final class Core {
 
 	/**
 	 * Controls access to the drawing manager.
-	 *
+	 * 
 	 * @return Application draw manager.
 	 */
 	public static DrawManager getDrawManager() {
@@ -219,7 +224,7 @@ public final class Core {
 
 	/**
 	 * Controls access to the input manager.
-	 *
+	 * 
 	 * @return Application input manager.
 	 */
 	public static InputManager getInputManager() {
@@ -228,7 +233,7 @@ public final class Core {
 
 	/**
 	 * Controls access to the file manager.
-	 *
+	 * 
 	 * @return Application file manager.
 	 */
 	public static FileManager getFileManager() {
@@ -237,7 +242,7 @@ public final class Core {
 
 	/**
 	 * Controls creation of new cooldowns.
-	 *
+	 * 
 	 * @param milliseconds
 	 *            Duration of the cooldown.
 	 * @return A new cooldown.
@@ -248,7 +253,7 @@ public final class Core {
 
 	/**
 	 * Controls creation of new cooldowns with variance.
-	 *
+	 * 
 	 * @param milliseconds
 	 *            Duration of the cooldown.
 	 * @param variance
@@ -256,14 +261,7 @@ public final class Core {
 	 * @return A new cooldown with variance.
 	 */
 	public static Cooldown getVariableCooldown(final int milliseconds,
-											   final int variance) {
+			final int variance) {
 		return new Cooldown(milliseconds, variance);
-	}
-
-	/**
-	 * @param level set LevelSetting from GameSettingScreen
-	 */
-	public static void setLevelSetting(final int level) {
-		LevelSetting = level;
 	}
 }
