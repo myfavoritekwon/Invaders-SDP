@@ -85,7 +85,7 @@ public final class Core {
 		DrawManager.getInstance().setFrame(frame);
 		int width = frame.getWidth();
 		int height = frame.getHeight();
-		
+
 		GameState gameState;
 
 		Wallet wallet = Wallet.getWallet();
