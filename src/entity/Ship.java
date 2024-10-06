@@ -27,7 +27,11 @@ public class Ship extends Entity {
 	/** Time spent inactive between hits. */
 	private Cooldown destructionCooldown;
 
-	private Web web;
+	private boolean threadWeb = false;
+
+	public void setThreadWeb(boolean threadWeb) {
+		this.threadWeb = threadWeb;
+	}
 
 	/**
 	 * Constructor, establishes the ship's properties.
@@ -50,7 +54,7 @@ public class Ship extends Entity {
 	 * reached.
 	 */
 	public final void moveRight() {
-		if(web.isThreadWeb()){
+		if(threadWeb){
 			this.positionX += SPEED / 2;
 		}
 		else{
@@ -63,11 +67,11 @@ public class Ship extends Entity {
 	 * reached.
 	 */
 	public final void moveLeft() {
-		if(web.isThreadWeb()){
-			this.positionY += SPEED / 2;
+		if(threadWeb){
+			this.positionX -= SPEED / 2;
 		}
 		else{
-			this.positionY += SPEED;
+			this.positionX -= SPEED;
 		}
 	}
 

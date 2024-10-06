@@ -65,6 +65,8 @@ public class GameScreen extends Screen {
 	private boolean levelFinished;
 	/** Checks if a bonus life is received. */
 	private boolean bonusLife;
+	/** Spider webs restricting player movement */
+	private Web web;
 	private Wallet wallet;
 
 	/**
@@ -111,6 +113,10 @@ public class GameScreen extends Screen {
 		enemyShipFormation.attach(this);
 		this.ship = new Ship(this.width / 2, this.height - 30);
 		ship.applyItem(wallet);
+		//Create random Spider Web.
+		double randomValue = Math.random();
+		this.web = new Web((int)(randomValue * width), this.height - 30);
+		this.logger.info("거미줄 생성 위치 : " + web.getPositionX());
 		// Appears each 10-30 seconds.
 		this.enemyShipSpecialCooldown = Core.getVariableCooldown(
 				BONUS_SHIP_INTERVAL, BONUS_SHIP_VARIANCE);
@@ -169,6 +175,16 @@ public class GameScreen extends Screen {
 				if (inputManager.isKeyDown(KeyEvent.VK_SPACE))
 					if (this.ship.shoot(this.bullets))
 						this.bulletsShot++;
+
+				//escape Spider Web
+				if(ship.getPositionX() + 6 <= web.getPositionX() - 6
+						|| web.getPositionX() + 6 <= ship.getPositionX() - 6){
+					this.ship.setThreadWeb(false);
+					}
+				//get caught in a spider's web
+				else{
+					this.ship.setThreadWeb(true);
+				}
 			}
 
 			if (this.enemyShipSpecial != null) {
@@ -218,6 +234,9 @@ public class GameScreen extends Screen {
 
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 				this.ship.getPositionY());
+		//draw Spider Web
+		drawManager.drawEntity(this.web, this.web.getPositionX(),
+				this.web.getPositionY());
 		if (this.enemyShipSpecial != null)
 			drawManager.drawEntity(this.enemyShipSpecial,
 					this.enemyShipSpecial.getPositionX(),
