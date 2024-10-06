@@ -36,7 +36,6 @@ public final class Core {
 	private static final int NUM_LEVELS = 7;
 	/** FIRST Level */
 	private static final GameSettings upSettings = new GameSettings(4, 4, 60, 2500);
-
 	/** Frame to draw the screen on. */
 	private static Frame frame;
 	/** Screen currently shown. */
