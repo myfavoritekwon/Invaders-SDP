@@ -127,7 +127,7 @@ public class GameScreen extends Screen {
 			this.logger.info("거미줄 생성 위치 : " + web.get(i).getPositionX());
 		}
 		//Create random Block.
-		int blockCount = 5 + level / 2;
+		int blockCount = level / 2;
 		int playerTopY = this.height - 40;
 		int enemyBottomY = 100 + (gameSettings.getFormationHeight() - 1) * 48;
 		this.block = new ArrayList<Block>();
