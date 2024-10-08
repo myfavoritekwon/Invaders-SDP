@@ -127,7 +127,7 @@ public class GameScreen extends Screen {
 			this.logger.info("거미줄 생성 위치 : " + web.get(i).getPositionX());
 		}
 		//Create random Block.
-		int blockCount = level / 2;
+		int blockCount = 5 + level / 2;
 		int playerTopY = this.height - 40;
 		int enemyBottomY = 100 + (gameSettings.getFormationHeight() - 1) * 48;
 		this.block = new ArrayList<Block>();
@@ -374,6 +374,19 @@ public class GameScreen extends Screen {
 						}
 					}
 				}
+			//check the collision between the obstacle and the enemyship
+			Set<Block> removableBlocks = new HashSet<>();
+			for (EnemyShip enemyShip : this.enemyShipFormation) {
+				if (!enemyShip.isDestroyed()) {
+					for (Block block : block) {
+						if (checkCollision(enemyShip, block)) {
+							removableBlocks.add(block);
+						}
+					}
+				}
+			}
+			// remove crashed obstacle
+			block.removeAll(removableBlocks);
 			this.bullets.removeAll(recyclable);
 			BulletPool.recycle(recyclable);
 		}
