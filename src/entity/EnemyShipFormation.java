@@ -95,6 +95,10 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	/** Number of not destroyed ships. */
 	private int shipCount;
 
+	private int point = 0;
+
+	private int distroyedship = 0;
+
 	/** Directions the formation can move. */
 	private enum Direction {
 		/** Movement to the right side of the screen. */
@@ -372,9 +376,18 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		for (List<EnemyShip> column : this.enemyShips)
 			for (int i = 0; i < column.size(); i++)
 				if (column.get(i).equals(destroyedShip)) {
+					//체력  0이면 남은 적 함선 수--, 점수부여, 파괴된 함선 수++
+					if(destroyedShip.getHealth() == 0){
+						this.shipCount--;
+						this.logger.info("Destroyed ship in ("
+								+ this.enemyShips.indexOf(column) + "," + i + ")");
+						point = destroyedShip.getPointValue();
+						distroyedship = 1;
+					}else{
+						point = 0;
+						distroyedship = 0;
+					}
 					column.get(i).destroy();
-					this.logger.info("Destroyed ship in ("
-							+ this.enemyShips.indexOf(column) + "," + i + ")");
 				}
 
 		// Updates the list of ships that can shoot the player.
@@ -399,8 +412,6 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 						+ this.shooters.size() + " members.");
 			}
 		}
-
-		this.shipCount--;
 	}
 
 	/**
@@ -446,4 +457,11 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	public final boolean isEmpty() {
 		return this.shipCount <= 0;
 	}
+
+
+	public int getPoint(){return point; }
+
+	public int getDistroyedship(){return distroyedship; }
 }
+
+
