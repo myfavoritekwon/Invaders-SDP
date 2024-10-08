@@ -1,7 +1,9 @@
 package screen;
 
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import engine.Cooldown;
@@ -65,6 +67,8 @@ public class GameScreen extends Screen {
 	private boolean levelFinished;
 	/** Checks if a bonus life is received. */
 	private boolean bonusLife;
+	/** Spider webs restricting player movement */
+	private List<Web> web;
 	private Wallet wallet;
 
 	/**
@@ -111,6 +115,15 @@ public class GameScreen extends Screen {
 		enemyShipFormation.attach(this);
 		this.ship = new Ship(this.width / 2, this.height - 30);
 		ship.applyItem(wallet);
+		//Create random Spider Web.
+		int web_count = 1 + level / 3;
+		web = new ArrayList<>();
+		for(int i = 0; i < web_count; i++) {
+			double randomValue = Math.random();
+			this.web.add(new Web((int) (randomValue * width - 12 * 2), this.height - 30));
+			this.logger.info("거미줄 생성 위치 : " + web.get(i).getPositionX());
+		}
+
 		// Appears each 10-30 seconds.
 		this.enemyShipSpecialCooldown = Core.getVariableCooldown(
 				BONUS_SHIP_INTERVAL, BONUS_SHIP_VARIANCE);
@@ -169,6 +182,22 @@ public class GameScreen extends Screen {
 				if (inputManager.isKeyDown(KeyEvent.VK_SPACE))
 					if (this.ship.shoot(this.bullets))
 						this.bulletsShot++;
+				boolean conti;
+
+
+
+				for(int i = 0; i < web.size(); i++) {
+					//escape Spider Web
+					if (ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
+							|| web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6) {
+						this.ship.setThreadWeb(false);
+					}
+					//get caught in a spider's web
+					else {
+						this.ship.setThreadWeb(true);
+						break;
+					}
+				}
 			}
 
 			if (this.enemyShipSpecial != null) {
@@ -218,6 +247,11 @@ public class GameScreen extends Screen {
 
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 				this.ship.getPositionY());
+		//draw Spider Web
+		for(int i = 0; i < web.size(); i++) {
+			drawManager.drawEntity(this.web.get(i), this.web.get(i).getPositionX(),
+					this.web.get(i).getPositionY());
+		}
 		if (this.enemyShipSpecial != null)
 			drawManager.drawEntity(this.enemyShipSpecial,
 					this.enemyShipSpecial.getPositionX(),
