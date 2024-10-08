@@ -5,7 +5,9 @@ import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.Graphics2D;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -84,7 +86,11 @@ public final class DrawManager {
 		/** Spider webs restricting player movement */
 		Web,
 		/** Obstacles preventing a player's bullet */
-		Block
+		Block,
+		/** 시야 방해물 1 (인공위성) */
+		Blocker1,
+		/** 시야 방해물 2 (우주비행사) */
+		Blocker2
 	};
 
 	/**
@@ -112,6 +118,8 @@ public final class DrawManager {
 			spriteMap.put(SpriteType.Explosion, new boolean[13][7]);
 			spriteMap.put(SpriteType.Web, new boolean[12][8]);
 			spriteMap.put(SpriteType.Block, new boolean[20][7]);
+			spriteMap.put(SpriteType.Blocker1, new boolean[182][93]); // 인공위성
+			spriteMap.put(SpriteType.Blocker2, new boolean[82][81]); // 우주 비행사
 
 			fileManager.loadSprite(spriteMap);
 			logger.info("Finished loading the sprites.");
@@ -207,6 +215,24 @@ public final class DrawManager {
 				if (image[i][j])
 					backBufferGraphics.drawRect(positionX + i * 2, positionY
 							+ j * 2, 1, 1);
+	}
+
+	// 각도 설정이 필요한 Entity(Blocker) 그리기
+	public void drawRotatedEntity(Entity entity, int x, int y, double angle) {
+		Graphics2D g2d = (Graphics2D) backBufferGraphics; // Graphics2D로 변환
+		AffineTransform oldTransform = g2d.getTransform(); // 이전 변환 저장
+
+		// 회전할 중심점 설정
+		int centerX = x + entity.getWidth() / 2;
+		int centerY = y + entity.getHeight() / 2;
+
+		// 주어진 각도로 회전
+		g2d.rotate(Math.toRadians(angle), centerX, centerY);
+
+		// 엔티티 그리기
+		drawEntity(entity, x, y);
+
+		g2d.setTransform(oldTransform); // 원래 변환 상태로 복원
 	}
 
 	/**
