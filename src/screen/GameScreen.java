@@ -69,6 +69,10 @@ public class GameScreen extends Screen {
 	private boolean bonusLife;
 	/** Spider webs restricting player movement */
 	private List<Web> web;
+	/**
+	 * Obstacles preventing a player's bullet
+	 */
+	private List<Block> block;
 	private Wallet wallet;
 
 	/**
@@ -123,6 +127,31 @@ public class GameScreen extends Screen {
 			this.web.add(new Web((int) (randomValue * width - 12 * 2), this.height - 30));
 			this.logger.info("거미줄 생성 위치 : " + web.get(i).getPositionX());
 		}
+		//Create random Block.
+		int blockCount = level / 2;
+		int playerTopY = this.height - 40;
+		int enemyBottomY = 100 + (gameSettings.getFormationHeight() - 1) * 48;
+		this.block = new ArrayList<Block>();
+		for (int i = 0; i < blockCount; i++) {
+			Block newBlock;
+			boolean overlapping;
+			do {
+				newBlock = new Block(0,0);
+				int positionX = (int) (Math.random() * (this.width - newBlock.getWidth()));
+				int positionY = (int) (Math.random() * (playerTopY - enemyBottomY - newBlock.getHeight())) + enemyBottomY;
+				newBlock = new Block(positionX, positionY);
+				overlapping = false;
+				for (Block block : block) {
+					if (checkCollision(newBlock, block)) {
+						overlapping = true;
+						break;
+					}
+				}
+			} while (overlapping);
+			block.add(newBlock);
+		}
+
+
 
 		// Appears each 10-30 seconds.
 		this.enemyShipSpecialCooldown = Core.getVariableCooldown(
@@ -248,10 +277,15 @@ public class GameScreen extends Screen {
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 				this.ship.getPositionY());
 		//draw Spider Web
-		for(int i = 0; i < web.size(); i++) {
+		for (int i = 0; i < web.size(); i++) {
 			drawManager.drawEntity(this.web.get(i), this.web.get(i).getPositionX(),
 					this.web.get(i).getPositionY());
 		}
+		//draw Blocks
+		for (Block block : block)
+			drawManager.drawEntity(block, block.getPositionX(),
+					block.getPositionY());
+
 		if (this.enemyShipSpecial != null)
 			drawManager.drawEntity(this.enemyShipSpecial,
 					this.enemyShipSpecial.getPositionX(),
@@ -313,30 +347,50 @@ public class GameScreen extends Screen {
 						this.lives--;
 						this.logger.info("Hit on player ship, " + this.lives
 								+ " lives remaining.");
+						}
 					}
-				}
-			} else {
-				for (EnemyShip enemyShip : this.enemyShipFormation)
-					if (!enemyShip.isDestroyed()
-							&& checkCollision(bullet, enemyShip)) {
-						this.score += enemyShip.getPointValue();
+				} else {
+					for (EnemyShip enemyShip : this.enemyShipFormation)
+						if (!enemyShip.isDestroyed()
+								&& checkCollision(bullet, enemyShip)) {
+							this.score += enemyShip.getPointValue();
+							this.shipsDestroyed++;
+							this.enemyShipFormation.destroy(enemyShip);
+							recyclable.add(bullet);
+						}
+					if (this.enemyShipSpecial != null
+							&& !this.enemyShipSpecial.isDestroyed()
+							&& checkCollision(bullet, this.enemyShipSpecial)) {
+						this.score += this.enemyShipSpecial.getPointValue();
 						this.shipsDestroyed++;
-						this.enemyShipFormation.destroy(enemyShip);
+						this.enemyShipSpecial.destroy();
+						this.enemyShipSpecialExplosionCooldown.reset();
 						recyclable.add(bullet);
 					}
-				if (this.enemyShipSpecial != null
-						&& !this.enemyShipSpecial.isDestroyed()
-						&& checkCollision(bullet, this.enemyShipSpecial)) {
-					this.score += this.enemyShipSpecial.getPointValue();
-					this.shipsDestroyed++;
-					this.enemyShipSpecial.destroy();
-					this.enemyShipSpecialExplosionCooldown.reset();
-					recyclable.add(bullet);
+					//check the collision between the obstacle and the bullet
+					for (Block block : this.block) {
+						if (checkCollision(bullet, block)) {
+							recyclable.add(bullet);
+							break;
+						}
+					}
+				}
+			//check the collision between the obstacle and the enemyship
+			Set<Block> removableBlocks = new HashSet<>();
+			for (EnemyShip enemyShip : this.enemyShipFormation) {
+				if (!enemyShip.isDestroyed()) {
+					for (Block block : block) {
+						if (checkCollision(enemyShip, block)) {
+							removableBlocks.add(block);
+						}
+					}
 				}
 			}
-		this.bullets.removeAll(recyclable);
-		BulletPool.recycle(recyclable);
-	}
+			// remove crashed obstacle
+			block.removeAll(removableBlocks);
+			this.bullets.removeAll(recyclable);
+			BulletPool.recycle(recyclable);
+		}
 
 	/**
 	 * Checks if two entities are colliding.
