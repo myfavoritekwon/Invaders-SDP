@@ -277,7 +277,7 @@ public class GameScreen extends Screen {
 		cleanBullets();
 		draw();
 
-		if ((this.enemyShipFormation.isEmpty() || this.lives == 0)
+		if ((this.enemyShipFormation.isEmpty() || this.lives <= 0)
 				&& !this.levelFinished) {
 			this.levelFinished = true;
 			this.screenFinishedCooldown.reset();
@@ -431,7 +431,7 @@ public class GameScreen extends Screen {
 					recyclable.add(bullet);
 					if (!this.ship.isDestroyed()) {
 						this.ship.destroy();
-						this.lives--;
+						lvdamage();
 						this.logger.info("Hit on player ship, " + this.lives
 								+ " lives remaining.");
 						}
@@ -440,9 +440,12 @@ public class GameScreen extends Screen {
 					for (EnemyShip enemyShip : this.enemyShipFormation)
 						if (!enemyShip.isDestroyed()
 								&& checkCollision(bullet, enemyShip)) {
-							this.score += enemyShip.getPointValue();
-							this.shipsDestroyed++;
 							this.enemyShipFormation.destroy(enemyShip);
+
+							// enemyShipFormation에서 적 함선 스코어값, 파괴된함선++ 받아오도록 설정
+							this.score += this.enemyShipFormation.getPoint();
+							this.shipsDestroyed += this.enemyShipFormation.getDistroyedship();
+
 							recyclable.add(bullet);
 						}
 					if (this.enemyShipSpecial != null
@@ -512,5 +515,15 @@ public class GameScreen extends Screen {
 	public final GameState getGameState() {
 		return new GameState(this.level, this.score, this.lives,
 				this.bulletsShot, this.shipsDestroyed);
+	}
+
+	//스테이지 레벨에 따라 적군 bullet 데미지 증가
+	public void lvdamage(){
+		for(int i=0; i<= GameState.level/5;i++){
+			this.lives--;
+		}
+		if(this.lives < 0){
+			this.lives = 0;
+		}
 	}
 }

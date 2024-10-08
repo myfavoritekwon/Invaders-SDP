@@ -38,6 +38,8 @@ public class EnemyShip extends Entity {
 	private final SoundManager soundManager = SoundManager.getInstance();
 
 	private GameState gameState;
+
+	private int health;
 	/**
 	 * Constructor, establishes the ship's properties.
 	 * 
@@ -55,6 +57,12 @@ public class EnemyShip extends Entity {
 		this.spriteType = spriteType;
 		this.animationCooldown = Core.getCooldown(500);
 		this.isDestroyed = false;
+
+		// 게임 레벨에 따라 적 체력 결정
+		this.health = 0;
+		for(int i =1; i<=GameState.level/3;i++){
+			this.health++;
+		}
 
 		switch (this.spriteType) {
 		case EnemyShipA1:
@@ -144,11 +152,19 @@ public class EnemyShip extends Entity {
 	/**
 	 * Destroys the ship, causing an explosion.
 	 */
-	public final void destroy() {
-		this.isDestroyed = true;
-		this.spriteType = SpriteType.Explosion;
-		soundManager.playSound(Sound.ALIEN_HIT);
+	public final void destroy() {      //적 함선 체력에 따라 파괴여부 결정
+		if(this.health == 0){
+			this.isDestroyed = true;
+			this.spriteType = SpriteType.Explosion;
+
+		}else{
+			this.health--;
+		}
+        soundManager.playSound(Sound.ALIEN_HIT);
 	}
+
+	public int getHealth(){return this.health; }  //적 함선 체력 받아오기
+
 
 	/**
 	 * Checks if the ship has been destroyed.
