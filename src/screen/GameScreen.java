@@ -1,8 +1,9 @@
 package screen;
 
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Random;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -71,9 +72,18 @@ public class GameScreen extends Screen {
 	 */
 	private List<Block> block;
 	private Wallet wallet;
+	/* Blocker 등장 쿨타임 */
+	private Cooldown blockerCooldown;
+	/* Blocker 보이는 시간 */
+	private Cooldown blockerVisibleCooldown;
+	/* Blocker이 보이고 있는지 */
+	private boolean blockerVisible;
+	private Random random;
+	private List<Blocker> blockers;
 	/** Singleton instance of SoundManager */
 	private final SoundManager soundManager = SoundManager.getInstance();
 
+	private int MAX_BLOCKERS = 0;
 	/**
 	 * Constructor, establishes the properties of the screen.
 	 * 
@@ -106,6 +116,12 @@ public class GameScreen extends Screen {
 		this.shipsDestroyed = gameState.getShipsDestroyed();
 		this.wallet = wallet;
 
+		this.random = new Random();
+		this.blockerVisible = false;
+		this.blockerCooldown = Core.getVariableCooldown(10000, 14000);
+		this.blockerCooldown.reset();
+		this.blockerVisibleCooldown = Core.getCooldown(20000);
+		this.blockers = new ArrayList<>();
 	}
 
 	/**
@@ -250,7 +266,11 @@ public class GameScreen extends Screen {
 
 			this.ship.update();
 			this.enemyShipFormation.update();
-			this.enemyShipFormation.shoot(this.bullets, this.level);
+
+			 if (level >= 3) {// 레벨 3 이후부터 시야 방해물 등장 이벤트 시작
+                this.enemyShipFormation.shoot(this.bullets, this.level);
+				handleBlockerAppearance();
+			}
 		}
 
 		manageCollisions();
@@ -315,7 +335,74 @@ public class GameScreen extends Screen {
 					/ 12);
 		}
 
+		// Blocker 그리는 부분
+		if (!blockers.isEmpty()) {
+			for (Blocker blocker : blockers) {
+				drawManager.drawRotatedEntity(blocker, blocker.getPositionX(), blocker.getPositionY(), blocker.getAngle());
+			}
+		}
 		drawManager.completeDrawing(this);
+	}
+
+
+	// Blocker의 위치, 각도, sprite 등을 다루는 메소드 (update에서 반복적으로 호출됨.)
+	private void handleBlockerAppearance() {
+
+		if (level >= 3 && level < 6) MAX_BLOCKERS = 1;
+		else if (level >= 6 && level < 11) MAX_BLOCKERS = 2;
+		else if (level >= 11) MAX_BLOCKERS = 3;
+
+		int kind = random.nextInt(2-1 + 1) +1; // 1~2
+		DrawManager.SpriteType newSprite;
+		switch (kind) {
+			case 1:
+				newSprite = DrawManager.SpriteType.Blocker1; // 인공위성
+				break;
+			case 2:
+				newSprite = DrawManager.SpriteType.Blocker2; // 우주 비행사
+				break;
+			default:
+				newSprite = DrawManager.SpriteType.Blocker1;
+				break;
+		}
+
+		// Blocker 개수 체크, 나올 타이밍 체크
+		if (blockers.size() < MAX_BLOCKERS && blockerCooldown.checkFinished()) {
+			boolean moveLeft = random.nextBoolean(); // 현재 Blocker의 이동 방향 랜덤 설정
+			int startY = random.nextInt(this.height - 90) + 25; // 화면 위아래 여백을 둔 랜덤 Y 위치
+			int startX = moveLeft ? this.width + 300 : -300; // 왼쪽으로 움직일 거면 화면 오른쪽 바깥, 오른쪽이면 왼쪽 바깥
+			// 새로운 Blocker 추가
+			if (moveLeft) {
+				blockers.add(new Blocker(startX, startY, newSprite, moveLeft)); // 오른쪽에서 왼쪽으로 이동
+			} else {
+				blockers.add(new Blocker(startX, startY, newSprite, moveLeft)); // 왼쪽에서 오른쪽으로 이동
+			}
+			blockerCooldown.reset();
+		}
+
+		// Blocker 리스트 중에 화면을 벗어나서 없어질 것들
+		List<Blocker> toRemove = new ArrayList<>();
+		for (int i = 0; i < blockers.size(); i++) {
+			Blocker blocker = blockers.get(i);
+
+			// Blocker가 화면을 벗어났을 경우 직접 리스트에서 제거
+			if (blocker.getMoveLeft() && blocker.getPositionX() < -300 || !blocker.getMoveLeft() && blocker.getPositionX() > this.width + 300) {
+				blockers.remove(i);
+				i--; // 리스트에서 요소가 제거되면 인덱스를 한 칸 줄여줘야 함
+				continue;
+			}
+
+			// Blocker 이동 및 회전 (positionX, Y값 변경)
+			if (blocker.getMoveLeft()) {
+				blocker.move(-1.5, 0); // 왼쪽으로 이동
+			} else {
+				blocker.move(1.5, 0); // 오른쪽으로 이동
+			}
+			blocker.rotate(0.2); // Blocker 회전
+		}
+
+		// 화면을 벗어난 Blocker 리스트에서 제거
+		blockers.removeAll(toRemove);
 	}
 
 	/**
