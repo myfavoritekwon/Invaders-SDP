@@ -36,7 +36,6 @@ public final class Core {
 	private static final int NUM_LEVELS = 7;
 	/** FIRST Level */
 	private static final GameSettings upSettings = new GameSettings(4, 4, 60, 2500);
-	
 	/** Frame to draw the screen on. */
 	private static Frame frame;
 	/** Screen currently shown. */
@@ -51,6 +50,10 @@ public final class Core {
 	/** Logger handler for printing to console. */
 	private static ConsoleHandler consoleHandler;
 
+	private static int LevelSetting;// <- setting EASY(0), NORMAL(1), HARD(2);
+
+	/** Initialize singleton instance of SoundManager and return that */
+	private static final SoundManager soundManager = SoundManager.getInstance();
 
 	/**
 	 * Test implementation.
@@ -81,7 +84,7 @@ public final class Core {
 		DrawManager.getInstance().setFrame(frame);
 		int width = frame.getWidth();
 		int height = frame.getHeight();
-		
+
 		GameState gameState;
 
 		Wallet wallet = Wallet.getWallet();
@@ -90,7 +93,6 @@ public final class Core {
 		do {
 			gameState = new GameState(1, 0, MAX_LIVES, 0, 0);
 			GameSettings gameSetting = upSettings;
-			int LevelSetting = 0; // <- setting EASY(1), NORMAL(2), HARD(3);
 			switch (returnCode) {
 			case 1:
 				// Main menu.
@@ -98,7 +100,6 @@ public final class Core {
 				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
 						+ " title screen at " + FPS + " fps.");
 				returnCode = frame.setScreen(currentScreen);
-				gameSetting = upSettings;
 				LOGGER.info("Closing title screen.");
 				break;
 			case 2:
@@ -108,12 +109,13 @@ public final class Core {
 					boolean bonusLife = gameState.getLevel()
 							% EXTRA_LIFE_FRECUENCY == 0
 							&& gameState.getLivesRemaining() < MAX_LIVES;
+					LOGGER.info("difficulty is " + LevelSetting);
 					//add variation
 					gameSetting = gameSetting.LevelSettings(gameSetting.getFormationWidth(),
 							gameSetting.getFormationHeight(),
 							gameSetting.getBaseSpeed(),
 							gameSetting.getShootingFrecuency(),
-							gameState.getLevel(), 3); //difficulty -> LevelSetting
+							gameState.getLevel(), LevelSetting);
 
 					currentScreen = new GameScreen(gameState,
 							gameSetting,
@@ -144,6 +146,7 @@ public final class Core {
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Closing score screen.");
 				break;
+
 			case 3:
 				//Shop
 
@@ -188,6 +191,8 @@ public final class Core {
 
 		fileHandler.flush();
 		fileHandler.close();
+		soundManager.closeAllSounds();
+
 		System.exit(0);
 	}
 
