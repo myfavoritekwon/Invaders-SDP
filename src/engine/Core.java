@@ -29,14 +29,14 @@ public final class Core {
 	private static final int FPS = 60;
 
 	/** Max lives. */
-	private static final int MAX_LIVES = 3;
+	private static int MAX_LIVES;
 	/** Levels between extra life. */
 	private static final int EXTRA_LIFE_FRECUENCY = 3;
 	/** Total number of levels. */
 	private static final int NUM_LEVELS = 7;
 	/** FIRST Level */
 	private static final GameSettings upSettings = new GameSettings(4, 4, 60, 2500);
-	
+
 	/** Frame to draw the screen on. */
 	private static Frame frame;
 	/** Screen currently shown. */
@@ -50,6 +50,9 @@ public final class Core {
 	private static Handler fileHandler;
 	/** Logger handler for printing to console. */
 	private static ConsoleHandler consoleHandler;
+
+	private static int LevelSetting;// <- setting EASY(0), NORMAL(1), HARD(2);
+
 	/** Initialize singleton instance of SoundManager and return that */
 	private static final SoundManager soundManager = SoundManager.getInstance();
 
@@ -82,16 +85,16 @@ public final class Core {
 		DrawManager.getInstance().setFrame(frame);
 		int width = frame.getWidth();
 		int height = frame.getHeight();
-		
+
 		GameState gameState;
 
 		Wallet wallet = Wallet.getWallet();
 
 		int returnCode = 1;
 		do {
+			MAX_LIVES = wallet.getLives_lv()+2;
 			gameState = new GameState(1, 0, MAX_LIVES, 0, 0);
 			GameSettings gameSetting = upSettings;
-			int LevelSetting = 0; // <- setting EASY(1), NORMAL(2), HARD(3);
 			switch (returnCode) {
 			case 1:
 				// Main menu.
@@ -99,7 +102,6 @@ public final class Core {
 				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
 						+ " title screen at " + FPS + " fps.");
 				returnCode = frame.setScreen(currentScreen);
-				gameSetting = upSettings;
 				LOGGER.info("Closing title screen.");
 				break;
 			case 2:
@@ -109,16 +111,17 @@ public final class Core {
 					boolean bonusLife = gameState.getLevel()
 							% EXTRA_LIFE_FRECUENCY == 0
 							&& gameState.getLivesRemaining() < MAX_LIVES;
+					LOGGER.info("difficulty is " + LevelSetting);
 					//add variation
 					gameSetting = gameSetting.LevelSettings(gameSetting.getFormationWidth(),
 							gameSetting.getFormationHeight(),
 							gameSetting.getBaseSpeed(),
 							gameSetting.getShootingFrecuency(),
-							gameState.getLevel(), 3); //difficulty -> LevelSetting
+							gameState.getLevel(), LevelSetting);
 
 					currentScreen = new GameScreen(gameState,
 							gameSetting,
-							bonusLife, width, height, FPS);
+							bonusLife, width, height, FPS, wallet);
 					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
 							+ " game screen at " + FPS + " fps.");
 					frame.setScreen(currentScreen);
@@ -147,7 +150,6 @@ public final class Core {
 				break;
 			case 3:
 				//Shop
-
 				currentScreen = new ShopScreen(width, height, FPS, wallet);
 				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
 						+ " Shop screen at " + FPS + " fps.");
@@ -166,11 +168,11 @@ public final class Core {
 
 			case 5:
 				//Setting
-
-				/* Please fill in this case state as you finish your work on Setting Screen.*/
-
-				LOGGER.warning("Setting screen has to come out. Please implement setting screen.");
-				returnCode = 1;
+				currentScreen = new SettingScreen(width, height, FPS);
+				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+						+ " setting screen at " + FPS + " fps.");
+				returnCode = frame.setScreen(currentScreen);
+				LOGGER.info("Closing Setting screen.");
 				break;
 
 			case 6:
@@ -180,6 +182,16 @@ public final class Core {
 						+ " game setting screen at " + FPS + " fps.");
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Closing game setting screen.");
+        break;
+
+			case 7:
+				//Credit Screen
+				currentScreen = new CreditScreen(width, height, FPS);
+				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+						+ " credit screen at " + FPS + " fps.");
+				returnCode = frame.setScreen(currentScreen);
+				LOGGER.info("Closing credit screen.");
+				break;
 
 			default:
 				break;
@@ -260,5 +272,13 @@ public final class Core {
 	public static Cooldown getVariableCooldown(final int milliseconds,
 			final int variance) {
 		return new Cooldown(milliseconds, variance);
+	}
+
+	/**
+	 *
+	 * @param difficulty set Level
+	 */
+	public static void setLevelSetting(int difficulty){
+		LevelSetting = difficulty;
 	}
 }

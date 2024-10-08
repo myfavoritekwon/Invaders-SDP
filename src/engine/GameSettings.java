@@ -1,7 +1,5 @@
 package engine;
 
-import java.util.logging.Logger;
-
 /**
  * Implements an object that stores a single game's difficulty settings.
  * 
@@ -69,11 +67,21 @@ public class GameSettings {
 		return shootingFrecuency;
 	}
 
+	/**
+	 *
+	 * @param formationWidth control Enemy width
+	 * @param formationHeight control Enemy height
+	 * @param baseSpeed control Enemy speed
+	 * @param shootingFrecuency control Enemy shooting Frequency
+	 * @param level Level
+	 * @param difficulty set difficulty
+	 * @return return type GameSettings
+	 */
 	public GameSettings LevelSettings(int formationWidth, int formationHeight,
 									  int baseSpeed, int shootingFrecuency, int level, int difficulty) {
 		GameSettings.difficulty = difficulty;
 		return switch (difficulty) {
-			case 1 -> {
+			case 0 -> {
 				if(level%3 == 0 && level < 5){
 					if(formationWidth == formationHeight){
 						if(formationWidth < 14) formationWidth += 1;
@@ -84,7 +92,7 @@ public class GameSettings {
 					else baseSpeed = -150;
                     if(shootingFrecuency-100 > 100) shootingFrecuency -= 100;
 					else shootingFrecuency = 100;
-                }else if(level % 2 == 0){
+                }else if(level % 2 == 0 && level >= 5){
 					if(formationWidth == formationHeight){
 						if(formationWidth < 14) formationWidth += 1;
 					} else {
@@ -97,7 +105,7 @@ public class GameSettings {
 				}
                 yield new GameSettings(formationWidth, formationHeight, baseSpeed, shootingFrecuency);
 			}
-			case 2 -> {
+			case 1 -> {
 				if(level%2 == 0 && level < 5){
 					if(formationWidth == formationHeight){
 						if(formationWidth < 14) formationWidth += 1;
@@ -121,7 +129,7 @@ public class GameSettings {
 				}
                 yield new GameSettings(formationWidth, formationHeight, baseSpeed, shootingFrecuency);
 			}
-			case 3 -> {
+			case 2 -> {
 				if(level%2 == 0 && level < 5){
 					if(formationWidth == formationHeight){
 						if(formationWidth < 14) formationWidth += 1;
@@ -151,6 +159,9 @@ public class GameSettings {
 		};
 	}
 
+	/**
+	 * @return difficulty
+	 */
 	public static int getDifficulty() {
 		return difficulty;
 	}
