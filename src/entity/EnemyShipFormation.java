@@ -331,15 +331,34 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	 * @param bullets
 	 *            Bullets set to add the bullet being shot.
 	 */
-	public final void shoot(final Set<Bullet> bullets) {
-		// For now, only ships in the bottom row are able to shoot.
-		int index = (int) (Math.random() * this.shooters.size());
-		EnemyShip shooter = this.shooters.get(index);
+	public final void shoot(final Set<Bullet> bullets, int level) {
+		// Increasing the number of projectiles per level 3 (levels 1 to 3, 4 to 6, 2, 7 to 9, etc.)
+		int numberOfShooters = Math.min((level / 3) + 1, this.shooters.size());
+		int numberOfBullets = (level / 3) + 1;
 
+		// Randomly select enemy to fire in proportion to the level
+		List<EnemyShip> selectedShooters = new ArrayList<>();
+		for (int i = 0; i < numberOfShooters; i++) {
+			int index = (int) (Math.random() * this.shooters.size());
+			selectedShooters.add(this.shooters.get(index));
+		}
+
+		// Fire when the cool down is over
 		if (this.shootingCooldown.checkFinished()) {
 			this.shootingCooldown.reset();
-			bullets.add(BulletPool.getBullet(shooter.getPositionX()
-					+ shooter.width / 2, shooter.getPositionY(), BULLET_SPEED));
+
+			// Each selected enemy fires a bullet
+			for (EnemyShip shooter : selectedShooters) {
+				// One shot at the base
+				bullets.add(BulletPool.getBullet(shooter.getPositionX()
+						+ shooter.width / 2 + 10, shooter.getPositionY(), BULLET_SPEED));
+
+				// Additional launches based on levels (more launches based on each level)
+				for (int i = 1; i < numberOfBullets; i++) {
+					bullets.add(BulletPool.getBullet(shooter.getPositionX()
+							+ shooter.width / 2 + (10 * (i + 1)), shooter.getPositionY(), BULLET_SPEED));
+				}
+			}
 		}
 	}
 

@@ -250,7 +250,7 @@ public class GameScreen extends Screen {
 
 			this.ship.update();
 			this.enemyShipFormation.update();
-			this.enemyShipFormation.shoot(this.bullets);
+			this.enemyShipFormation.shoot(this.bullets, this.level);
 		}
 
 		manageCollisions();
