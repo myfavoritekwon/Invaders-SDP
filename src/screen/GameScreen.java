@@ -162,7 +162,7 @@ public class GameScreen extends Screen {
 		web = new ArrayList<>();
 		for (int i = 0; i < web_count; i++) {
 			double randomValue = Math.random();
-			this.web.add(new Web((int) (randomValue * width), this.height - 30));
+			this.web.add(new Web((int) (randomValue * width - 12 * 2), this.height - 30));
 			this.logger.info("거미줄 생성 위치 : " + web.get(i).getPositionX());
 		}
 		//Create random Block.
