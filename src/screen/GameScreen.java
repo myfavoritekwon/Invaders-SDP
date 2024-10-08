@@ -274,22 +274,22 @@ public class GameScreen extends Screen {
 	private void draw() {
 		drawManager.initDrawing(this);
 
-			drawManager.drawEntity(this.ship, this.ship.getPositionX(),
-					this.ship.getPositionY());
-			//draw Spider Web
-			for (int i = 0; i < web.size(); i++) {
-				drawManager.drawEntity(this.web.get(i), this.web.get(i).getPositionX(),
-						this.web.get(i).getPositionY());
-			}
-			//draw Blocks
-			for (Block block : block)
-				drawManager.drawEntity(block, block.getPositionX(),
-						block.getPositionY());
+		drawManager.drawEntity(this.ship, this.ship.getPositionX(),
+				this.ship.getPositionY());
+		//draw Spider Web
+		for (int i = 0; i < web.size(); i++) {
+			drawManager.drawEntity(this.web.get(i), this.web.get(i).getPositionX(),
+					this.web.get(i).getPositionY());
+		}
+		//draw Blocks
+		for (Block block : block)
+			drawManager.drawEntity(block, block.getPositionX(),
+					block.getPositionY());
 
-			if (this.enemyShipSpecial != null)
-				drawManager.drawEntity(this.enemyShipSpecial,
-						this.enemyShipSpecial.getPositionX(),
-						this.enemyShipSpecial.getPositionY());
+		if (this.enemyShipSpecial != null)
+			drawManager.drawEntity(this.enemyShipSpecial,
+					this.enemyShipSpecial.getPositionX(),
+					this.enemyShipSpecial.getPositionY());
 
 		enemyShipFormation.draw();
 
@@ -333,20 +333,20 @@ public class GameScreen extends Screen {
 		BulletPool.recycle(recyclable);
 	}
 
-		/**
-		 * Manages collisions between bullets and ships.
-		 */
-		private void manageCollisions() {
-			Set<Bullet> recyclable = new HashSet<Bullet>();
-			for (Bullet bullet : this.bullets)
-				if (bullet.getSpeed() > 0) {
-					if (checkCollision(bullet, this.ship) && !this.levelFinished) {
-						recyclable.add(bullet);
-						if (!this.ship.isDestroyed()) {
-							this.ship.destroy();
-							this.lives--;
-							this.logger.info("Hit on player ship, " + this.lives
-									+ " lives remaining.");
+	/**
+	 * Manages collisions between bullets and ships.
+	 */
+	private void manageCollisions() {
+		Set<Bullet> recyclable = new HashSet<Bullet>();
+		for (Bullet bullet : this.bullets)
+			if (bullet.getSpeed() > 0) {
+				if (checkCollision(bullet, this.ship) && !this.levelFinished) {
+					recyclable.add(bullet);
+					if (!this.ship.isDestroyed()) {
+						this.ship.destroy();
+						this.lives--;
+						this.logger.info("Hit on player ship, " + this.lives
+								+ " lives remaining.");
 						}
 					}
 				} else {
