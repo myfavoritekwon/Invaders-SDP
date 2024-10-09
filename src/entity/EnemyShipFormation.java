@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 import engine.*;
 import screen.Screen;
-import engine.DrawManager.SpriteType;
 
 /**
  * Groups enemy ships into a formation that moves together.
