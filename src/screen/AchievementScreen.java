@@ -11,9 +11,9 @@ import engine.SoundManager;
 
 /**
  * Implements the high scores screen, it shows player records.
- * 
+ *
  * @author <a href="mailto:RobertoIA1987@gmail.com">Roberto Izquierdo Amo</a>
- * 
+ *
  */
 public class AchievementScreen extends Screen {
 
@@ -24,7 +24,7 @@ public class AchievementScreen extends Screen {
 
 	/**
 	 * Constructor, establishes the properties of the screen.
-	 * 
+	 *
 	 * @param width
 	 *            Screen width.
 	 * @param height
@@ -46,7 +46,7 @@ public class AchievementScreen extends Screen {
 
 	/**
 	 * Starts the action.
-	 * 
+	 *
 	 * @return Next screen code.
 	 */
 	public final int run() {
