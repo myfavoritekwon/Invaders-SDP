@@ -122,9 +122,9 @@ public class GameSettings {
 					} else {
 						if(formationHeight < 10) formationHeight += 1;
 					}
-					if(baseSpeed-20 > -150)baseSpeed -= 20; //스피드 조절
+					if(baseSpeed-20 > -150)baseSpeed -= 20; //speed control
 					else baseSpeed = -150;
-					if(shootingFrecuency-300 > 300) shootingFrecuency -= 300; //발사 간격 조절
+					if(shootingFrecuency-300 > 300) shootingFrecuency -= 300; //Adjust firing interval
 					else shootingFrecuency = 100;
 				}
                 yield new GameSettings(formationWidth, formationHeight, baseSpeed, shootingFrecuency);

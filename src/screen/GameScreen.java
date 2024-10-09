@@ -76,11 +76,11 @@ public class GameScreen extends Screen {
 	 */
 	private List<Block> block;
 	private Wallet wallet;
-	/* Blocker 등장 쿨타임 */
+	/* Blocker appearance cooldown */
 	private Cooldown blockerCooldown;
-	/* Blocker 보이는 시간 */
+	/* Blocker visible time */
 	private Cooldown blockerVisibleCooldown;
-	/* Blocker이 보이고 있는지 */
+	/* Is Blocker visible */
 	private boolean blockerVisible;
 	private Random random;
 	private List<Blocker> blockers;
