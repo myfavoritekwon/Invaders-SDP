@@ -206,8 +206,6 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		int movementY = 0;
 		double remainingProportion = (double) this.shipCount
 				/ (this.nShipsHigh * this.nShipsWide);
-//		this.movementSpeed = (int) (Math.pow(remainingProportion, 2)
-//				* this.baseSpeed);
 		this.movementSpeed = this.baseSpeed;
 		this.movementSpeed += MINIMUM_SPEED;
 		
@@ -372,6 +370,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	 * @param destroyedShip
 	 *            Ship to be destroyed.
 	 */
+
 	public final void destroy(final EnemyShip destroyedShip) {
 		for (List<EnemyShip> column : this.enemyShips)
 			for (int i = 0; i < column.size(); i++)
@@ -448,7 +447,6 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 			}
 		}
 	}
-
 
 	/**
 	 * Gets the ship on a given column that will be in charge of shooting.
