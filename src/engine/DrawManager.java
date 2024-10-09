@@ -97,9 +97,9 @@ public final class DrawManager {
 		Web,
 		/** Obstacles preventing a player's bullet */
 		Block,
-		/** 시야 방해물 1 (인공위성) */
+		/** Obstruction 1 (satellite) */
 		Blocker1,
-		/** 시야 방해물 2 (우주비행사) */
+		/** Obstruction 2 (Astronaut) */
 		Blocker2
 	};
 
@@ -239,19 +239,19 @@ public final class DrawManager {
 							+ j * 2, 1, 1);
 	}
 
-	// 각도 설정이 필요한 Entity(Blocker) 그리기
+	//Drawing an Entity (Blocker) that requires angle setting
 	public void drawRotatedEntity(Entity entity, int x, int y, double angle) {
-		Graphics2D g2d = (Graphics2D) backBufferGraphics; // Graphics2D로 변환
-		AffineTransform oldTransform = g2d.getTransform(); // 이전 변환 저장
+		Graphics2D g2d = (Graphics2D) backBufferGraphics; // Convert to Graphics2D
+		AffineTransform oldTransform = g2d.getTransform(); // Save previous conversion
 
-		// 회전할 중심점 설정
+		//Set center point to rotate
 		int centerX = x + entity.getWidth() / 2;
 		int centerY = y + entity.getHeight() / 2;
 
-		// 주어진 각도로 회전
+		//rotate by a given angle
 		g2d.rotate(Math.toRadians(angle), centerX, centerY);
 
-		// 엔티티 그리기
+		//Drawing entities
 		drawEntity(entity, x, y);
 
 		g2d.setTransform(oldTransform); // 원래 변환 상태로 복원
