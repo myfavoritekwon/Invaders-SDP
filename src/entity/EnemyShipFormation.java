@@ -376,8 +376,43 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		for (List<EnemyShip> column : this.enemyShips)
 			for (int i = 0; i < column.size(); i++)
 				if (column.get(i).equals(destroyedShip)) {
+					column.get(i).destroy();
+					this.logger.info("Destroyed ship in ("
+							+ this.enemyShips.indexOf(column) + "," + i + ")");
+				}
+
+		// Updates the list of ships that can shoot the player.
+		if (this.shooters.contains(destroyedShip)) {
+			int destroyedShipIndex = this.shooters.indexOf(destroyedShip);
+			int destroyedShipColumnIndex = -1;
+
+			for (List<EnemyShip> column : this.enemyShips)
+				if (column.contains(destroyedShip)) {
+					destroyedShipColumnIndex = this.enemyShips.indexOf(column);
+					break;
+				}
+
+			EnemyShip nextShooter = getNextShooter(this.enemyShips
+					.get(destroyedShipColumnIndex));
+
+			if (nextShooter != null)
+				this.shooters.set(destroyedShipIndex, nextShooter);
+			else {
+				this.shooters.remove(destroyedShipIndex);
+				this.logger.info("Shooters list reduced to "
+						+ this.shooters.size() + " members.");
+			}
+		}
+
+		this.shipCount--;
+	}
+
+	public final void HealthManageDestroy(final EnemyShip destroyedShip) {
+		for (List<EnemyShip> column : this.enemyShips)
+			for (int i = 0; i < column.size(); i++)
+				if (column.get(i).equals(destroyedShip)) {
 					//체력  0이면 남은 적 함선 수--, 점수부여, 파괴된 함선 수++
-					if(destroyedShip.getHealth() == 0){
+					if(destroyedShip.getHealth() <= 0){
 						this.shipCount--;
 						this.logger.info("Destroyed ship in ("
 								+ this.enemyShips.indexOf(column) + "," + i + ")");
@@ -387,7 +422,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 						point = 0;
 						distroyedship = 0;
 					}
-					column.get(i).destroy();
+					column.get(i).HealthManageDestroy();
 				}
 
 		// Updates the list of ships that can shoot the player.

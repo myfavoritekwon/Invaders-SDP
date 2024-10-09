@@ -146,9 +146,13 @@ public class EnemyShip extends Entity {
 	/**
 	 * Destroys the ship, causing an explosion.
 	 */
+	public final void destroy() {
+		this.isDestroyed = true;
+		this.spriteType = SpriteType.Explosion;
+	}
 
-	public final void destroy() {      //적 함선 체력에 따라 파괴여부 결정
-		if(this.health == 0){
+	public final void HealthManageDestroy() {      //적 함선 체력에 따라 파괴여부 결정
+		if(this.health <= 0){
 			this.isDestroyed = true;
 			this.spriteType = SpriteType.Explosion;
 		}else{
