@@ -128,8 +128,8 @@ public final class DrawManager {
 			spriteMap.put(SpriteType.Explosion, new boolean[13][7]);
 			spriteMap.put(SpriteType.Web, new boolean[12][8]);
 			spriteMap.put(SpriteType.Block, new boolean[20][7]);
-			spriteMap.put(SpriteType.Blocker1, new boolean[182][93]); // 인공위성
-			spriteMap.put(SpriteType.Blocker2, new boolean[82][81]); // 우주 비행사
+			spriteMap.put(SpriteType.Blocker1, new boolean[182][93]); // artificial satellite
+			spriteMap.put(SpriteType.Blocker2, new boolean[82][81]); // astronaut
 
 			fileManager.loadSprite(spriteMap);
 			logger.info("Finished loading the sprites.");
@@ -254,7 +254,7 @@ public final class DrawManager {
 		//Drawing entities
 		drawEntity(entity, x, y);
 
-		g2d.setTransform(oldTransform); // 원래 변환 상태로 복원
+		g2d.setTransform(oldTransform); // Restore to original conversion state
 	}
 
 	/**

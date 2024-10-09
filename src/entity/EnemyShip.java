@@ -58,7 +58,7 @@ public class EnemyShip extends Entity {
 		this.animationCooldown = Core.getCooldown(500);
 		this.isDestroyed = false;
 
-		// 게임 레벨에 따라 적 체력 결정
+		//Determine enemy health based on game level
 		this.health = 0;
 		for(int i =1; i<=GameState.level/3;i++){
 			this.health++;
