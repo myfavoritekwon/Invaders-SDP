@@ -399,7 +399,7 @@ public class GameScreen extends Screen {
 			} else {
 				blocker.move(1.5, 0); // move right
 			}
-			blocker.rotate(0.2); // Blocker 회전
+			blocker.rotate(0.2); // Blocker rotation
 		}
 
 		// Remove from the blocker list that goes off screen
