@@ -449,6 +449,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		}
 	}
 
+
 	/**
 	 * Gets the ship on a given column that will be in charge of shooting.
 	 * 
