@@ -6,21 +6,25 @@ import java.util.List;
 
 import engine.Core;
 import engine.Score;
+import engine.Sound;
+import engine.SoundManager;
 
 /**
  * Implements the high scores screen, it shows player records.
- * 
+ *
  * @author <a href="mailto:RobertoIA1987@gmail.com">Roberto Izquierdo Amo</a>
- * 
+ *
  */
 public class AchievementScreen extends Screen {
 
 	/** List of past high scores. */
 	private List<Score> highScores;
+	/** Singleton instance of SoundManager */
+	private final SoundManager soundManager = SoundManager.getInstance();
 
 	/**
 	 * Constructor, establishes the properties of the screen.
-	 * 
+	 *
 	 * @param width
 	 *            Screen width.
 	 * @param height
@@ -42,7 +46,7 @@ public class AchievementScreen extends Screen {
 
 	/**
 	 * Starts the action.
-	 * 
+	 *
 	 * @return Next screen code.
 	 */
 	public final int run() {
@@ -59,8 +63,10 @@ public class AchievementScreen extends Screen {
 
 		draw();
 		if (inputManager.isKeyDown(KeyEvent.VK_SPACE)
-				&& this.inputDelay.checkFinished())
+				&& this.inputDelay.checkFinished()) {
 			this.isRunning = false;
+			soundManager.playSound(Sound.MENU_BACK);
+		}
 	}
 
 	/**
