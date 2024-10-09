@@ -7,9 +7,9 @@ import java.awt.*;
 public class Blocker extends Entity {
 
     private Random random;
-    /* 각도 */
+    /* angle */
     private double angle;
-    /* 왼쪽으로 움직일 것인가? */
+    /* Move left? */
     private boolean moveLeft;
 
     public Blocker(int positionX, int positionY, final SpriteType spriteType, boolean moveLeft) {
