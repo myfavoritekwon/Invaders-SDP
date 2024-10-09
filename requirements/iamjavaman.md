@@ -50,4 +50,4 @@ Items in this game will be implemented as follows:
 ## Dependency
 
 - Sound effects
-    - Sound effects will be played when items are dropped and used. 
+    - Sound effects will be played when items are dropped and used.
