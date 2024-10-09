@@ -142,7 +142,7 @@ public class GameScreen extends Screen {
 		for(int i = 0; i < web_count; i++) {
 			double randomValue = Math.random();
 			this.web.add(new Web((int) Math.max(0, randomValue * width - 12 * 2), this.height - 30));
-			this.logger.info("거미줄 생성 위치 : " + web.get(i).getPositionX());
+			this.logger.info("Spider web creation location : " + web.get(i).getPositionX());
 		}
 		//Create random Block.
 		int blockCount = level / 2;
@@ -268,7 +268,7 @@ public class GameScreen extends Screen {
 			this.ship.update();
 			this.enemyShipFormation.update();
 
-			 if (level >= 3) {// 레벨 3 이후부터 시야 방해물 등장 이벤트 시작
+			 if (level >= 3) {//Events where vision obstructions appear start from level 3 onwards.
                 this.enemyShipFormation.shoot(this.bullets, this.level);
 				handleBlockerAppearance();
 			}
@@ -336,7 +336,7 @@ public class GameScreen extends Screen {
 					/ 12);
 		}
 
-		// Blocker 그리는 부분
+		// Blocker drawing part
 		if (!blockers.isEmpty()) {
 			for (Blocker blocker : blockers) {
 				drawManager.drawRotatedEntity(blocker, blocker.getPositionX(), blocker.getPositionY(), blocker.getAngle());
@@ -346,7 +346,7 @@ public class GameScreen extends Screen {
 	}
 
 
-	// Blocker의 위치, 각도, sprite 등을 다루는 메소드 (update에서 반복적으로 호출됨.)
+	// Methods that handle the position, angle, sprite, etc. of the blocker (called repeatedly in update.)
 	private void handleBlockerAppearance() {
 
 		if (level >= 3 && level < 6) MAX_BLOCKERS = 1;
@@ -357,52 +357,52 @@ public class GameScreen extends Screen {
 		DrawManager.SpriteType newSprite;
 		switch (kind) {
 			case 1:
-				newSprite = DrawManager.SpriteType.Blocker1; // 인공위성
+				newSprite = DrawManager.SpriteType.Blocker1; // artificial satellite
 				break;
 			case 2:
-				newSprite = DrawManager.SpriteType.Blocker2; // 우주 비행사
+				newSprite = DrawManager.SpriteType.Blocker2; // astronaut
 				break;
 			default:
 				newSprite = DrawManager.SpriteType.Blocker1;
 				break;
 		}
 
-		// Blocker 개수 체크, 나올 타이밍 체크
+		// Check number of blockers, check timing of exit
 		if (blockers.size() < MAX_BLOCKERS && blockerCooldown.checkFinished()) {
-			boolean moveLeft = random.nextBoolean(); // 현재 Blocker의 이동 방향 랜덤 설정
-			int startY = random.nextInt(this.height - 90) + 25; // 화면 위아래 여백을 둔 랜덤 Y 위치
-			int startX = moveLeft ? this.width + 300 : -300; // 왼쪽으로 움직일 거면 화면 오른쪽 바깥, 오른쪽이면 왼쪽 바깥
-			// 새로운 Blocker 추가
+			boolean moveLeft = random.nextBoolean(); // Randomly sets the movement direction of the current blocker
+			int startY = random.nextInt(this.height - 90) + 25; // Random Y position with margins at the top and bottom of the screen
+			int startX = moveLeft ? this.width + 300 : -300; // If you want to move left, outside the right side of the screen, if you want to move right, outside the left side of the screen.
+			// Add new Blocker
 			if (moveLeft) {
-				blockers.add(new Blocker(startX, startY, newSprite, moveLeft)); // 오른쪽에서 왼쪽으로 이동
+				blockers.add(new Blocker(startX, startY, newSprite, moveLeft)); // move from right to left
 			} else {
-				blockers.add(new Blocker(startX, startY, newSprite, moveLeft)); // 왼쪽에서 오른쪽으로 이동
+				blockers.add(new Blocker(startX, startY, newSprite, moveLeft)); // move from left to right
 			}
 			blockerCooldown.reset();
 		}
 
-		// Blocker 리스트 중에 화면을 벗어나서 없어질 것들
+		// Items in the blocker list that will disappear after leaving the screen
 		List<Blocker> toRemove = new ArrayList<>();
 		for (int i = 0; i < blockers.size(); i++) {
 			Blocker blocker = blockers.get(i);
 
-			// Blocker가 화면을 벗어났을 경우 직접 리스트에서 제거
+			// If the blocker leaves the screen, remove it directly from the list.
 			if (blocker.getMoveLeft() && blocker.getPositionX() < -300 || !blocker.getMoveLeft() && blocker.getPositionX() > this.width + 300) {
 				blockers.remove(i);
-				i--; // 리스트에서 요소가 제거되면 인덱스를 한 칸 줄여줘야 함
+				i--; // When an element is removed from the list, the index must be decreased by one place.
 				continue;
 			}
 
-			// Blocker 이동 및 회전 (positionX, Y값 변경)
+			// Blocker movement and rotation (positionX, Y value change)
 			if (blocker.getMoveLeft()) {
-				blocker.move(-1.5, 0); // 왼쪽으로 이동
+				blocker.move(-1.5, 0); // move left
 			} else {
-				blocker.move(1.5, 0); // 오른쪽으로 이동
+				blocker.move(1.5, 0); // move right
 			}
 			blocker.rotate(0.2); // Blocker 회전
 		}
 
-		// 화면을 벗어난 Blocker 리스트에서 제거
+		// Remove from the blocker list that goes off screen
 		blockers.removeAll(toRemove);
 	}
 
@@ -441,9 +441,9 @@ public class GameScreen extends Screen {
 					for (EnemyShip enemyShip : this.enemyShipFormation)
 						if (!enemyShip.isDestroyed()
 								&& checkCollision(bullet, enemyShip)) {
-							//체력에 따라 파괴여부 결정
+							//Determination of destruction based on physical strength
 							this.enemyShipFormation.HealthManageDestroy(enemyShip);
-							// enemyShipFormation에서 적 함선 스코어값, 파괴된함선++ 받아오도록 설정
+							//Set enemyShipFormation to receive enemy ship score and destroyed ship++
 							this.score += this.enemyShipFormation.getPoint();
 							this.shipsDestroyed += this.enemyShipFormation.getDistroyedship();
 
@@ -518,7 +518,7 @@ public class GameScreen extends Screen {
 				this.bulletsShot, this.shipsDestroyed);
 	}
 
-	//스테이지 레벨에 따라 적군 bullet 데미지 증가
+	//Enemy bullet damage increases depending on stage level
 	public void lvdamage(){
 		for(int i=0; i<= GameState.level/5;i++){
 			this.lives--;

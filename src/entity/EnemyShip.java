@@ -146,13 +146,12 @@ public class EnemyShip extends Entity {
 	/**
 	 * Destroys the ship, causing an explosion.
 	 */
-
 	public final void destroy() {
 		this.isDestroyed = true;
 		this.spriteType = SpriteType.Explosion;
 	}
 
-	public final void HealthManageDestroy() {      //적 함선 체력에 따라 파괴여부 결정
+	public final void HealthManageDestroy() { //Determine whether to destroy the enemy ship based on its health
 		if(this.health <= 0){
 			this.isDestroyed = true;
 			this.spriteType = SpriteType.Explosion;
@@ -161,7 +160,7 @@ public class EnemyShip extends Entity {
 		}
 	}
 
-	public int getHealth(){return this.health; }  //적 함선 체력 받아오기
+	public int getHealth(){return this.health; }  //Receive enemy ship health
 
 
 	/**
