@@ -441,8 +441,8 @@ public class GameScreen extends Screen {
 					for (EnemyShip enemyShip : this.enemyShipFormation)
 						if (!enemyShip.isDestroyed()
 								&& checkCollision(bullet, enemyShip)) {
-							this.enemyShipFormation.destroy(enemyShip);
-
+							//체력에 따라 파괴여부 결정
+							this.enemyShipFormation.HealthManageDestroy(enemyShip);
 							// enemyShipFormation에서 적 함선 스코어값, 파괴된함선++ 받아오도록 설정
 							this.score += this.enemyShipFormation.getPoint();
 							this.shipsDestroyed += this.enemyShipFormation.getDistroyedship();
