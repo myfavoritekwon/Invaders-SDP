@@ -155,7 +155,7 @@ public class GameScreen extends Screen {
 		}
 		//Create random Block.
 		int blockCount = level / 2;
-		int playerTopY = this.height - 40;
+		int playerTopY_contain_barrier = this.height - 40 - 150;
 		int enemyBottomY = 100 + (gameSettings.getFormationHeight() - 1) * 48;
 		this.block = new ArrayList<Block>();
 		for (int i = 0; i < blockCount; i++) {
@@ -164,7 +164,7 @@ public class GameScreen extends Screen {
 			do {
 				newBlock = new Block(0,0);
 				int positionX = (int) (Math.random() * (this.width - newBlock.getWidth()));
-				int positionY = (int) (Math.random() * (playerTopY - enemyBottomY - newBlock.getHeight())) + enemyBottomY;
+				int positionY = (int) (Math.random() * (playerTopY_contain_barrier - enemyBottomY - newBlock.getHeight())) + enemyBottomY;
 				newBlock = new Block(positionX, positionY);
 				overlapping = false;
 				for (Block block : block) {
