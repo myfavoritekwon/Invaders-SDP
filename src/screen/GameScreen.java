@@ -272,13 +272,10 @@ public class GameScreen extends Screen {
 
 			this.ship.update();
 			this.enemyShipFormation.update();
-
+			this.enemyShipFormation.shoot(this.bullets, this.level);
 			 if (level >= 3) {//Events where vision obstructions appear start from level 3 onwards.
-                this.enemyShipFormation.shoot(this.bullets, this.level);
 				handleBlockerAppearance();
-			}else{
-				 this.enemyShipFormation.shoot(this.bullets, this.level);
-			 }
+			}
 		}
 
 		manageCollisions();
