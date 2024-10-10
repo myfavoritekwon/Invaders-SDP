@@ -1,5 +1,6 @@
 package engine;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
@@ -11,7 +12,7 @@ import java.util.logging.Logger;
 
 import entity.Wallet;
 import screen.*;
-
+import engine.Score;
 
 /**
  * Implements core game logic.
@@ -53,6 +54,8 @@ public final class Core {
 	/** Initialize singleton instance of SoundManager and return that */
 	private static final SoundManager soundManager = SoundManager.getInstance();
 
+	private static long startTime, endTime;
+
 	private static int LevelSetting;// <- setting EASY(0), NORMAL(1), HARD(2);
 
 
@@ -62,7 +65,7 @@ public final class Core {
 	 * @param args
 	 *            Program args, ignored.
 	 */
-	public static void main(final String[] args) {
+	public static void main(final String[] args) throws IOException {
 		try {
 			LOGGER.setUseParentHandlers(false);
 
@@ -88,6 +91,7 @@ public final class Core {
 
 		GameState gameState;
 
+		AchievementManager achievementManager;
 		Wallet wallet = Wallet.getWallet();
 
 		int returnCode = 1;
@@ -95,6 +99,7 @@ public final class Core {
 			MAX_LIVES = wallet.getLives_lv()+2;
 			gameState = new GameState(1, 0, MAX_LIVES, 0, 0);
 			GameSettings gameSetting = upSettings;
+			achievementManager = new AchievementManager();
 			switch (returnCode) {
 			case 1:
 				// Main menu.
@@ -108,6 +113,7 @@ public final class Core {
 				// Game & score.
 				do {
 					// One extra live every few levels.
+					startTime = System.currentTimeMillis();
 					boolean bonusLife = gameState.getLevel()
 							% EXTRA_LIFE_FRECUENCY == 0
 							&& gameState.getLivesRemaining() < MAX_LIVES;
@@ -129,21 +135,24 @@ public final class Core {
 
 					gameState = ((GameScreen) currentScreen).getGameState();
 
-					gameState = new GameState(gameState.getLevel() + 1,
+					gameState = new GameState(
+							gameState.getLevel() + 1,
 							gameState.getScore(),
 							gameState.getLivesRemaining(),
 							gameState.getBulletsShot(),
 							gameState.getShipsDestroyed());
-
+					endTime = System.currentTimeMillis();
+					achievementManager.updatePlaying((int) (endTime - startTime) / 1000, MAX_LIVES, gameState.getLivesRemaining(), gameState.getLevel()-1);
 				} while (gameState.getLivesRemaining() > 0);
-
+				achievementManager.updatePlayed(gameState.getAccuracy(), gameState.getScore(), GameSettingScreen.getMultiPlay());
+                achievementManager.updateAllAchievements();
 				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
 						+ " score screen at " + FPS + " fps, with a score of "
 						+ gameState.getScore() + ", "
 						+ gameState.getLivesRemaining() + " lives remaining, "
 						+ gameState.getBulletsShot() + " bullets shot and "
 						+ gameState.getShipsDestroyed() + " ships destroyed.");
-				currentScreen = new ScoreScreen(width, height, FPS, gameState, wallet);
+				currentScreen = new ScoreScreen(GameSettingScreen.getName1(), width, height, FPS, gameState, wallet, achievementManager);
 
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Closing score screen.");
@@ -160,7 +169,7 @@ public final class Core {
 
 			case 4:
 				// Achievement
-				currentScreen = new AchievementScreen(width, height, FPS);
+				currentScreen = new AchievementScreen(width, height, FPS,achievementManager);
 				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
 						+ " achievement screen at " + FPS + " fps.");
 				returnCode = frame.setScreen(currentScreen);
@@ -199,7 +208,6 @@ public final class Core {
 			}
 
 		} while (returnCode != 0);
-
 		fileHandler.flush();
 		fileHandler.close();
 		soundManager.closeAllSounds();
