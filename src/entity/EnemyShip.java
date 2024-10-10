@@ -39,6 +39,8 @@ public class EnemyShip extends Entity {
 
 	private GameState gameState;
 
+	private int Level = Core.getBring_Level();
+
 	private int health;
 	/**
 	 * Constructor, establishes the ship's properties.
@@ -60,22 +62,22 @@ public class EnemyShip extends Entity {
 
 		//Determine enemy health based on game level
 		this.health = 0;
-		for(int i =1; i<=GameState.level/3;i++){
+		for(int i =1; i<=Level/3;i++){
 			this.health++;
 		}
 
 		switch (this.spriteType) {
 		case EnemyShipA1:
 		case EnemyShipA2:
-			this.pointValue = (int) (A_TYPE_POINTS+(GameState.level*0.1)+GameSettings.getDifficulty());
+			this.pointValue = (int) (A_TYPE_POINTS+(Level*0.1)+Core.getLevelSetting());
 			break;
 		case EnemyShipB1:
 		case EnemyShipB2:
-			this.pointValue = (int) (B_TYPE_POINTS+(GameState.level*0.1)+GameSettings.getDifficulty());
+			this.pointValue = (int) (B_TYPE_POINTS+(Level*0.1)+Core.getLevelSetting());
 			break;
 		case EnemyShipC1:
 		case EnemyShipC2:
-			this.pointValue = (int) (C_TYPE_POINTS+(GameState.level*0.1)+GameSettings.getDifficulty());
+			this.pointValue = (int) (C_TYPE_POINTS+(Level*0.1)+Core.getLevelSetting());
 			break;
 		default:
 			this.pointValue = 0;

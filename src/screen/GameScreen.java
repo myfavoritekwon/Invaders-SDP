@@ -88,6 +88,8 @@ public class GameScreen extends Screen {
 	private int playTime;
 
 	private int MAX_BLOCKERS = 0;
+
+	private GameState gameState;
 	/**
 	 * Constructor, establishes the properties of the screen.
 	 * 
@@ -111,7 +113,7 @@ public class GameScreen extends Screen {
 
 		this.gameSettings = gameSettings;
 		this.bonusLife = bonusLife;
-		this.level = gameState.getLevel();
+		this.level = Core.getBring_Level();
 		this.score = gameState.getScore();
 		this.lives = gameState.getLivesRemaining();
 		if (this.bonusLife)
@@ -274,7 +276,9 @@ public class GameScreen extends Screen {
 			 if (level >= 3) {//Events where vision obstructions appear start from level 3 onwards.
                 this.enemyShipFormation.shoot(this.bullets, this.level);
 				handleBlockerAppearance();
-			}
+			}else{
+				 this.enemyShipFormation.shoot(this.bullets, this.level);
+			 }
 		}
 
 		manageCollisions();
@@ -523,7 +527,7 @@ public class GameScreen extends Screen {
 
 	//Enemy bullet damage increases depending on stage level
 	public void lvdamage(){
-		for(int i=0; i<= GameState.level/5;i++){
+		for(int i=0; i<=Core.getBring_Level()/1;i++){
 			this.lives--;
 		}
 		if(this.lives < 0){

@@ -10,7 +10,7 @@ public class GameState {
 
 	private GameState instance;
 	/** Current game level. */
-	public static int level;
+	public int level;
 	/** Current score. */
 	private int score;
 	/** Lives currently remaining. */

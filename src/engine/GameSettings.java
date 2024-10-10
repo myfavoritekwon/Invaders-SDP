@@ -7,9 +7,9 @@ package engine;
  * 
  */
 public class GameSettings {
+	private GameState gameState;
 
-
-	private static int difficulty;
+	private int difficulty;
 	/** Width of the level's enemy formation. */
 	private int formationWidth;
 	/** Height of the level's enemy formation. */
@@ -80,7 +80,7 @@ public class GameSettings {
 	 */
 	public GameSettings LevelSettings(int formationWidth, int formationHeight,
 									  int baseSpeed, int shootingFrecuency, int level, int difficulty) {
-		GameSettings.difficulty = difficulty;
+		this.difficulty = difficulty;
 		return switch (difficulty) {
 			case 0 -> {
 				if(level%3 == 0 && level < 5){
@@ -163,7 +163,7 @@ public class GameSettings {
 	/**
 	 * @return difficulty
 	 */
-	public static int getDifficulty() {
+	public int getDifficulty() {
 		return difficulty;
 	}
 
