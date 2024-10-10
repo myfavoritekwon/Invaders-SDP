@@ -909,6 +909,7 @@ public final class DrawManager {
 			backBufferGraphics.fillRect((screen.getWidth()-300)/2, (screen.getHeight()-100)/2, 300, 80);
 			backBufferGraphics.setColor(Color.black);
 			drawCenteredBigString(screen, "Already max level", screen.getHeight()/2);
+
 		}
 	}
 }
