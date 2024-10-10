@@ -9,7 +9,7 @@ package engine;
 public class GameState {
 
 	/** Current game level. */
-	public static int level;
+	public int level;
 	/** Current score. */
 	private int score;
 	/** Lives currently remaining. */

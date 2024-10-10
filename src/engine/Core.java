@@ -1,6 +1,5 @@
 package engine;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
@@ -27,16 +26,12 @@ public final class Core {
 	private static final int HEIGHT = 650;
 	/** Max fps of current screen. */
 	private static final int FPS = 60;
-
 	/** Max lives. */
 	private static int MAX_LIVES;
 	/** Levels between extra life. */
 	private static final int EXTRA_LIFE_FRECUENCY = 3;
 	/** Total number of levels. */
 	private static final int NUM_LEVELS = 7;
-	/** FIRST Level */
-	private static final GameSettings upSettings = new GameSettings(4, 4, 60, 2500);
-
 	/** Frame to draw the screen on. */
 	private static Frame frame;
 	/** Screen currently shown. */
@@ -54,6 +49,8 @@ public final class Core {
 	private static final SoundManager soundManager = SoundManager.getInstance();
 
 	private static int LevelSetting;// <- setting EASY(0), NORMAL(1), HARD(2);
+
+	private static int bring_Level;
 
 
 	/**
@@ -94,7 +91,8 @@ public final class Core {
 		do {
 			MAX_LIVES = wallet.getLives_lv()+2;
 			gameState = new GameState(1, 0, MAX_LIVES, 0, 0);
-			GameSettings gameSetting = upSettings;
+			GameSettings gameSetting = new GameSettings(4, 4, 60, 2500);
+			bring_Level = 1;
 			switch (returnCode) {
 			case 1:
 				// Main menu.
@@ -134,7 +132,7 @@ public final class Core {
 							gameState.getLivesRemaining(),
 							gameState.getBulletsShot(),
 							gameState.getShipsDestroyed());
-
+					bring_Level = gameState.getLevel();
 				} while (gameState.getLivesRemaining() > 0);
 
 				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
@@ -280,5 +278,13 @@ public final class Core {
 	 */
 	public static void setLevelSetting(final int level) {
 		LevelSetting = level;
+	}
+
+	public static int getLevelSetting(){
+		return LevelSetting;
+	}
+
+	public static int getBring_Level(){
+		return bring_Level;
 	}
 }
