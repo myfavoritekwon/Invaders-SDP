@@ -8,9 +8,8 @@ package engine;
  */
 public class GameState {
 
-	private GameState instance;
 	/** Current game level. */
-	public int level;
+	private int level;
 	/** Current score. */
 	private int score;
 	/** Lives currently remaining. */

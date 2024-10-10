@@ -52,9 +52,7 @@ public final class Core {
 
 	private static long startTime, endTime;
 
-	private static int LevelSetting;// <- setting EASY(0), NORMAL(1), HARD(2);
-
-	private static int bring_Level;
+	private static int DifficultySetting;// <- setting EASY(0), NORMAL(1), HARD(2);
 
 
 	/**
@@ -98,7 +96,6 @@ public final class Core {
 			gameState = new GameState(1, 0, MAX_LIVES, 0, 0);
 			achievementManager = new AchievementManager();
 			GameSettings gameSetting = new GameSettings(4, 4, 60, 2500);
-			bring_Level = 1;
 			switch (returnCode) {
 			case 1:
 				// Main menu.
@@ -116,13 +113,13 @@ public final class Core {
 					boolean bonusLife = gameState.getLevel()
 							% EXTRA_LIFE_FRECUENCY == 0
 							&& gameState.getLivesRemaining() < MAX_LIVES;
-					LOGGER.info("difficulty is " + LevelSetting);
+					LOGGER.info("difficulty is " + DifficultySetting);
 					//add variation
 					gameSetting = gameSetting.LevelSettings(gameSetting.getFormationWidth(),
 							gameSetting.getFormationHeight(),
 							gameSetting.getBaseSpeed(),
 							gameSetting.getShootingFrecuency(),
-							gameState.getLevel(), LevelSetting);
+							gameState.getLevel(), DifficultySetting);
 
 					currentScreen = new GameScreen(gameState,
 							gameSetting,
@@ -140,7 +137,6 @@ public final class Core {
 							gameState.getLivesRemaining(),
 							gameState.getBulletsShot(),
 							gameState.getShipsDestroyed());
-					bring_Level = gameState.getLevel();
 					endTime = System.currentTimeMillis();
 					achievementManager.updatePlaying((int) (endTime - startTime) / 1000, MAX_LIVES, gameState.getLivesRemaining(), gameState.getLevel()-1);
 				} while (gameState.getLivesRemaining() > 0);
@@ -287,14 +283,10 @@ public final class Core {
 	 * @param level set LevelSetting from GameSettingScreen
 	 */
 	public static void setLevelSetting(final int level) {
-		LevelSetting = level;
+		DifficultySetting = level;
 	}
 
 	public static int getLevelSetting(){
-		return LevelSetting;
-	}
-
-	public static int getBring_Level(){
-		return bring_Level;
+		return DifficultySetting;
 	}
 }

@@ -112,8 +112,9 @@ public class GameScreen extends Screen {
 		super(width, height, fps);
 
 		this.gameSettings = gameSettings;
+		this.gameState = gameState;
 		this.bonusLife = bonusLife;
-		this.level = Core.getBring_Level();
+		this.level = gameState.getLevel();
 		this.score = gameState.getScore();
 		this.lives = gameState.getLivesRemaining();
 		if (this.bonusLife)
@@ -136,7 +137,7 @@ public class GameScreen extends Screen {
 	public final void initialize() {
 		super.initialize();
 
-		enemyShipFormation = new EnemyShipFormation(this.gameSettings);
+		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
 		this.ship = new Ship(this.width / 2, this.height - 30);
 		ship.applyItem(wallet);
@@ -524,7 +525,7 @@ public class GameScreen extends Screen {
 
 	//Enemy bullet damage increases depending on stage level
 	public void lvdamage(){
-		for(int i=0; i<=Core.getBring_Level()/1;i++){
+		for(int i=0; i<=level/3;i++){
 			this.lives--;
 		}
 		if(this.lives < 0){
