@@ -170,6 +170,7 @@ public class GameSettings {
 	 */
 	public int getDifficulty() {
 		return difficulty;
+
 	}
 
 }
