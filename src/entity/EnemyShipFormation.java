@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import engine.*;
+import engine.DrawManager.SpriteType;
 import screen.Screen;
 
 /**
@@ -358,10 +359,11 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 					bullets.add(BulletPool.getBullet(shooter.getPositionX()
 							+ shooter.width / 2 + (10 * (i + 1)), shooter.getPositionY(), BULLET_SPEED));
 				}
+
+				bullets.add(BulletPool.getBullet(shooter.getPositionX()
+						+ shooter.width / 2, shooter.getPositionY(), BULLET_SPEED));
+				soundManager.playSound(Sound.ALIEN_LASER);
 			}
-			bullets.add(BulletPool.getBullet(shooter.getPositionX()
-					+ shooter.width / 2, shooter.getPositionY(), BULLET_SPEED));
-			soundManager.playSound(Sound.ALIEN_LASER);
 		}
 	}
 
