@@ -143,7 +143,7 @@ public class GameScreen extends Screen {
 		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
         // Appears each 10-30 seconds.
-        this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
+        this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
         ship.applyItem(wallet);
 		//Create random Spider Web.
 		int web_count = 1 + level / 3;
