@@ -86,6 +86,8 @@ public class GameScreen extends Screen {
 	private List<Blocker> blockers;
 
 	private int MAX_BLOCKERS = 0;
+
+	private GameState gameState;
 	/**
 	 * Constructor, establishes the properties of the screen.
 	 * 
@@ -109,7 +111,7 @@ public class GameScreen extends Screen {
 
 		this.gameSettings = gameSettings;
 		this.bonusLife = bonusLife;
-		this.level = gameState.getLevel();
+		this.level = Core.getBring_Level();
 		this.score = gameState.getScore();
 		this.lives = gameState.getLivesRemaining();
 		if (this.bonusLife)
@@ -271,7 +273,9 @@ public class GameScreen extends Screen {
 			 if (level >= 3) {// 레벨 3 이후부터 시야 방해물 등장 이벤트 시작
                 this.enemyShipFormation.shoot(this.bullets, this.level);
 				handleBlockerAppearance();
-			}
+			}else{
+				 this.enemyShipFormation.shoot(this.bullets, this.level);
+			 }
 		}
 
 		manageCollisions();
@@ -520,7 +524,7 @@ public class GameScreen extends Screen {
 
 	//스테이지 레벨에 따라 적군 bullet 데미지 증가
 	public void lvdamage(){
-		for(int i=0; i<= GameState.level/5;i++){
+		for(int i=0; i<=Core.getBring_Level()/1;i++){
 			this.lives--;
 		}
 		if(this.lives < 0){
