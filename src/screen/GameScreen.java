@@ -1,17 +1,20 @@
 package screen;
 
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import engine.Cooldown;
-import engine.Core;
-import engine.GameSettings;
-import engine.GameState;
-import engine.DrawManager;
+
+
+
+
+import engine.*;
 import entity.*;
 
 /**
@@ -53,37 +56,62 @@ public class GameScreen extends Screen {
 	private Cooldown enemyShipSpecialExplosionCooldown;
 	/** Time from finishing the level to screen change. */
 	private Cooldown screenFinishedCooldown;
+	private Cooldown shootingCooldown;
 	/** Set of all bullets fired by on screen ships. */
 	private Set<Bullet> bullets;
 	/** Current score. */
+	private String name1;
+
 	private int score;
+	/** Current ship type. */
+	private Ship.ShipType shipType;
 	/** Player lives left. */
 	private int lives;
 	/** Total bullets shot by the player. */
 	private int bulletsShot;
 	/** Total ships destroyed by the player. */
 	private int shipsDestroyed;
+	/** Total ships destroyed consecutive by the player. */
+	private int combo = 0;
 	/** Moment the game starts. */
 	private long gameStartTime;
 	/** Checks if the level is finished. */
 	private boolean levelFinished;
 	/** Checks if a bonus life is received. */
 	private boolean bonusLife;
+	/** list of highScores for find recode. */
+	private List<Score>highScores;
+	/** Elapsed time while playing this game. */
+	private int elapsedTime;
+	/** Keep previous timestamp. */
+	private Integer prevTime;
+	/** Alert Message when a special enemy appears. */
+	private String alertMessage;
+	/** checks if it's executed. */
+  	private boolean isExecuted = false;
+	/** timer.. */
+	private Timer timer;
+	private TimerTask timerTask;
 	/** Spider webs restricting player movement */
 	private List<Web> web;
 	/**
 	 * Obstacles preventing a player's bullet
 	 */
 	private List<Block> block;
+
 	private Wallet wallet;
-	/* Blocker 등장 쿨타임 */
+	/* Blocker appearance cooldown */
 	private Cooldown blockerCooldown;
-	/* Blocker 보이는 시간 */
+	/* Blocker visible time */
 	private Cooldown blockerVisibleCooldown;
-	/* Blocker이 보이고 있는지 */
+	/* Is Blocker visible */
 	private boolean blockerVisible;
 	private Random random;
 	private List<Blocker> blockers;
+	/** Singleton instance of SoundManager */
+	private final SoundManager soundManager = SoundManager.getInstance();
+
+
 
 	private int MAX_BLOCKERS = 0;
 
@@ -110,15 +138,29 @@ public class GameScreen extends Screen {
 		super(width, height, fps);
 
 		this.gameSettings = gameSettings;
+		this.gameState = gameState;
 		this.bonusLife = bonusLife;
-		this.level = Core.getBring_Level();
+		this.level = gameState.getLevel();
 		this.score = gameState.getScore();
+		this.elapsedTime = gameState.getElapsedTime();
+		this.alertMessage = gameState.getAlertMessage();
+		this.shipType = gameState.getShipType();
 		this.lives = gameState.getLivesRemaining();
 		if (this.bonusLife)
 			this.lives++;
 		this.bulletsShot = gameState.getBulletsShot();
 		this.shipsDestroyed = gameState.getShipsDestroyed();
+
+
+		try {
+			this.highScores = Core.getFileManager().loadHighScores();
+
+		} catch (IOException e) {
+			logger.warning("Couldn't load high scores!");
+		}
+
 		this.wallet = wallet;
+
 
 		this.random = new Random();
 		this.blockerVisible = false;
@@ -134,21 +176,22 @@ public class GameScreen extends Screen {
 	public final void initialize() {
 		super.initialize();
 
-		enemyShipFormation = new EnemyShipFormation(this.gameSettings);
+		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
-		this.ship = new Ship(this.width / 2, this.height - 30);
-		ship.applyItem(wallet);
+        // Appears each 10-30 seconds.
+        this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
+        ship.applyItem(wallet);
 		//Create random Spider Web.
 		int web_count = 1 + level / 3;
 		web = new ArrayList<>();
 		for(int i = 0; i < web_count; i++) {
 			double randomValue = Math.random();
 			this.web.add(new Web((int) Math.max(0, randomValue * width - 12 * 2), this.height - 30));
-			this.logger.info("거미줄 생성 위치 : " + web.get(i).getPositionX());
+			this.logger.info("Spider web creation location : " + web.get(i).getPositionX());
 		}
 		//Create random Block.
 		int blockCount = level / 2;
-		int playerTopY = this.height - 40;
+		int playerTopY_contain_barrier = this.height - 40 - 150;
 		int enemyBottomY = 100 + (gameSettings.getFormationHeight() - 1) * 48;
 		this.block = new ArrayList<Block>();
 		for (int i = 0; i < blockCount; i++) {
@@ -157,7 +200,7 @@ public class GameScreen extends Screen {
 			do {
 				newBlock = new Block(0,0);
 				int positionX = (int) (Math.random() * (this.width - newBlock.getWidth()));
-				int positionY = (int) (Math.random() * (playerTopY - enemyBottomY - newBlock.getHeight())) + enemyBottomY;
+				int positionY = (int) (Math.random() * (playerTopY_contain_barrier - enemyBottomY - newBlock.getHeight())) + enemyBottomY;
 				newBlock = new Block(positionX, positionY);
 				overlapping = false;
 				for (Block block : block) {
@@ -185,6 +228,20 @@ public class GameScreen extends Screen {
 		this.gameStartTime = System.currentTimeMillis();
 		this.inputDelay = Core.getCooldown(INPUT_DELAY);
 		this.inputDelay.reset();
+        soundManager.stopSound(Sound.BGM_MAIN);
+		soundManager.playSound(Sound.COUNTDOWN);
+
+		switch (this.level) {
+			case 1: soundManager.loopSound(Sound.BGM_LV1); break;
+			case 2: soundManager.loopSound(Sound.BGM_LV2); break;
+			case 3: soundManager.loopSound(Sound.BGM_LV3); break;
+			case 4: soundManager.loopSound(Sound.BGM_LV4); break;
+			case 5: soundManager.loopSound(Sound.BGM_LV5); break;
+			case 6: soundManager.loopSound(Sound.BGM_LV6); break;
+            case 7:
+				// From level 7 and above, it continues to play at BGM_LV7.
+            default: soundManager.loopSound(Sound.BGM_LV7); break;
+		}
 	}
 
 	/**
@@ -207,8 +264,13 @@ public class GameScreen extends Screen {
 	 */
 	protected final void update() {
 		super.update();
-
 		if (this.inputDelay.checkFinished() && !this.levelFinished) {
+
+			/*Elapsed Time Update*/
+			long currentTime = System.currentTimeMillis();
+			if (this.prevTime != null)
+				this.elapsedTime += (int) (currentTime - this.prevTime);
+			this.prevTime = (int) currentTime;
 
 			if (!this.ship.isDestroyed()) {
 				boolean moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT)
@@ -258,8 +320,27 @@ public class GameScreen extends Screen {
 			if (this.enemyShipSpecial == null
 					&& this.enemyShipSpecialCooldown.checkFinished()) {
 				this.enemyShipSpecial = new EnemyShip();
+				this.alertMessage = "";
 				this.enemyShipSpecialCooldown.reset();
+				soundManager.playSound(Sound.UFO_APPEAR);
 				this.logger.info("A special ship appears");
+			}
+			if(this.enemyShipSpecial == null
+					&& this.enemyShipSpecialCooldown.checkAlert()) {
+				switch (this.enemyShipSpecialCooldown.checkAlertAnimation()){
+					case 1: this.alertMessage = "--! ALERT !--";
+						break;
+
+					case 2: this.alertMessage = "-!! ALERT !!-";
+						break;
+
+					case 3: this.alertMessage = "!!! ALERT !!!";
+						break;
+
+					default: this.alertMessage = "";
+						break;
+				}
+
 			}
 			if (this.enemyShipSpecial != null
 					&& this.enemyShipSpecial.getPositionX() > this.width) {
@@ -269,13 +350,10 @@ public class GameScreen extends Screen {
 
 			this.ship.update();
 			this.enemyShipFormation.update();
-
-			 if (level >= 3) {// 레벨 3 이후부터 시야 방해물 등장 이벤트 시작
-                this.enemyShipFormation.shoot(this.bullets, this.level);
+			this.enemyShipFormation.shoot(this.bullets, this.level);
+			 if (level >= 3) {//Events where vision obstructions appear start from level 3 onwards.
 				handleBlockerAppearance();
-			}else{
-				 this.enemyShipFormation.shoot(this.bullets, this.level);
-			 }
+			}
 		}
 
 		manageCollisions();
@@ -285,6 +363,9 @@ public class GameScreen extends Screen {
 		if ((this.enemyShipFormation.isEmpty() || this.lives <= 0)
 				&& !this.levelFinished) {
 			this.levelFinished = true;
+			soundManager.stopSound(soundManager.getCurrentBGM());
+			if (this.lives == 0)
+				soundManager.playSound(Sound.GAME_END);
 			this.screenFinishedCooldown.reset();
 		}
 
@@ -298,6 +379,12 @@ public class GameScreen extends Screen {
 	 */
 	private void draw() {
 		drawManager.initDrawing(this);
+		drawManager.drawGameTitle(this);
+
+
+		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX());
+
+		drawManager.drawEntity(this.ship, this.ship.getPositionX(), this.ship.getPositionY());
 
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 				this.ship.getPositionY());
@@ -311,6 +398,7 @@ public class GameScreen extends Screen {
 			drawManager.drawEntity(block, block.getPositionX(),
 					block.getPositionY());
 
+
 		if (this.enemyShipSpecial != null)
 			drawManager.drawEntity(this.enemyShipSpecial,
 					this.enemyShipSpecial.getPositionX(),
@@ -322,35 +410,42 @@ public class GameScreen extends Screen {
 			drawManager.drawEntity(bullet, bullet.getPositionX(),
 					bullet.getPositionY());
 
-		// Interface.
+
 		drawManager.drawScore(this, this.score);
-		drawManager.drawLives(this, this.lives);
+		drawManager.drawElapsedTime(this, this.elapsedTime);
+		drawManager.drawAlertMessage(this, this.alertMessage);
+		drawManager.drawLives(this, this.lives, this.shipType);
+		drawManager.drawLevel(this, this.level);
 		drawManager.drawHorizontalLine(this, SEPARATION_LINE_HEIGHT - 1);
+		drawManager.drawReloadTimer(this,this.ship,ship.getRemainingReloadTime());
+		drawManager.drawCombo(this,this.combo);
+
 
 		// Countdown to game start.
 		if (!this.inputDelay.checkFinished()) {
-			int countdown = (int) ((INPUT_DELAY
-					- (System.currentTimeMillis()
-							- this.gameStartTime)) / 1000);
-			drawManager.drawCountDown(this, this.level, countdown,
-					this.bonusLife);
-			drawManager.drawHorizontalLine(this, this.height / 2 - this.height
-					/ 12);
-			drawManager.drawHorizontalLine(this, this.height / 2 + this.height
-					/ 12);
+			int countdown = (int) ((INPUT_DELAY - (System.currentTimeMillis() - this.gameStartTime)) / 1000);
+			drawManager.drawCountDown(this, this.level, countdown, this.bonusLife);
+			drawManager.drawHorizontalLine(this, this.height / 2 - this.height / 12);
+			drawManager.drawHorizontalLine(this, this.height / 2 + this.height / 12);
 		}
 
-		// Blocker 그리는 부분
+
+		//add drawRecord method for drawing
+		drawManager.drawRecord(highScores,this);
+
+
+		// Blocker drawing part
 		if (!blockers.isEmpty()) {
 			for (Blocker blocker : blockers) {
 				drawManager.drawRotatedEntity(blocker, blocker.getPositionX(), blocker.getPositionY(), blocker.getAngle());
 			}
 		}
+
 		drawManager.completeDrawing(this);
 	}
 
 
-	// Blocker의 위치, 각도, sprite 등을 다루는 메소드 (update에서 반복적으로 호출됨.)
+	// Methods that handle the position, angle, sprite, etc. of the blocker (called repeatedly in update.)
 	private void handleBlockerAppearance() {
 
 		if (level >= 3 && level < 6) MAX_BLOCKERS = 1;
@@ -361,52 +456,52 @@ public class GameScreen extends Screen {
 		DrawManager.SpriteType newSprite;
 		switch (kind) {
 			case 1:
-				newSprite = DrawManager.SpriteType.Blocker1; // 인공위성
+				newSprite = DrawManager.SpriteType.Blocker1; // artificial satellite
 				break;
 			case 2:
-				newSprite = DrawManager.SpriteType.Blocker2; // 우주 비행사
+				newSprite = DrawManager.SpriteType.Blocker2; // astronaut
 				break;
 			default:
 				newSprite = DrawManager.SpriteType.Blocker1;
 				break;
 		}
 
-		// Blocker 개수 체크, 나올 타이밍 체크
+		// Check number of blockers, check timing of exit
 		if (blockers.size() < MAX_BLOCKERS && blockerCooldown.checkFinished()) {
-			boolean moveLeft = random.nextBoolean(); // 현재 Blocker의 이동 방향 랜덤 설정
-			int startY = random.nextInt(this.height - 90) + 25; // 화면 위아래 여백을 둔 랜덤 Y 위치
-			int startX = moveLeft ? this.width + 300 : -300; // 왼쪽으로 움직일 거면 화면 오른쪽 바깥, 오른쪽이면 왼쪽 바깥
-			// 새로운 Blocker 추가
+			boolean moveLeft = random.nextBoolean(); // Randomly sets the movement direction of the current blocker
+			int startY = random.nextInt(this.height - 90) + 25; // Random Y position with margins at the top and bottom of the screen
+			int startX = moveLeft ? this.width + 300 : -300; // If you want to move left, outside the right side of the screen, if you want to move right, outside the left side of the screen.
+			// Add new Blocker
 			if (moveLeft) {
-				blockers.add(new Blocker(startX, startY, newSprite, moveLeft)); // 오른쪽에서 왼쪽으로 이동
+				blockers.add(new Blocker(startX, startY, newSprite, moveLeft)); // move from right to left
 			} else {
-				blockers.add(new Blocker(startX, startY, newSprite, moveLeft)); // 왼쪽에서 오른쪽으로 이동
+				blockers.add(new Blocker(startX, startY, newSprite, moveLeft)); // move from left to right
 			}
 			blockerCooldown.reset();
 		}
 
-		// Blocker 리스트 중에 화면을 벗어나서 없어질 것들
+		// Items in the blocker list that will disappear after leaving the screen
 		List<Blocker> toRemove = new ArrayList<>();
 		for (int i = 0; i < blockers.size(); i++) {
 			Blocker blocker = blockers.get(i);
 
-			// Blocker가 화면을 벗어났을 경우 직접 리스트에서 제거
+			// If the blocker leaves the screen, remove it directly from the list.
 			if (blocker.getMoveLeft() && blocker.getPositionX() < -300 || !blocker.getMoveLeft() && blocker.getPositionX() > this.width + 300) {
 				blockers.remove(i);
-				i--; // 리스트에서 요소가 제거되면 인덱스를 한 칸 줄여줘야 함
+				i--; // When an element is removed from the list, the index must be decreased by one place.
 				continue;
 			}
 
-			// Blocker 이동 및 회전 (positionX, Y값 변경)
+			// Blocker movement and rotation (positionX, Y value change)
 			if (blocker.getMoveLeft()) {
-				blocker.move(-1.5, 0); // 왼쪽으로 이동
+				blocker.move(-1.5, 0); // move left
 			} else {
-				blocker.move(1.5, 0); // 오른쪽으로 이동
+				blocker.move(1.5, 0); // move right
 			}
-			blocker.rotate(0.2); // Blocker 회전
+			blocker.rotate(0.2); // Blocker rotation
 		}
 
-		// 화면을 벗어난 Blocker 리스트에서 제거
+		// Remove from the blocker list that goes off screen
 		blockers.removeAll(toRemove);
 	}
 
@@ -430,6 +525,19 @@ public class GameScreen extends Screen {
 	 */
 	private void manageCollisions() {
 		Set<Bullet> recyclable = new HashSet<Bullet>();
+
+		if (isExecuted == false){
+			isExecuted = true;
+			timer = new Timer();
+			timerTask = new TimerTask() {
+				public void run() {
+					combo = 0;
+				}
+			};
+			timer.schedule(timerTask, 3000);
+		}
+
+
 		for (Bullet bullet : this.bullets)
 			if (bullet.getSpeed() > 0) {
 				if (checkCollision(bullet, this.ship) && !this.levelFinished) {
@@ -441,27 +549,41 @@ public class GameScreen extends Screen {
 								+ " lives remaining.");
 						}
 					}
-				} else {
-					for (EnemyShip enemyShip : this.enemyShipFormation)
-						if (!enemyShip.isDestroyed()
-								&& checkCollision(bullet, enemyShip)) {
-							//체력에 따라 파괴여부 결정
-							this.enemyShipFormation.HealthManageDestroy(enemyShip);
-							// enemyShipFormation에서 적 함선 스코어값, 파괴된함선++ 받아오도록 설정
-							this.score += this.enemyShipFormation.getPoint();
-							this.shipsDestroyed += this.enemyShipFormation.getDistroyedship();
 
-							recyclable.add(bullet);
-						}
-					if (this.enemyShipSpecial != null
-							&& !this.enemyShipSpecial.isDestroyed()
-							&& checkCollision(bullet, this.enemyShipSpecial)) {
-						this.score += this.enemyShipSpecial.getPointValue();
+
+			} else {
+				for (EnemyShip enemyShip : this.enemyShipFormation)
+					if (!enemyShip.isDestroyed()
+							&& checkCollision(bullet, enemyShip)) {
+						if (combo >= 5)
+							this.score += enemyShip.getPointValue() * (combo / 5 + 1);
+						else
+							this.score += enemyShip.getPointValue();
 						this.shipsDestroyed++;
-						this.enemyShipSpecial.destroy();
-						this.enemyShipSpecialExplosionCooldown.reset();
+						this.combo++;
+						this.enemyShipFormation.destroy(enemyShip);
+						timer.cancel();
+						isExecuted = false;
 						recyclable.add(bullet);
 					}
+
+				if (this.enemyShipSpecial != null
+						&& !this.enemyShipSpecial.isDestroyed()
+						&& checkCollision(bullet, this.enemyShipSpecial)) {
+					if (combo >= 5)
+				    this.score += enemyShipSpecial.getPointValue() * (combo / 5 + 1);
+					else
+						this.score += enemyShipSpecial.getPointValue();
+					this.shipsDestroyed++;
+					this.combo++;
+					this.enemyShipSpecial.destroy();
+					this.enemyShipSpecialExplosionCooldown.reset();
+					timer.cancel();
+					isExecuted = false;
+
+					recyclable.add(bullet);
+
+				}
 					//check the collision between the obstacle and the bullet
 					for (Block block : this.block) {
 						if (checkCollision(bullet, block)) {
@@ -518,13 +640,13 @@ public class GameScreen extends Screen {
 	 * @return Current game state.
 	 */
 	public final GameState getGameState() {
-		return new GameState(this.level, this.score, this.lives,
-				this.bulletsShot, this.shipsDestroyed);
+		return new GameState(this.level, this.score, this.shipType, this.lives,
+				this.bulletsShot, this.shipsDestroyed, this.elapsedTime, this.alertMessage, 0);
 	}
 
-	//스테이지 레벨에 따라 적군 bullet 데미지 증가
+	//Enemy bullet damage increases depending on stage level
 	public void lvdamage(){
-		for(int i=0; i<=Core.getBring_Level()/1;i++){
+		for(int i=0; i<=level/3;i++){
 			this.lives--;
 		}
 		if(this.lives < 0){
