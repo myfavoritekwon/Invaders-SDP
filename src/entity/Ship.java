@@ -23,6 +23,12 @@ public abstract class Ship extends Entity {
 	private static int BULLET_SPEED = -6;
 	/** Movement of the ship for each unit of time. */
 	private static final int SPEED = 2;
+
+    /** Play the sound every 0.5 second */
+	private static final int SOUND_COOLDOWN_INTERVAL = 500;
+    /** Cooldown for playing sound */
+	private Cooldown soundCooldown;
+
 	/** Multipliers for the ship's properties. */
 	protected final ShipMultipliers multipliers;
 	/** Name of the ship. */
@@ -37,6 +43,8 @@ public abstract class Ship extends Entity {
 	/** Singleton instance of SoundManager */
 	private final SoundManager soundManager = SoundManager.getInstance();
 
+
+	private long lastShootTime;
 	private boolean threadWeb = false;
 
 	public void setThreadWeb(boolean threadWeb) {
@@ -70,6 +78,8 @@ public abstract class Ship extends Entity {
 		this.spriteType = spriteType;
 		this.shootingCooldown = Core.getCooldown(this.getShootingInterval());
 		this.destructionCooldown = Core.getCooldown(1000);
+		this.lastShootTime = 0;
+		this.soundCooldown = Core.getCooldown(SOUND_COOLDOWN_INTERVAL);
 	}
 
 	/**
@@ -93,7 +103,10 @@ public abstract class Ship extends Entity {
 		else{
 			this.positionX += this.getSpeed();
 		}
-        soundManager.playSound(Sound.PLAYER_MOVE);
+    if (soundCooldown.checkFinished()) {
+		  soundManager.playSound(Sound.PLAYER_MOVE);
+		  soundCooldown.reset();
+    }
 	}
 
 	/**
@@ -107,7 +120,10 @@ public abstract class Ship extends Entity {
 		else{
 			this.positionX -= this.getSpeed();
 		}
-        soundManager.playSound(Sound.PLAYER_MOVE);
+    if (soundCooldown.checkFinished()) {
+			soundManager.playSound(Sound.PLAYER_MOVE);
+			soundCooldown.reset();
+	  }
 	}
 
 	/**
@@ -123,6 +139,7 @@ public abstract class Ship extends Entity {
 			bullets.add(BulletPool.getBullet(positionX + this.width / 2,
 					positionY,  this.getBulletSpeed()));
 			soundManager.playSound(Sound.PLAYER_LASER);
+      this.lastShootTime = System.currentTimeMillis();
 			return true;
 		}
 		return false;
@@ -179,6 +196,14 @@ public abstract class Ship extends Entity {
 	public final int getShootingInterval() {
 		return Math.round(SHOOTING_INTERVAL * this.multipliers.shootingInterval());
 	}
+
+	public long getRemainingReloadTime(){
+		long currentTime = System.currentTimeMillis();
+		long elapsedTime = currentTime - this.lastShootTime;
+		long remainingTime = SHOOTING_INTERVAL - elapsedTime;
+		return remainingTime > 0 ? remainingTime : 0;
+	}
+
 
 	public void applyItem(Wallet wallet){
 		int bulletLv = wallet.getBullet_lv();
