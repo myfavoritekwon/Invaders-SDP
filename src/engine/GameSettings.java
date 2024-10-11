@@ -28,15 +28,16 @@ public class GameSettings {
 	 *            Height of the level's enemy formation.
 	 * @param baseSpeed
 	 *            Speed of the enemies.
-	 * @param shootingFrecuency
-	 *            Frecuency of enemy shootings, +/- 30%.
+	 * @param shootingFrequency
+	 *            Frecuen
+	 *            cy of enemy shootings, +/- 30%.
 	 */
 	public GameSettings(final int formationWidth, final int formationHeight,
-			final int baseSpeed, final int shootingFrecuency) {
+			final int baseSpeed, final int shootingFrequency) { // fix typo
 		this.formationWidth = formationWidth;
 		this.formationHeight = formationHeight;
 		this.baseSpeed = baseSpeed;
-		this.shootingFrecuency = shootingFrecuency;
+		this.shootingFrecuency = shootingFrequency;
 	}
 
 	/**
@@ -122,9 +123,9 @@ public class GameSettings {
 					} else {
 						if(formationHeight < 10) formationHeight += 1;
 					}
-					if(baseSpeed-20 > -150)baseSpeed -= 20; //스피드 조절
+					if(baseSpeed-20 > -150)baseSpeed -= 20; //speed control
 					else baseSpeed = -150;
-					if(shootingFrecuency-300 > 300) shootingFrecuency -= 300; //발사 간격 조절
+					if(shootingFrecuency-300 > 300) shootingFrecuency -= 300; //Adjust firing interval
 					else shootingFrecuency = 100;
 				}
                 yield new GameSettings(formationWidth, formationHeight, baseSpeed, shootingFrecuency);
