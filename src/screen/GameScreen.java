@@ -1,17 +1,17 @@
 package screen;
 
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-
-
-
 
 
 import engine.*;
@@ -110,13 +110,18 @@ public class GameScreen extends Screen {
 	private List<Blocker> blockers;
 	/** Singleton instance of SoundManager */
 	private final SoundManager soundManager = SoundManager.getInstance();
-
-
+	/** Singleton instance of ItemManager. */
+	private ItemManager itemManager;
+	/** Item boxes that dropped when kill enemy ships. */
+	private Set<ItemBox> itemBoxes;
+	/** Barriers appear in game screen. */
+	private Set<Barrier> barriers;
 
 	private int MAX_BLOCKERS = 0;
 
 	private GameState gameState;
-	/**
+
+    /**
 	 * Constructor, establishes the properties of the screen.
 	 * 
 	 * @param gameState
@@ -179,14 +184,14 @@ public class GameScreen extends Screen {
 		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
         // Appears each 10-30 seconds.
-        this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
+        this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
         ship.applyItem(wallet);
 		//Create random Spider Web.
 		int web_count = 1 + level / 3;
 		web = new ArrayList<>();
 		for(int i = 0; i < web_count; i++) {
 			double randomValue = Math.random();
-			this.web.add(new Web((int) Math.max(0, randomValue * width - 12 * 2), this.height - 30));
+			this.web.add(new Web((int) Math.max(0, randomValue * width - 12 * 2), this.height - 70));
 			this.logger.info("Spider web creation location : " + web.get(i).getPositionX());
 		}
 		//Create random Block.
@@ -222,13 +227,18 @@ public class GameScreen extends Screen {
 		this.enemyShipSpecialExplosionCooldown = Core
 				.getCooldown(BONUS_SHIP_EXPLOSION);
 		this.screenFinishedCooldown = Core.getCooldown(SCREEN_CHANGE_INTERVAL);
-		this.bullets = new HashSet<Bullet>();
+		this.bullets = new HashSet<>();
+		this.barriers = new HashSet<>();
+        this.itemBoxes = new HashSet<>();
+		this.itemManager = new ItemManager(this.ship, this.enemyShipFormation, this.barriers);
 
 		// Special input delay / countdown.
 		this.gameStartTime = System.currentTimeMillis();
 		this.inputDelay = Core.getCooldown(INPUT_DELAY);
 		this.inputDelay.reset();
-        soundManager.stopSound(Sound.BGM_MAIN);
+
+		if (soundManager.isSoundPlaying(Sound.BGM_MAIN))
+        	soundManager.stopSound(Sound.BGM_MAIN);
 		soundManager.playSound(Sound.COUNTDOWN);
 
 		switch (this.level) {
@@ -268,9 +278,14 @@ public class GameScreen extends Screen {
 
 			/*Elapsed Time Update*/
 			long currentTime = System.currentTimeMillis();
+
 			if (this.prevTime != null)
 				this.elapsedTime += (int) (currentTime - this.prevTime);
+
 			this.prevTime = (int) currentTime;
+
+			if(!itemManager.isGhostActive())
+				this.ship.setColor(Color.GREEN);
 
 			if (!this.ship.isDestroyed()) {
 				boolean moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT)
@@ -290,11 +305,9 @@ public class GameScreen extends Screen {
 					this.ship.moveLeft();
 				}
 				if (inputManager.isKeyDown(KeyEvent.VK_SPACE))
-					if (this.ship.shoot(this.bullets))
-						this.bulletsShot++;
+					if (this.ship.shoot(this.bullets, this.itemManager.getShotNum()))
+						this.bulletsShot += this.itemManager.getShotNum();
 				boolean conti;
-
-
 
 				for(int i = 0; i < web.size(); i++) {
 					//escape Spider Web
@@ -349,9 +362,14 @@ public class GameScreen extends Screen {
 			}
 
 			this.ship.update();
-			this.enemyShipFormation.update();
-			this.enemyShipFormation.shoot(this.bullets, this.level);
-			 if (level >= 3) {//Events where vision obstructions appear start from level 3 onwards.
+
+			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
+			if (!itemManager.isTimeStopActive()) {
+				this.enemyShipFormation.update();
+				this.enemyShipFormation.shoot(this.bullets, this.level);
+			}
+
+			if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
 				handleBlockerAppearance();
 			}
 		}
@@ -386,8 +404,6 @@ public class GameScreen extends Screen {
 
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(), this.ship.getPositionY());
 
-		drawManager.drawEntity(this.ship, this.ship.getPositionX(),
-				this.ship.getPositionY());
 		//draw Spider Web
 		for (int i = 0; i < web.size(); i++) {
 			drawManager.drawEntity(this.web.get(i), this.web.get(i).getPositionX(),
@@ -406,11 +422,18 @@ public class GameScreen extends Screen {
 
 		enemyShipFormation.draw();
 
+		for (ItemBox itemBox : this.itemBoxes)
+			drawManager.drawEntity(itemBox, itemBox.getPositionX(), itemBox.getPositionY());
+
+		for (Barrier barrier : this.barriers)
+			drawManager.drawEntity(barrier, barrier.getPositionX(), barrier.getPositionY());
+
 		for (Bullet bullet : this.bullets)
 			drawManager.drawEntity(bullet, bullet.getPositionX(),
 					bullet.getPositionY());
 
 
+		// Interface.
 		drawManager.drawScore(this, this.score);
 		drawManager.drawElapsedTime(this, this.elapsedTime);
 		drawManager.drawAlertMessage(this, this.alertMessage);
@@ -537,23 +560,37 @@ public class GameScreen extends Screen {
 			timer.schedule(timerTask, 3000);
 		}
 
+		for (Bullet bullet : this.bullets) {
 
-		for (Bullet bullet : this.bullets)
+			// Enemy ship's bullets
 			if (bullet.getSpeed() > 0) {
-				if (checkCollision(bullet, this.ship) && !this.levelFinished) {
+				if (checkCollision(bullet, this.ship) && !this.levelFinished && !itemManager.isGhostActive()) {
 					recyclable.add(bullet);
 					if (!this.ship.isDestroyed()) {
 						this.ship.destroy();
 						lvdamage();
 						this.logger.info("Hit on player ship, " + this.lives
 								+ " lives remaining.");
+					}
+				}
+
+				if (this.barriers != null) {
+					Iterator<Barrier> barrierIterator = this.barriers.iterator();
+					while (barrierIterator.hasNext()) {
+						Barrier barrier = barrierIterator.next();
+						if (checkCollision(bullet, barrier)) {
+							recyclable.add(bullet);
+							barrier.reduceHealth();
+							if (barrier.isDestroyed()) {
+								barrierIterator.remove();
+							}
 						}
 					}
+				}
 
-
-			} else {
+			} else {	// Player ship's bullets
 				for (EnemyShip enemyShip : this.enemyShipFormation)
-					if (!enemyShip.isDestroyed()
+					if (enemyShip != null && !enemyShip.isDestroyed()
 							&& checkCollision(bullet, enemyShip)) {
 						// Decide whether to destroy according to physical strength
 						this.enemyShipFormation.HealthManageDestroy(enemyShip);
@@ -568,13 +605,18 @@ public class GameScreen extends Screen {
 						timer.cancel();
 						isExecuted = false;
 						recyclable.add(bullet);
+
+						if (itemManager.dropItem()) {
+							this.itemBoxes.add(new ItemBox(enemyShip.getPositionX() + 6, enemyShip.getPositionY() + 1));
+							logger.info("Item box dropped");
+						}
 					}
 
 				if (this.enemyShipSpecial != null
 						&& !this.enemyShipSpecial.isDestroyed()
 						&& checkCollision(bullet, this.enemyShipSpecial)) {
 					if (combo >= 5)
-				    this.score += enemyShipSpecial.getPointValue() * (combo / 5 + 1);
+						this.score += enemyShipSpecial.getPointValue() * (combo / 5 + 1);
 					else
 						this.score += enemyShipSpecial.getPointValue();
 					this.shipsDestroyed++;
@@ -585,32 +627,51 @@ public class GameScreen extends Screen {
 					isExecuted = false;
 
 					recyclable.add(bullet);
-
 				}
-					//check the collision between the obstacle and the bullet
-					for (Block block : this.block) {
-						if (checkCollision(bullet, block)) {
-							recyclable.add(bullet);
-							break;
+
+				Iterator<ItemBox> itemBoxIterator = this.itemBoxes.iterator();
+				while (itemBoxIterator.hasNext()) {
+					ItemBox itemBox = itemBoxIterator.next();
+					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow()) {
+						itemBoxIterator.remove();
+						recyclable.add(bullet);
+						Entry<Integer, Integer> itemResult = this.itemManager.useItem();
+
+						if (itemResult != null) {
+							this.score += itemResult.getKey();
+							this.shipsDestroyed += itemResult.getValue();
 						}
 					}
 				}
-			//check the collision between the obstacle and the enemyship
-			Set<Block> removableBlocks = new HashSet<>();
-			for (EnemyShip enemyShip : this.enemyShipFormation) {
-				if (!enemyShip.isDestroyed()) {
-					for (Block block : block) {
-						if (checkCollision(enemyShip, block)) {
-							removableBlocks.add(block);
-						}
+
+				//check the collision between the obstacle and the bullet
+				for (Block block : this.block) {
+					if (checkCollision(bullet, block)) {
+						recyclable.add(bullet);
+                        soundManager.playSound(Sound.BULLET_BLOCKING);
+						break;
 					}
 				}
 			}
-			// remove crashed obstacle
-			block.removeAll(removableBlocks);
-			this.bullets.removeAll(recyclable);
-			BulletPool.recycle(recyclable);
 		}
+
+		//check the collision between the obstacle and the enemyship
+		Set<Block> removableBlocks = new HashSet<>();
+		for (EnemyShip enemyShip : this.enemyShipFormation) {
+			if (enemyShip != null && !enemyShip.isDestroyed()) {
+				for (Block block : block) {
+					if (checkCollision(enemyShip, block)) {
+						removableBlocks.add(block);
+					}
+				}
+			}
+		}
+
+		// remove crashed obstacle
+		block.removeAll(removableBlocks);
+		this.bullets.removeAll(recyclable);
+		BulletPool.recycle(recyclable);
+	}
 
 	/**
 	 * Checks if two entities are colliding.
