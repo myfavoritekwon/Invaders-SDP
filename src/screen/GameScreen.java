@@ -605,8 +605,7 @@ public class GameScreen extends Screen {
 						timer.cancel();
 						isExecuted = false;
 						recyclable.add(bullet);
-
-						if (itemManager.dropItem()) {
+						if (itemManager.dropItem() && enemyShip.getHealth() < 0) {
 							this.itemBoxes.add(new ItemBox(enemyShip.getPositionX() + 6, enemyShip.getPositionY() + 1));
 							logger.info("Item box dropped");
 						}
