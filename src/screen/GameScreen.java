@@ -17,6 +17,7 @@ import java.util.TimerTask;
 
 
 import engine.*;
+import engine.Socket.Server;
 import entity.*;
 
 
@@ -134,6 +135,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	private GameState gameState;
 
+	private Server server;
+
 	private int hitBullets;
 
     /**
@@ -201,6 +204,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.alertMessage = "";
 
 		this.wallet = wallet;
+
+		this.server = new Server();
 	}
 
 	/**
@@ -394,13 +399,13 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				// boolean 초기값 설정
 				boolean moveRight = false;
 				boolean moveLeft = false;
+				boolean moveRight;
+				boolean moveLeft;
+				server.getButton(playerNumber); // 여기 static 고쳐야함 생성자 받으면 될듯
 				switch (playerNumber) {
 					case 0:
-						// 플레이어 1 W를 안눌렀을 때 이동 가능
-						if(!inputManager.isKeyDown(KeyEvent.VK_W)) {
-							moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
-							moveLeft = inputManager.isKeyDown(KeyEvent.VK_A);
-						}
+						moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
+						moveLeft = inputManager.isKeyDown(KeyEvent.VK_A);
 						break;
 					case 1:
 						// 플레이어 2 윗 방향키 안눌렀을 때 이동 가능

@@ -7,6 +7,8 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import engine.Socket.Client;
+import engine.Socket.Server;
 import entity.Ship;
 import entity.Wallet;
 import screen.*;
@@ -70,7 +72,6 @@ public final class Core {
 			LOGGER.addHandler(fileHandler);
 			LOGGER.addHandler(consoleHandler);
 			LOGGER.setLevel(Level.ALL);
-
 		} catch (Exception e) {
 			// TODO handle exception
 			e.printStackTrace();
@@ -221,6 +222,16 @@ public final class Core {
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Closing score screen.");
 				break;
+			case 9:
+				//Multi
+				System.out.println("멀티다이자시가");
+				Server server = new Server();
+				server.connectSocket();
+				returnCode = frame.setScreen(currentScreen);
+
+				break;
+			case 10: //방장 난이도 조절하는 칸
+
 			default:
 				break;
 			}
