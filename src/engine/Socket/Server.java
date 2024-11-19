@@ -1,50 +1,61 @@
 package engine.Socket;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.logging.Logger;
 
 public class Server {
-    public String hostIp;
+    private String hostIp = "172.17.100.13"; // 기본값 설정
     public int port = 9000;
-    private int Button;
-    private int moving;
+    private int Button = 0; // 초기화
+    private int moving = 0;
 
-    public void setHostIp() {
-        try {
-            hostIp = InetAddress.getLocalHost().getHostAddress();
-            System.out.println("Host IP Address: " + hostIp);
-        } catch (UnknownHostException e) {
-            System.out.println("fail :: " + e.getMessage());
-        }
-    }
-
-    public void connectSocket(){
-        try {
-            ServerSocket serverSocket = new ServerSocket(port);
-            serverSocket.accept();
-            Socket serverUser = null;
-            OutputStream out;
-            InputStream in;
-            while(true){//while 조건문에 조건 넣기
-                serverUser = serverSocket.accept();
-                System.out.println("Open Server from : " + serverUser.toString());
-                in = serverUser.getInputStream();
-                moving = in.read();
-                out = serverUser.getOutputStream();
-                PrintWriter writer = new PrintWriter(out, true);
-                writer.println(Button);
+    public void connectSocket() {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Server is running on port: " + port + " Ip" + hostIp);
+            while (true) {
+                // 클라이언트 연결 수락
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connected: " + clientSocket.getInetAddress());
+                serverSocket.close();
+                return;
+                // 클라이언트 처리 스레드 실행
+                //new Thread(() -> handleClient(clientSocket)).start();
             }
-            //port++;
-        }catch (IOException e){
-            System.out.println("fail :: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Server failed: " + e.getMessage());
         }
     }
 
-    public void getButton(int button){
+    private void handleClient(Socket clientSocket) {
+        try (InputStream in = clientSocket.getInputStream();
+             OutputStream out = clientSocket.getOutputStream();
+             PrintWriter writer = new PrintWriter(out, true)) {
+
+            // 클라이언트로부터 데이터 읽기
+            moving = in.read();
+            System.out.println("Received moving data: " + moving);
+
+            // 클라이언트로 데이터 보내기
+            writer.println(Button); // Button 값을 클라이언트로 전송
+            System.out.println("Sent Button data: " + Button);
+
+        } catch (IOException e) {
+            System.out.println("Error handling client: " + e.getMessage());
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                System.out.println("Failed to close client socket: " + e.getMessage());
+            }
+        }
+    }
+
+    public void getButton(int button) {
         this.Button = button;
+    }
+
+    public String getHostIp() {
+        return hostIp;
     }
 }

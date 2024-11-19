@@ -226,6 +226,7 @@ public final class Core {
 				//Multi
 				System.out.println("멀티다이자시가");
 				Server server = new Server();
+				Client client = new Client();
 				server.connectSocket();
 				returnCode = frame.setScreen(currentScreen);
 
