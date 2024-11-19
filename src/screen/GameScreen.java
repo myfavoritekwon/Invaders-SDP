@@ -16,6 +16,7 @@ import java.util.TimerTask;
 
 
 import engine.*;
+import engine.Socket.Server;
 import entity.*;
 
 
@@ -133,6 +134,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	private GameState gameState;
 
+	private Server server;
+
     /**
 	 * Constructor, establishes the properties of the screen.
 	 * 
@@ -196,6 +199,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.alertMessage = "";
 
 		this.wallet = wallet;
+
+		this.server = new Server();
 	}
 
 	/**
@@ -366,6 +371,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			if (!this.ship.isDestroyed()) {
 				boolean moveRight;
 				boolean moveLeft;
+				server.getButton(playerNumber); // 여기 static 고쳐야함 생성자 받으면 될듯
 				switch (playerNumber) {
 					case 0:
 						moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
