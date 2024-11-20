@@ -32,7 +32,7 @@ public class ItemManager {
     /** Height of game screen. */
     private int HEIGHT;
     /** Item drop probability, (1 ~ 100). */
-    private static final int ITEM_DROP_PROBABILITY = 100;
+    private static final int ITEM_DROP_PROBABILITY = 30;
     /** Cooldown of Ghost */
     private static final int GHOST_COOLDOWN = 3000;
     /** Cooldown of Time-stop */
