@@ -58,8 +58,7 @@ public class ItemManager {
     private Cooldown ghost_cooldown = Core.getCooldown(0);
     /** Cooldown variable for Time-stop */
     private Cooldown timeStop_cooldown = Core.getCooldown(0);
-    /** Bullet cycle cool down*/
-    private Cooldown laserDurationCooldown = Core.getCooldown(0);
+
 
     /** Check if the number of shot is max, (maximum 3). */
     private boolean isMaxShotNum;
