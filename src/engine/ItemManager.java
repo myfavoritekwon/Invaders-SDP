@@ -360,10 +360,6 @@ public class ItemManager {
     }
 
 
-    public Ship getShip() {
-        return this.ship;
-    }
-
     /**
      * Checks if Time-stop is active.
      *
