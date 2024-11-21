@@ -222,17 +222,18 @@ public final class Core {
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Closing score screen.");
 				break;
-			case 9:
+			case 9: //여기에 게임방 리스트
+				currentScreen = new MultiRoomScreen(width, height, FPS);
+				returnCode = frame.setScreen(currentScreen);
+				LOGGER.info("Loading success multi room screen.");
+				break;
+			case 10: //방장 난이도 조절하는 칸 and 대기 30초
 				//Multi
 				System.out.println("멀티다이자시가");
 				Server server = new Server();
 				Client client = new Client();
-				server.connectSocket();
+				server.connectSocket();//서버만 써져있음.
 				returnCode = frame.setScreen(currentScreen);
-
-				break;
-			case 10: //방장 난이도 조절하는 칸
-
 			default:
 				break;
 			}
