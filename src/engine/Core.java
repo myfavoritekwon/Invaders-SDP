@@ -231,20 +231,22 @@ public final class Core {
 				LOGGER.info("Closing score screen.");
 				break;
 			case 9: //여기에 게임방 리스트
-
+				server = new Server();
+				server.startServer();
 				currentScreen = new MultiRoomScreen(width, height, FPS);
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Loading success multi room screen.");
 				break;
 			case 10: //방장 난이도 조절하는 칸 and 대기 30초
 				//Multi
-				server = new Server();
 				server.setIp();
 				Room room = new Room(server.getHostIp(), server.getPort(), DifficultySetting, rooms.size());
 				rooms.add(room);
 				System.out.println(rooms.size());
-				server.startServer();//서버만 써져있음.
+				server.connectToServer();//서버만 써져있음.
 				returnCode = frame.setScreen(currentScreen);
+			case 11: //클라이언트 생성
+				server.connectToServer();
 			default:
 				break;
 			}

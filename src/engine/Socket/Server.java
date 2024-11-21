@@ -28,11 +28,12 @@ public class Server {
 
     // 서버 역할: 클라이언트 연결 요청 수락
     public void startServer() {
+        new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(port)) {
                 System.out.println("Server running at " + hostIp + ":" + port);
-                Socket socket;
+                Socket socket = null;
                 while (true) {
-                    serverSocket.setSoTimeout(3000);
+                    serverSocket.setSoTimeout(30000);
                     socket = serverSocket.accept();
                     System.out.println("Client connected: " + socket.getInetAddress());
 
@@ -46,10 +47,13 @@ public class Server {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }).start();
     }
 
     // 클라이언트 역할: 서버에서 Peer 리스트를 받고 선택 후 연결
-    public void connectToServer(String serverIp, int serverPort) {
+    public void connectToServer() {
+        String serverIp = hostIp;
+        int serverPort = port;
         try (Socket socket = new Socket(serverIp, serverPort)) {
             System.out.println("Connected to server: " + serverIp + ":" + serverPort);
 

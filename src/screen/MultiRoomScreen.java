@@ -60,6 +60,11 @@ public class MultiRoomScreen extends Screen {
             if(this.selectedRow==0 && inputManager.isKeyDown(KeyEvent.VK_SPACE)){
                 checkDraw = true;
             }
+            if(this.selectedRow!=0 && inputManager.isKeyDown(KeyEvent.VK_SPACE)){
+                this.returnCode = 11;
+                this.isRunning = false;
+                soundManager.playSound(Sound.MENU_CLICK);
+            }
             if(checkDraw){
                 if(this.inputDelay.checkFinished() && this.selectionCooldown.checkFinished()){
                     if(inputManager.isKeyDown(KeyEvent.VK_LEFT)){
