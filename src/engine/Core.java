@@ -231,8 +231,8 @@ public final class Core {
 				LOGGER.info("Closing score screen.");
 				break;
 			case 9: //여기에 게임방 리스트
-				serverManager = new ServerManager(DifficultySetting, rooms);
 				currentScreen = new MultiRoomScreen(width, height, FPS);
+				serverManager = new ServerManager(DifficultySetting, rooms);
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Loading success multi room screen.");
 				break;
@@ -242,7 +242,6 @@ public final class Core {
 				returnCode = frame.setScreen(currentScreen);
 				break;
 			case 11: //클라이언트 생성
-				serverManager.joinGameRoom(room);
 				break;
 			default:
 				break;

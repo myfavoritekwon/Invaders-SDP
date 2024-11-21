@@ -4,6 +4,7 @@ import engine.Core;
 import engine.InputManager;
 import engine.ServerManager;
 import entity.Room;
+import screen.MultiRoomScreen;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -13,204 +14,116 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 
 public class Server {
-    protected InputManager inputManager;
-    private boolean state = true;
-    private String hostIp; // 기본값 설정
-    private int port = 9000;
+    private static Client client = new Client();
+    protected int returnCode;
+    private static String hostIp; // 기본값 설정
+    private static final int INFO_PORT = 9000;
+    private static int MAIN_PORT = 9001;
     private int Button; // 초기화
     private int moving = 0;
-    private List<Room> rooms = Collections.synchronizedList(new ArrayList<>());;
+    private List<Room> rooms = new ArrayList<>();
 
-
-    // 서버 역할: 클라이언트 연결 요청 수락
-    public void startServer() {
+    // 서버 정보 전송용 서버
+    public static void startInfoServer() {
         new Thread(() -> {
-            try (ServerSocket serverSocket = new ServerSocket(port)) {
-                System.out.println("Server running at " + hostIp + ":" + port);
-                rooms = ServerManager.getRooms();
-                this.port = this.port+1;
-                System.out.println(port + " " + rooms.size());
-                Socket socket;
+            try (ServerSocket infoServerSocket = new ServerSocket(INFO_PORT)) {
+                System.out.println("Info server running on port " + INFO_PORT);
+
                 while (true) {
-                    serverSocket.setSoTimeout(10000000);
-                    socket = serverSocket.accept();
-                    System.out.println("Client connected: " + socket.getInetAddress());
-                    System.out.println(port);
-                    // Peer 리스트 전송
-                    sendPeerList(socket);
-
-                    // Peer 리스트 수신
-                    List<Room> receivedList = receivePeerList(socket);
-
-                    // Peer 선택 및 연결
-                    Room selectedPeer = selectPeer(receivedList, 1);
-                    if (selectedPeer != null) {
-                        connectToPeer(selectedPeer.getIp(), selectedPeer.getPort());
-                    }
-
-                    // 키 정보 송수신 시작
-                    startKeyCommunication(socket);
-
+                    Socket socket = infoServerSocket.accept();
+                    System.out.println("Client connected to info server: " + socket.getInetAddress());
+                    // 서버 IP와 포트 정보 전송
+                    sendServerInfo(socket);
                 }
             } catch (IOException e) {
-                if(e.getMessage().equals("Address already in use")) {
-                    try (Socket socket = new Socket(hostIp, 9000)) {
-                        System.out.println("Connected to server: " + hostIp + ":" + port);
-                        // Peer 리스트 수신
-                        List<Room> receivedList = receivePeerList(socket);
-                        System.out.println(receivedList.size());
-                        // Peer 선택 및 연결
-//                        Room selectedPeer = selectPeer(receivedList, 1);//선택한 리스트 번호 입력
-//                        if (selectedPeer != null) {
-//                            connectToPeer(selectedPeer.getIp(), selectedPeer.getPort());
-//                        }
-                    } catch (IOException | ClassNotFoundException a) {
-                        a.printStackTrace();
-                    }
-                }
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
+                //e.printStackTrace();
+                System.out.println("go to client");
+                client.connectServer(hostIp);
             }
         }).start();
     }
 
-    // 서버 역할: 클라이언트 연결 요청 수락
-    public void startGameServer() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Server running at " + hostIp + ":" + port);
-            rooms = Core.getRooms();
-            this.port = this.port + 1;
-            System.out.println(port);
-            Socket socket;
-            while (true) {
-                serverSocket.setSoTimeout(30000);
-                socket = serverSocket.accept();
-                System.out.println("Client connected: " + socket.getInetAddress());
-                System.out.println(port);
+    // 클라이언트와의 통신용 서버
+    public static void startMainServer() {
+        new Thread(() -> {
+            try (ServerSocket mainServerSocket = new ServerSocket(MAIN_PORT)) {
+                System.out.println("Main server running on port " + MAIN_PORT);
 
-                // 키 정보 송수신 시작
-                startKeyCommunication(socket);
+                while (true) {
+                    mainServerSocket.setSoTimeout(30000);
+                    Socket clientSocket = mainServerSocket.accept();
+                    System.out.println("Client connected to main server: " + clientSocket.getInetAddress());
 
+                    // 클라이언트와 통신 처리
+                    handleClient(clientSocket);
+                }
+            } catch (IOException e) {
+                //e.printStackTrace();
+                MultiRoomScreen.getErrorCheck(1);
             }
+        }).start();
+    }
+
+    // 서버 IP와 포트 정보를 클라이언트로 전송
+    private static void sendServerInfo(Socket clientSocket) {
+        try (PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true)) {
+            String serverIp = hostIp;
+            writer.println(serverIp);
+            writer.println(MAIN_PORT); // 통신용 서버 포트
+            System.out.println("Sent server info: IP=" + serverIp + ", Port=" + MAIN_PORT);
         } catch (IOException e) {
-            e.printStackTrace();
-            rooms.removeLast();
+            System.out.println("Error sending server info: " + e.getMessage());
+            MultiRoomScreen.getErrorCheck(1);
         }
     }
 
-    // 클라이언트 역할: 서버에서 Peer 리스트를 받고 선택 후 연결
-    public void connectToServer(Room room) {
-        String serverIp = room.getIp();
-        int serverPort = room.getPort();
-        try (Socket socket = new Socket(serverIp, port)) {
-            System.out.println("Connected to server: " + serverIp + ":" + serverPort);
-
-            // Peer 리스트 수신
-            List<Room> receivedList = receivePeerList(socket);
-
-            // Peer 선택 및 연결
-            Room selectedPeer = selectPeer(receivedList, 1);//선택한 리스트 번호 입력
-            if (selectedPeer != null) {
-                connectToPeer(selectedPeer.getIp(), selectedPeer.getPort());
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Peer 리스트 전송
-    private void sendPeerList(Socket socket) throws IOException {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream())) {
-            outputStream.writeObject(rooms);
-            System.out.println("Sent Peer List: " + rooms);
-        }
-    }
-
-    // Peer 리스트 수신
-    private List<Room> receivePeerList(Socket socket) throws IOException, ClassNotFoundException {
-        try (ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream())) {
-            @SuppressWarnings("unchecked")
-            List<Room> receivedList = (List<Room>) inputStream.readObject();
-            System.out.println("Received Peer List: " + receivedList);
-            return receivedList;
-        }
-    }
-
-    // Peer 선택
-    private Room selectPeer(List<Room> peerList, int choice) {
-
-        if (choice < 1 || choice > peerList.size()) {
-            System.out.println("Invalid selection. Exiting...");
-            return null;
-        }
-
-        Room selectedPeer = peerList.get(choice - 1);
-        System.out.println("Selected Peer: " + selectedPeer);
-        return selectedPeer;
-    }
-
-    // Peer로 직접 연결 및 키 정보 송수신
-    public void connectToPeer(String peerIp, int peerPort) {
-        try (Socket socket = new Socket(peerIp, peerPort)) {
-            System.out.println("Connected to peer: " + peerIp + ":" + peerPort);
-
-            // 키 정보 송수신 시작
-            startKeyCommunication(socket);
-
-        } catch (IOException e) {
-            System.out.println("Failed to connect to peer: " + peerIp + ":" + peerPort);
-        }
-    }
-
-    // 키 정보 송수신
-    private void startKeyCommunication(Socket socket) {
+    //클라이언트 처리
+    private static void handleClient(Socket clientSocket) {
         try (
-                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-                //키 입력값 넣기
+                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+                BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in));
         ) {
+            writer.println("Welcome to the main server!");
+
             // 수신 스레드
             Thread receiveThread = new Thread(() -> {
                 try {
-                    String receivedKey;
-                    while ((receivedKey = reader.readLine()) != null) {
-                        System.out.println("Received key: " + receivedKey);
+                    String message;
+                    while ((message = reader.readLine()) != null) {
+                        System.out.println("Client: " + message);
                     }
                 } catch (IOException e) {
-                    System.out.println("Connection lost while receiving.");
+                    System.out.println("Connection lost: " + clientSocket.getInetAddress());
                 }
             });
 
             // 송신 스레드
             Thread sendThread = new Thread(() -> {
-                System.out.println("Type keys to send (type 'exit' to quit):");
-                while (true) {
-
-                    if (27 == Button) {
-                        System.out.println("Exiting communication.");
-                        break;
+                try {
+                    String message;
+                    while ((message = consoleReader.readLine()) != null) {
+                        writer.println(message);
+                        System.out.println("You: " + message);
                     }
-                    writer.println(Button);
-                    System.out.println("Sent key: " + Button);
+                } catch (IOException e) {
+                    System.out.println("Error sending message");
                 }
             });
 
-            // 스레드 실행
+            // 스레드 시작
             receiveThread.start();
             sendThread.start();
 
-            // 송수신 종료 시까지 대기
+            // 두 스레드가 모두 종료될 때까지 대기
             receiveThread.join();
             sendThread.join();
-
-        } catch (Exception e) {
-            System.out.println("Error during key communication: " + e.getMessage());
+        } catch (IOException | InterruptedException e) {
+            System.out.println("Connection lost: " + clientSocket.getInetAddress());
+            MultiRoomScreen.getErrorCheck(1);
         }
     }
 
@@ -242,7 +155,7 @@ public class Server {
     }
 
     public int getPort() {
-        return port;
+        return MAIN_PORT;
     }
 
 }
