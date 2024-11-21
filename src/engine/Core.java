@@ -1,6 +1,8 @@
 package engine;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -9,6 +11,7 @@ import java.util.logging.Logger;
 
 import engine.Socket.Client;
 import engine.Socket.Server;
+import entity.Room;
 import entity.Ship;
 import entity.Wallet;
 import screen.*;
@@ -51,6 +54,11 @@ public final class Core {
 	private static long startTime, endTime;
 
 	private static int DifficultySetting;// <- setting EASY(0), NORMAL(1), HARD(2);
+
+	private static final List<Room> rooms = new ArrayList<Room>();
+
+	private static Client client;
+	private static Server server;
 
 
 	/**
@@ -223,16 +231,19 @@ public final class Core {
 				LOGGER.info("Closing score screen.");
 				break;
 			case 9: //여기에 게임방 리스트
+
 				currentScreen = new MultiRoomScreen(width, height, FPS);
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Loading success multi room screen.");
 				break;
 			case 10: //방장 난이도 조절하는 칸 and 대기 30초
 				//Multi
-				System.out.println("멀티다이자시가");
-				Server server = new Server();
-				Client client = new Client();
-				server.connectSocket();//서버만 써져있음.
+				server = new Server();
+				server.setIp();
+				Room room = new Room(server.getHostIp(), server.getPort(), DifficultySetting, rooms.size());
+				rooms.add(room);
+				System.out.println(rooms.size());
+				server.startServer();//서버만 써져있음.
 				returnCode = frame.setScreen(currentScreen);
 			default:
 				break;
@@ -323,5 +334,9 @@ public final class Core {
 
 	public static int getLevelSetting(){
 		return DifficultySetting;
+	}
+
+	public static List<Room> getRooms(){
+		return rooms;
 	}
 }
