@@ -1953,12 +1953,11 @@ public final class DrawManager {
 		}
 	}
 
-	public void drawNewRoom(final Screen screen, boolean isSelected, int difficulty){
+	public void drawMatching(final Screen screen){
 		//새로 방 만드는 칸
-		String makeNewRoom = "New Room";
-		int NewRoomStringY = Math.round(screen.getHeight() * 0.15f);
-		backBufferGraphics.setColor(isSelected ? Color.GREEN : Color.WHITE);
-		drawCenteredBigString(screen, makeNewRoom, NewRoomStringY);
+		String makeNewRoom = "Matching...";
+		backBufferGraphics.setColor(Color.GREEN);
+		drawCenteredBigString(screen, makeNewRoom, screen.getHeight()/2);
 
 	}
 

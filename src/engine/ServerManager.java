@@ -1,5 +1,6 @@
 package engine;
 
+import engine.Socket.Client;
 import engine.Socket.Server;
 import entity.Room;
 
@@ -7,29 +8,33 @@ import java.util.List;
 
 
 public class ServerManager {
+    private Client client;
     private Server server;
     private int difficulty;
     private static List<Room> rooms;
+    private String hostIp;
 
     public ServerManager() {
     }
 
     public ServerManager(int difficulty, List<Room> rooms) {
+        this.client = new Client();
         this.server = new Server();
         this.difficulty = difficulty;
         this.rooms = rooms;
 
-        server.setIp();
-        server.startServer();
+        if(rooms.isEmpty())
+            server.setIp();
+        hostIp = server.getHostIp();
+        newRoom();
+        //서버 정보 뿌림
+        Server.startInfoServer();
+        //게임 서버
+        Server.startMainServer();
     }
 
     public void startGameServer(){
-        newRoom();
-        server.startGameServer();
-    }
-
-    public void joinGameRoom(Room room){
-        server.connectToServer(room);
+        client.connectServer(hostIp);
     }
 
     private void newRoom(){
@@ -40,5 +45,9 @@ public class ServerManager {
 
     public static List<Room> getRooms(){
         return rooms;
+    }
+
+    public static void deleteRoom(boolean check){
+        rooms.removeFirst();
     }
 }
