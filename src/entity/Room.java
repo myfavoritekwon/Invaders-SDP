@@ -7,14 +7,12 @@ public class Room implements Serializable {
     private final String ip;
     private final int port;
     private final int difficulty;
-    private final int location;
 
 
-    public Room(String ip, int port, int difficulty, int location) {
+    public Room(String ip, int port, int difficulty) {
         this.ip = ip;
         this.port = port;
         this.difficulty = difficulty;
-        this.location = location;
     }
 
     public String getIp() {
@@ -25,9 +23,5 @@ public class Room implements Serializable {
     }
     public int getDifficulty() {
         return difficulty;
-    }
-
-    public int getLocation() {
-        return location;
     }
 }

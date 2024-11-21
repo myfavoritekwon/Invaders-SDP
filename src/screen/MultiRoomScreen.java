@@ -24,7 +24,7 @@ public class MultiRoomScreen extends Screen {
 
     public MultiRoomScreen(final int width, final int height, final int fps) {
         super(width, height, fps);
-        rooms = Core.getRooms();
+        rooms = ServerManager.getRooms();
         this.difficultyLevel = 1;
         TOTAL_ROWS = 1+rooms.size();
 
@@ -63,6 +63,7 @@ public class MultiRoomScreen extends Screen {
                 checkDraw = true;
             }
             if(this.selectedRow!=0 && inputManager.isKeyDown(KeyEvent.VK_SPACE)){
+                Core.setRoom(selectedRow);
                 this.returnCode = 11;
                 this.isRunning = false;
                 soundManager.playSound(Sound.MENU_CLICK);

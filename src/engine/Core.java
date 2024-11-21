@@ -56,9 +56,9 @@ public final class Core {
 	private static int DifficultySetting;// <- setting EASY(0), NORMAL(1), HARD(2);
 
 	private static final List<Room> rooms = new ArrayList<Room>();
+	private static Room room;
 
-	private static Client client;
-	private static Server server;
+	private static ServerManager serverManager = new ServerManager();
 
 
 	/**
@@ -231,22 +231,19 @@ public final class Core {
 				LOGGER.info("Closing score screen.");
 				break;
 			case 9: //여기에 게임방 리스트
-				server = new Server();
-				server.setIp();
-				server.startServer();
+				serverManager = new ServerManager(DifficultySetting, rooms);
 				currentScreen = new MultiRoomScreen(width, height, FPS);
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Loading success multi room screen.");
 				break;
 			case 10: //방장 난이도 조절하는 칸 and 대기 30초
 				//Multi
-				Room room = new Room(server.getHostIp(), server.getPort(), DifficultySetting, rooms.size());
-				rooms.add(room);
-				System.out.println(rooms.size());
-				server.startGameServer();//서버만 써져있음.
+				serverManager.startGameServer();
 				returnCode = frame.setScreen(currentScreen);
+				break;
 			case 11: //클라이언트 생성
-				server.connectToServer();
+				serverManager.joinGameRoom(room);
+				break;
 			default:
 				break;
 			}
@@ -340,5 +337,9 @@ public final class Core {
 
 	public static List<Room> getRooms(){
 		return rooms;
+	}
+
+	public static void setRoom(int roomNB) {
+		room = rooms.get(roomNB);
 	}
 }
