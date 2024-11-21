@@ -232,6 +232,7 @@ public final class Core {
 				break;
 			case 9: //여기에 게임방 리스트
 				server = new Server();
+				server.setIp();
 				server.startServer();
 				currentScreen = new MultiRoomScreen(width, height, FPS);
 				returnCode = frame.setScreen(currentScreen);
@@ -239,11 +240,10 @@ public final class Core {
 				break;
 			case 10: //방장 난이도 조절하는 칸 and 대기 30초
 				//Multi
-				server.setIp();
 				Room room = new Room(server.getHostIp(), server.getPort(), DifficultySetting, rooms.size());
 				rooms.add(room);
 				System.out.println(rooms.size());
-				server.connectToServer();//서버만 써져있음.
+				server.startGameServer();//서버만 써져있음.
 				returnCode = frame.setScreen(currentScreen);
 			case 11: //클라이언트 생성
 				server.connectToServer();

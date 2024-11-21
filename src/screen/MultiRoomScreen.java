@@ -4,6 +4,7 @@ import engine.*;
 import entity.Room;
 
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class MultiRoomScreen extends Screen {
     private static int TOTAL_ROWS;
     private int difficultyLevel;
     private List<Room> rooms = new ArrayList<>();
+    private int Button;
 
     private final Cooldown selectionCooldown;
     protected int returnCode;

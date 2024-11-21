@@ -3,27 +3,28 @@ package engine.Socket;
 import engine.Core;
 import engine.InputManager;
 import entity.Room;
-import screen.Screen;
 
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
 public class Server {
+    protected InputManager inputManager;
     private boolean state = true;
     private String hostIp; // 기본값 설정
     private int port = 9000;
-    private int Button = 0; // 초기화
+    private int Button; // 초기화
     private int moving = 0;
-    private List<Room> rooms = new ArrayList<Room>();
-    protected InputManager inputManager;
-    private KeyEvent e;
+    private List<Room> rooms = Collections.synchronizedList(new ArrayList<>());;
 
 
     // 서버 역할: 클라이언트 연결 요청 수락
@@ -31,41 +32,98 @@ public class Server {
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(port)) {
                 System.out.println("Server running at " + hostIp + ":" + port);
-                Socket socket = null;
+                rooms = Core.getRooms();
+                this.port = this.port+1;
+                System.out.println(port);
+                Socket socket;
                 while (true) {
-                    serverSocket.setSoTimeout(30000);
+                    serverSocket.setSoTimeout(10000000);
                     socket = serverSocket.accept();
                     System.out.println("Client connected: " + socket.getInetAddress());
-
+                    System.out.println(port);
                     // Peer 리스트 전송
                     sendPeerList(socket);
+
+                    // Peer 리스트 수신
+                    List<Room> receivedList = receivePeerList(socket);
+
+                    // Peer 선택 및 연결
+                    Room selectedPeer = selectPeer(receivedList, 1);
+                    if (selectedPeer != null) {
+                        connectToPeer(selectedPeer.getIp(), selectedPeer.getPort());
+                    }
 
                     // 키 정보 송수신 시작
                     startKeyCommunication(socket);
 
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                if(e.getMessage().equals("Address already in use")) {
+                    try (Socket socket = new Socket(hostIp, port)) {
+                        System.out.println("Connected to server: " + hostIp + ":" + port);
+                        // Peer 리스트 수신
+                        List<Room> receivedList = receivePeerList(socket);
+
+                        // Peer 선택 및 연결
+                        Room selectedPeer = selectPeer(receivedList, 1);//선택한 리스트 번호 입력
+                        if (selectedPeer != null) {
+                            connectToPeer(selectedPeer.getIp(), selectedPeer.getPort());
+                        }
+                    } catch (IOException | ClassNotFoundException a) {
+                        a.printStackTrace();
+                    }
+                }
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             }
         }).start();
+    }
+
+    // 서버 역할: 클라이언트 연결 요청 수락
+    public void startGameServer() {
+            try (ServerSocket serverSocket = new ServerSocket(port)) {
+                System.out.println("Server running at " + hostIp + ":" + port);
+                rooms = Core.getRooms();
+                this.port = this.port+1;
+                System.out.println(port);
+                Socket socket;
+                while (true) {
+                    serverSocket.setSoTimeout(30000);
+                    socket = serverSocket.accept();
+                    System.out.println("Client connected: " + socket.getInetAddress());
+                    System.out.println(port);
+
+                    // Peer 리스트 전송
+                    sendPeerList(socket);
+
+
+                    receivePeerList(socket);
+
+                    // 키 정보 송수신 시작
+                    startKeyCommunication(socket);
+
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                rooms.removeLast();
+            }
     }
 
     // 클라이언트 역할: 서버에서 Peer 리스트를 받고 선택 후 연결
     public void connectToServer() {
         String serverIp = hostIp;
         int serverPort = port;
-        try (Socket socket = new Socket(serverIp, serverPort)) {
+        try (Socket socket = new Socket(serverIp, port)) {
             System.out.println("Connected to server: " + serverIp + ":" + serverPort);
 
             // Peer 리스트 수신
             List<Room> receivedList = receivePeerList(socket);
 
             // Peer 선택 및 연결
-            Room selectedPeer = selectPeer(receivedList, 0);//선택한 리스트 번호 입력
+            Room selectedPeer = selectPeer(receivedList, 1);//선택한 리스트 번호 입력
             if (selectedPeer != null) {
                 connectToPeer(selectedPeer.getIp(), selectedPeer.getPort());
             }
-
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -138,14 +196,13 @@ public class Server {
             Thread sendThread = new Thread(() -> {
                 System.out.println("Type keys to send (type 'exit' to quit):");
                 while (true) {
-                    //키 입력값 받기
-                    int keyInput = e.getKeyCode();
-                    if (27 == keyInput) {
+
+                    if (27 == Button) {
                         System.out.println("Exiting communication.");
                         break;
                     }
-                    writer.println(keyInput);
-                    System.out.println("Sent key: " + keyInput);
+                    writer.println(Button);
+                    System.out.println("Sent key: " + Button);
                 }
             });
 
@@ -192,4 +249,5 @@ public class Server {
     public int getPort() {
         return port;
     }
+
 }

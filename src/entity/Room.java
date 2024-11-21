@@ -1,6 +1,9 @@
 package entity;
 
-public class Room {
+import java.io.Serializable;
+
+public class Room implements Serializable {
+    private static final long serialVersionUID = 1L; // 직렬화 버전 관리용 ID
     private final String ip;
     private final int port;
     private final int difficulty;
