@@ -2,6 +2,7 @@ package engine.Socket;
 
 import engine.Core;
 import engine.InputManager;
+import engine.ServerManager;
 import entity.Room;
 
 import java.awt.event.KeyAdapter;
@@ -32,9 +33,9 @@ public class Server {
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(port)) {
                 System.out.println("Server running at " + hostIp + ":" + port);
-                rooms = Core.getRooms();
+                rooms = ServerManager.getRooms();
                 this.port = this.port+1;
-                System.out.println(port);
+                System.out.println(port + " " + rooms.size());
                 Socket socket;
                 while (true) {
                     serverSocket.setSoTimeout(10000000);
@@ -59,16 +60,16 @@ public class Server {
                 }
             } catch (IOException e) {
                 if(e.getMessage().equals("Address already in use")) {
-                    try (Socket socket = new Socket(hostIp, port)) {
+                    try (Socket socket = new Socket(hostIp, 9000)) {
                         System.out.println("Connected to server: " + hostIp + ":" + port);
                         // Peer 리스트 수신
                         List<Room> receivedList = receivePeerList(socket);
-
+                        System.out.println(receivedList.size());
                         // Peer 선택 및 연결
-                        Room selectedPeer = selectPeer(receivedList, 1);//선택한 리스트 번호 입력
-                        if (selectedPeer != null) {
-                            connectToPeer(selectedPeer.getIp(), selectedPeer.getPort());
-                        }
+//                        Room selectedPeer = selectPeer(receivedList, 1);//선택한 리스트 번호 입력
+//                        if (selectedPeer != null) {
+//                            connectToPeer(selectedPeer.getIp(), selectedPeer.getPort());
+//                        }
                     } catch (IOException | ClassNotFoundException a) {
                         a.printStackTrace();
                     }
@@ -81,38 +82,32 @@ public class Server {
 
     // 서버 역할: 클라이언트 연결 요청 수락
     public void startGameServer() {
-            try (ServerSocket serverSocket = new ServerSocket(port)) {
-                System.out.println("Server running at " + hostIp + ":" + port);
-                rooms = Core.getRooms();
-                this.port = this.port+1;
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Server running at " + hostIp + ":" + port);
+            rooms = Core.getRooms();
+            this.port = this.port + 1;
+            System.out.println(port);
+            Socket socket;
+            while (true) {
+                serverSocket.setSoTimeout(30000);
+                socket = serverSocket.accept();
+                System.out.println("Client connected: " + socket.getInetAddress());
                 System.out.println(port);
-                Socket socket;
-                while (true) {
-                    serverSocket.setSoTimeout(30000);
-                    socket = serverSocket.accept();
-                    System.out.println("Client connected: " + socket.getInetAddress());
-                    System.out.println(port);
 
-                    // Peer 리스트 전송
-                    sendPeerList(socket);
+                // 키 정보 송수신 시작
+                startKeyCommunication(socket);
 
-
-                    receivePeerList(socket);
-
-                    // 키 정보 송수신 시작
-                    startKeyCommunication(socket);
-
-                }
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-                rooms.removeLast();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+            rooms.removeLast();
+        }
     }
 
     // 클라이언트 역할: 서버에서 Peer 리스트를 받고 선택 후 연결
-    public void connectToServer() {
-        String serverIp = hostIp;
-        int serverPort = port;
+    public void connectToServer(Room room) {
+        String serverIp = room.getIp();
+        int serverPort = room.getPort();
         try (Socket socket = new Socket(serverIp, port)) {
             System.out.println("Connected to server: " + serverIp + ":" + serverPort);
 
