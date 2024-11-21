@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.swing.*;
 
 import entity.ShipFactory;
 import entity.Wallet;
@@ -1950,5 +1951,20 @@ public final class DrawManager {
 			drawCenteredBigString(screen, "Already max level", screen.getHeight()/2);
 
 		}
+	}
+
+	public void drawNewRoom(final Screen screen, boolean isSelected, int difficulty){
+		//새로 방 만드는 칸
+		String makeNewRoom = "New Room";
+		int NewRoomStringY = Math.round(screen.getHeight() * 0.15f);
+		backBufferGraphics.setColor(isSelected ? Color.GREEN : Color.WHITE);
+		drawCenteredBigString(screen, makeNewRoom, NewRoomStringY);
+
+	}
+
+	public void drawSelectRoom(final Screen screen, boolean isSelected, String string, int y, int size){
+		backBufferGraphics.setColor(isSelected ? Color.GREEN : Color.WHITE);
+		int height = Math.round(screen.getHeight() * 0.15f)+100+y*100;
+		drawCenteredBigString(screen, string, height);
 	}
 }
