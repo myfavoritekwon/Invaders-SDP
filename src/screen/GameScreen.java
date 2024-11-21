@@ -571,7 +571,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				drawManager.drawRotatedEntity(blocker, blocker.getPositionX(), blocker.getPositionY(), blocker.getAngle());
 			}
 		}
-
 		drawManager.completeDrawing(this);
 	}
 

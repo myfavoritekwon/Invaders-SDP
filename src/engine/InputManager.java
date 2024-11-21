@@ -57,6 +57,7 @@ public final class InputManager implements KeyListener {
 	public void keyPressed(final KeyEvent key) {
 		if (key.getKeyCode() >= 0 && key.getKeyCode() < NUM_KEYS)
 			keys[key.getKeyCode()] = true;
+
 	}
 
 	/**
