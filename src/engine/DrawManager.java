@@ -1962,9 +1962,36 @@ public final class DrawManager {
 
 	}
 
-	public void drawSelectRoom(final Screen screen, boolean isSelected, String string, int y, int size){
+	public void drawSelectRoom(final Screen screen, boolean isSelected, int difficulty, int y){
 		backBufferGraphics.setColor(isSelected ? Color.GREEN : Color.WHITE);
 		int height = Math.round(screen.getHeight() * 0.15f)+100+y*100;
-		drawCenteredBigString(screen, string, height);
+		if(difficulty == 0){
+			drawCenteredBigString(screen, "Player1  "+"EASY", height);
+		}else if(difficulty == 1){
+			drawCenteredBigString(screen, "Player1  "+"NORMAL", height);
+		}else{
+			drawCenteredBigString(screen, "Player1  "+"HARD", height);
+		}
+
+	}
+
+	public void drawSelectDifficulty(final Screen screen, int difficultyLevel){
+		String spaceString = "  ";
+		String levelEasyString = "Easy";
+		String levelNormalString = "Normal";
+		String levelHardString = "Hard";
+
+		if (difficultyLevel==0) backBufferGraphics.setColor(Color.GREEN);
+		else backBufferGraphics.setColor(Color.WHITE);
+		drawCenteredRegularString(screen, levelEasyString + spaceString.repeat(60), (int) (screen.getHeight() * 0.15f)+50);
+
+		if (difficultyLevel==1) backBufferGraphics.setColor(Color.GREEN);
+		else backBufferGraphics.setColor(Color.WHITE);
+		drawCenteredRegularString(screen, levelNormalString, (int) (screen.getHeight() * 0.15f)+50);
+
+		if (difficultyLevel==2) backBufferGraphics.setColor(Color.GREEN);
+		else backBufferGraphics.setColor(Color.WHITE);
+		drawCenteredRegularString(screen, spaceString.repeat(60) + levelHardString, (int) (screen.getHeight() * 0.15f)+50);
+
 	}
 }
