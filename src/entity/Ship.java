@@ -183,6 +183,7 @@ public abstract class Ship extends Entity {
 
 			this.shootingCooldown.reset();
 			this.lastShootTime = System.currentTimeMillis();
+
 			//각속도 계산
 			int Xspeed = (int)Math.round(Math.cos(angle_shoot) * this.getBulletSpeed());
 			int Yspeed = (int)Math.round(Math.sin(angle_shoot) * this.getBulletSpeed());
@@ -215,6 +216,7 @@ public abstract class Ship extends Entity {
 
 		return false;
 	}
+
 	// 좌측키 누르면 각도값 감소
 	public void moveAngleToLeft(){
 		if(angle >= 20)
@@ -248,6 +250,7 @@ public abstract class Ship extends Entity {
 	public final boolean isDestroyed() {
 		return !this.destructionCooldown.checkFinished();
 	}
+
 	// 각도값 출력
 	public final int getAngle(){return angle;}
 	/**
