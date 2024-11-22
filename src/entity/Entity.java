@@ -3,6 +3,7 @@ package entity;
 import java.awt.Color;
 
 import engine.DrawManager.SpriteType;
+import entity.Ship;
 
 /**
  * Implements a generic game entity.
@@ -131,4 +132,5 @@ public class Entity {
 	public final int getHeight() {
 		return this.height;
 	}
+
 }

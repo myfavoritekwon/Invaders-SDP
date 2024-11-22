@@ -94,6 +94,8 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	/** Number of not destroyed ships. */
 	private int shipCount;
 
+	private List<EnemyShip> listEnemies = new ArrayList<>();
+
 	private int point = 0;
 
 	private int distroyedship = 0;
@@ -155,13 +157,16 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 				else
 					spriteType = SpriteType.EnemyShipA1;
 
-				column.add(new EnemyShip((SEPARATION_DISTANCE 
+				EnemyShip insert = new EnemyShip((SEPARATION_DISTANCE
 						* this.enemyShips.indexOf(column))
-								+ positionX, (SEPARATION_DISTANCE * i)
-								+ positionY, spriteType, gameState));
+						+ positionX, (SEPARATION_DISTANCE * i)
+						+ positionY, spriteType, gameState);
+				column.add(insert);
+				listEnemies.add(insert);
 				this.shipCount++;
 			}
 		}
+
 
 		this.shipWidth = this.enemyShips.get(0).get(0).getWidth();
 		this.shipHeight = this.enemyShips.get(0).get(0).getHeight();
@@ -536,4 +541,6 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	public int getDistroyedship(){return distroyedship; }
 
 	public List<List<EnemyShip>> getEnemyShips() {return enemyShips; }
+	public List<EnemyShip> getShooters() {return shooters; }
+	public List<EnemyShip> getListEnemies(){return listEnemies;}
 }

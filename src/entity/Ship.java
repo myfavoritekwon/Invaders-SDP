@@ -116,6 +116,10 @@ public abstract class Ship extends Entity {
 	public final void moveRight() {
 		moveRight(0.0f);
 	}
+	public final void moveRight(int move){this.positionX += move;}
+	public final void moveLeft(int move){this.positionX -= move;}
+	public final void moveUp(int move){this.positionY -= move;}
+	public final void moveDown(int move){this.positionY += move;}
 
 	/**
 	 * Moves the ship speed units left, or until the left screen border is
@@ -123,6 +127,12 @@ public abstract class Ship extends Entity {
 	 */
 	public final void moveLeft() {
 		moveLeft(0.0f);
+	}
+	public final void moveDown() {
+		moveDown(0.0f);
+	}
+	public final void moveUp() {
+		moveUp(0.0f);
 	}
 
 	public final void moveRight(float balance) {
@@ -142,6 +152,28 @@ public abstract class Ship extends Entity {
 			this.positionX -= this.getSpeed() / 2;
 		} else {
 			this.positionX -= this.getSpeed();
+		}
+		if (soundCooldown.checkFinished()) {
+			soundManager.playSound(Sound.PLAYER_MOVE, balance);
+			soundCooldown.reset();
+		}
+	}
+	public final void moveDown(float balance) {
+		if(threadWeb){
+			this.positionY += this.getSpeed() / 2;
+		} else {
+			this.positionY += this.getSpeed();
+		}
+		if (soundCooldown.checkFinished()) {
+			soundManager.playSound(Sound.PLAYER_MOVE, balance);
+			soundCooldown.reset();
+		}
+	}
+	public final void moveUp(float balance) {
+		if(threadWeb){
+			this.positionY -= this.getSpeed() / 2;
+		} else {
+			this.positionY -= this.getSpeed();
 		}
 		if (soundCooldown.checkFinished()) {
 			soundManager.playSound(Sound.PLAYER_MOVE, balance);
