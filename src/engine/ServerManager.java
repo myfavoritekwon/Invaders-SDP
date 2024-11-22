@@ -17,9 +17,9 @@ public class ServerManager {
     public ServerManager() {
     }
 
-    public ServerManager(int difficulty, List<Room> rooms) {
-        this.client = new Client();
-        this.server = new Server();
+    public ServerManager(int difficulty, List<Room> rooms, Server server, Client client) {
+        this.client = client;
+        this.server = server;
         this.difficulty = difficulty;
         this.rooms = rooms;
 
