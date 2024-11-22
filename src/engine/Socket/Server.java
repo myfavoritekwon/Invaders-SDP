@@ -1,47 +1,49 @@
 package engine.Socket;
 
-import engine.Core;
-import engine.InputManager;
-import engine.ServerManager;
 import entity.Room;
+import screen.GameScreen;
 import screen.MultiRoomScreen;
 
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
-
+// !!!!!!!!!아이피 고정으로 바꾸기!!!!!!!!!!
 public class Server {
     private static Client client = new Client();
-    protected int returnCode;
-    private static String hostIp; // 기본값 설정
+    private static String hostIp; //
     private static final int INFO_PORT = 9000;
     private static int MAIN_PORT = 9001;
-    private int Button; // 초기화
-    private int moving = 0;
-    private List<Room> rooms = new ArrayList<>();
+    private static int sleepTime = 250;
+    private static char Button; // 초기화
+    private static boolean checkConnect = false;
+    private static int returnCode;
+    private static ServerSocket infoServerSocket = null;
 
     // 서버 정보 전송용 서버
     public static void startInfoServer() {
         new Thread(() -> {
-            try (ServerSocket infoServerSocket = new ServerSocket(INFO_PORT)) {
+            try{
+                infoServerSocket = new ServerSocket(INFO_PORT);
                 System.out.println("Info server running on port " + INFO_PORT);
-
+                GameScreen.setSORC(true);
                 while (true) {
-                    Socket socket = infoServerSocket.accept();
-                    System.out.println("Client connected to info server: " + socket.getInetAddress());
-                    // 서버 IP와 포트 정보 전송
-                    sendServerInfo(socket);
+                        Socket socket = infoServerSocket.accept();
+                        System.out.println("Client connected to info server: " + socket.getInetAddress());
+                        // 서버 IP와 포트 정보 전송
+                        sendServerInfo(socket);
                 }
             } catch (IOException e) {
-                //e.printStackTrace();
-                System.out.println("go to client");
-                client.connectServer(hostIp);
+                System.out.println("An exception occurred: " + e.getMessage());
+                if (infoServerSocket != null && !infoServerSocket.isClosed()) {
+                    try {
+                        infoServerSocket.close(); // catch 블록에서 서버 소켓을 닫기
+                    } catch (IOException ex) {
+                        System.out.println("Failed to close server socket: " + ex.getMessage());
+                    }
+                }
             }
         }).start();
     }
@@ -51,18 +53,29 @@ public class Server {
         new Thread(() -> {
             try (ServerSocket mainServerSocket = new ServerSocket(MAIN_PORT)) {
                 System.out.println("Main server running on port " + MAIN_PORT);
-
                 while (true) {
-                    mainServerSocket.setSoTimeout(30000);
-                    Socket clientSocket = mainServerSocket.accept();
-                    System.out.println("Client connected to main server: " + clientSocket.getInetAddress());
+                    try {
+                        mainServerSocket.setSoTimeout(3000);
+                        Socket clientSocket = mainServerSocket.accept();
+                        System.out.println("Client connected to main server: " + clientSocket.getInetAddress());
+                        checkConnect = true;
+                        // 클라이언트와 통신 처리
+                        handleClient(clientSocket);
+                    } catch (IOException e) {
+                        if (e.getMessage().equals("Accept timed out")) {
+                            break;
+                        }
+                    }
 
-                    // 클라이언트와 통신 처리
-                    handleClient(clientSocket);
                 }
-            } catch (IOException e) {
-                //e.printStackTrace();
+                System.out.println("Main server stopped");
+                mainServerSocket.close();
                 MultiRoomScreen.getErrorCheck(1);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("go to client");
+                MultiRoomScreen.getErrorCheck(2);
+                client.connectServer(hostIp);
             }
         }).start();
     }
@@ -87,6 +100,9 @@ public class Server {
                 PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
                 BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in));
         ) {
+            int t = Integer.parseInt(reader.readLine());
+            System.out.println(t);
+            returnCode = t;
             writer.println("Welcome to the main server!");
 
             // 수신 스레드
@@ -95,6 +111,11 @@ public class Server {
                     String message;
                     while ((message = reader.readLine()) != null) {
                         System.out.println("Client: " + message);
+                        try {
+                            Thread.sleep(sleepTime);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 } catch (IOException e) {
                     System.out.println("Connection lost: " + clientSocket.getInetAddress());
@@ -103,14 +124,15 @@ public class Server {
 
             // 송신 스레드
             Thread sendThread = new Thread(() -> {
-                try {
-                    String message;
-                    while ((message = consoleReader.readLine()) != null) {
-                        writer.println(message);
-                        System.out.println("You: " + message);
+                String message;
+                while ((message = String.valueOf(Button)) != null) {
+                    writer.println(message);
+                    System.out.println("You: " + message);
+                    try {
+                        Thread.sleep(sleepTime);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
-                } catch (IOException e) {
-                    System.out.println("Error sending message");
                 }
             });
 
@@ -121,6 +143,7 @@ public class Server {
             // 두 스레드가 모두 종료될 때까지 대기
             receiveThread.join();
             sendThread.join();
+
         } catch (IOException | InterruptedException e) {
             System.out.println("Connection lost: " + clientSocket.getInetAddress());
             MultiRoomScreen.getErrorCheck(1);
@@ -146,8 +169,8 @@ public class Server {
         }
     }
 
-    public void getButton(int button) {
-        this.Button = button;
+    public void setButton(char button) {
+        Button = button;
     }
 
     public String getHostIp() {
@@ -158,4 +181,11 @@ public class Server {
         return MAIN_PORT;
     }
 
+    public static boolean checkConnect() {
+        return checkConnect;
+    }
+
+    public static int getReturnCode() {
+        return returnCode;
+    }
 }

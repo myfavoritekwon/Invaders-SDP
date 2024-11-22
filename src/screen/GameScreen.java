@@ -17,6 +17,7 @@ import java.util.TimerTask;
 
 
 import engine.*;
+import engine.Socket.Client;
 import engine.Socket.Server;
 import entity.*;
 
@@ -136,6 +137,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private GameState gameState;
 
 	private Server server;
+	private Client client;
+	private static boolean SORC;
+	private static char Button;
+
 
 	private int hitBullets;
 
@@ -205,7 +210,45 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		this.wallet = wallet;
 
-		this.server = new Server();
+		this.server = Core.getServer();
+		this.client = Core.getClient();
+//서버 열렸을 때만 동작 하게 조건문 넣기
+		KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+		manager.addKeyEventDispatcher(new KeyEventDispatcher() {
+			@Override
+			public boolean dispatchKeyEvent(KeyEvent e) {
+				if (e.getID() == KeyEvent.KEY_PRESSED) {
+					Button = KeyMapping(e);
+					if(SORC) server.setButton(Button);
+					else client.setButton(Button);
+				} else if (e.getID() == KeyEvent.KEY_RELEASED) {
+					System.out.println("Key Released: " + Button);
+					Button= '\0'; // 키가 떼어지면 초기화
+					if(SORC) server.setButton(Button);
+					else client.setButton(Button);
+				}
+				return false; // 이벤트를 다른 리스너에게도 전달
+			}
+		});
+	}
+
+	private static char KeyMapping(KeyEvent e) {
+		switch (e.getKeyCode()) {
+			case KeyEvent.VK_UP:
+				return 'U'; // 위 방향키를 'U'로 매핑
+			case KeyEvent.VK_DOWN:
+				return 'D'; // 아래 방향키를 'D'로 매핑
+			case KeyEvent.VK_LEFT:
+				return 'L'; // 왼쪽 방향키를 'L'로 매핑
+			case KeyEvent.VK_RIGHT:
+				return 'R'; // 오른쪽 방향키를 'R'로 매핑
+			case KeyEvent.VK_SPACE:
+				return 'S'; // 스페이스바 'S'로 매핑
+			case KeyEvent.VK_ESCAPE:
+				return 'E'; // ESC 키를 'E'로 매핑
+			default:
+				return e.getKeyChar(); // 다른 키는 원래 문자 그대로 반환
+		}
 	}
 
 	/**
@@ -401,7 +444,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				boolean moveLeft = false;
 				boolean moveRight;
 				boolean moveLeft;
-				server.getButton(playerNumber); // 여기 static 고쳐야함 생성자 받으면 될듯
 				switch (playerNumber) {
 					case 0:
 						moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
@@ -926,6 +968,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		block.removeAll(removableBlocks);
 		this.bullets.removeAll(recyclable);
 		BulletPool.recycle(recyclable);
+	}
+
+	public static void setSORC(boolean sorc){
+		SORC = sorc;
 	}
 
 	/**

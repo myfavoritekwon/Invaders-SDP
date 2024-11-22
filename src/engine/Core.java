@@ -59,6 +59,8 @@ public final class Core {
 	private static Room room;
 
 	private static ServerManager serverManager = new ServerManager();
+	private static Server server;
+	private static Client client;
 
 
 	/**
@@ -230,18 +232,59 @@ public final class Core {
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Closing score screen.");
 				break;
-			case 9: //여기에 게임방 리스트
-				currentScreen = new MultiRoomScreen(width, height, FPS);
-				serverManager = new ServerManager(DifficultySetting, rooms);
+			case 9: //Connect Server-Client
+				client = new Client();
+				server = new Server();
+				serverManager = new ServerManager(DifficultySetting, rooms, server, client);
+				currentScreen = new MultiRoomScreen(width, height, FPS, server, client);
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Loading success multi room screen.");
 				break;
-			case 10: //방장 난이도 조절하는 칸 and 대기 30초
+			case 10: //Draw game multi
 				//Multi
-				serverManager.startGameServer();
+				// Game & score.
+				do {
+					// One extra live every few levels.
+					startTime = System.currentTimeMillis();
+					boolean bonusLife = gameState.getLevel()
+							% EXTRA_LIFE_FRECUENCY == 0
+							&& gameState.getLivesRemaining() < MAX_LIVES;
+					LOGGER.info("difficulty is " + 1);
+					//add variation
+					gameSetting = gameSetting.LevelSettings(gameSetting.getFormationWidth(),
+							gameSetting.getFormationHeight(),
+							gameSetting.getBaseSpeed(),
+							gameSetting.getShootingFrecuency(),
+							gameState.getLevel(),1);
+
+					currentScreen = new GameScreen(gameState,
+							gameSetting,
+							bonusLife, width, height, FPS, wallet);
+					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+
+							+ " game screen at " + FPS + " fps.");
+					frame.setScreen(currentScreen);
+					LOGGER.info("Closing game screen.");
+
+					gameState = ((GameScreen) currentScreen).getGameState();
+
+					gameState = new GameState(gameState, gameState.getLevel() + 1);
+					endTime = System.currentTimeMillis();
+					achievementManager.updatePlaying((int) (endTime - startTime) / 1000, MAX_LIVES, gameState.getLivesRemaining(), gameState.getLevel()-1);
+				} while (gameState.getLivesRemaining() > 0);
+				achievementManager.updatePlayed(gameState.getAccuracy(), gameState.getScore(), GameSettingScreen.getMultiPlay());
+				achievementManager.updateAllAchievements();
+				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+						+ " score screen at " + FPS + " fps, with a score of "
+						+ gameState.getScore() + ", "
+						+ gameState.getShipType().toString() + " ship, "
+						+ gameState.getLivesRemaining() + " lives remaining, "
+						+ gameState.getBulletsShot() + " bullets shot and "
+						+ gameState.getShipsDestroyed() + " ships destroyed.");
+				currentScreen = new ScoreScreen(GameSettingScreen.getName(0), width, height, FPS, gameState, wallet, achievementManager, false);
+
 				returnCode = frame.setScreen(currentScreen);
-				break;
-			case 11: //클라이언트 생성
+				LOGGER.info("Closing score screen.");
 				break;
 			default:
 				break;
@@ -340,5 +383,13 @@ public final class Core {
 
 	public static void setRoom(int roomNB) {
 		room = rooms.get(roomNB);
+	}
+
+	public static Server getServer() {
+		return server;
+	}
+
+	public static Client getClient() {
+		return client;
 	}
 }
