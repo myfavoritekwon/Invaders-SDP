@@ -259,7 +259,7 @@ public final class Core {
 
 					currentScreen = new GameScreen(gameState,
 							gameSetting,
-							bonusLife, width, height, FPS, wallet);
+							bonusLife, width, height, FPS, wallet, server, client);
 					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
 
 							+ " game screen at " + FPS + " fps.");
