@@ -495,8 +495,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				// boolean 초기값 설정
 				boolean moveRight = false;
 				boolean moveLeft = false;
-				boolean moveRight;
-				boolean moveLeft;
 				switch (playerNumber) {
 					case 0:
 						moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
@@ -631,9 +629,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawGameTitle(this);
 		// 1인 모드 총알 경로
 		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX() , this.ship.getAngle());
-
-
-		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX());
 		//draw ship
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(), this.ship.getPositionY());
 		if(P2PCheck)
