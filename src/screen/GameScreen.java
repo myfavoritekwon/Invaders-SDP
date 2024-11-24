@@ -3,16 +3,10 @@ package screen;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
-import java.util.ArrayList;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 import engine.*;
@@ -134,6 +128,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private GameState gameState;
 
 	private int hitBullets;
+
+
 
     /**
 	 * Constructor, establishes the properties of the screen.
@@ -276,7 +272,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			} while (overlapping);
 			block.add(newBlock);
 		}
-
+		/** initialinze images*/
+		DrawManager.initializeItemImages();
 
 
 		// Appears each 10-30 seconds.
@@ -312,6 +309,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 	}
 
+
 	/**
 	 * Starts the action.
 	 * 
@@ -332,6 +330,23 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 */
 	protected final void update() {
 		super.update();
+		if (inputManager.isKeyDown(KeyEvent.VK_O)) {
+			itemManager.swapItems();
+		}
+
+
+		// I 키로 첫 번째 아이템 실행
+		if (inputManager.isKeyDown(KeyEvent.VK_I)) {
+			ItemManager.ItemType usedItem = itemManager.useStoredItem();
+			if (usedItem != null) {
+				Entry<Integer, Integer> result = itemManager.useItem(usedItem);
+				if (result != null) {
+					this.score += result.getKey();
+					this.shipsDestroyed += result.getValue();
+				}
+			}
+		}
+
 		if (this.inputDelay.checkFinished() && !this.levelFinished) {
 			boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
 			boolean player2Attacking = inputManager.isKeyDown(KeyEvent.VK_SHIFT);
@@ -496,6 +511,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			this.alertMessage = "";
 			this.isRunning = false;
 		}
+
 	}
 
 	/**
@@ -508,6 +524,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX());
 
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(), this.ship.getPositionY());
+
+		drawManager.drawItemHud(this, this.height, itemManager.getStoredItems());
+
+
 
 		//draw Spider Web
 		for (int i = 0; i < web.size(); i++) {
@@ -854,6 +874,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					isExecuted = true;
 				}
 
+				// 아이템 박스 충돌 로직 수정
 				Iterator<ItemBox> itemBoxIterator = this.itemBoxes.iterator();
 				while (itemBoxIterator.hasNext()) {
 					ItemBox itemBox = itemBoxIterator.next();
@@ -861,11 +882,13 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						this.hitBullets++;
 						itemBoxIterator.remove();
 						recyclable.add(bullet);
-						Entry<Integer, Integer> itemResult = this.itemManager.useItem();
 
-						if (itemResult != null) {
-							this.score += itemResult.getKey();
-							this.shipsDestroyed += itemResult.getValue();
+						ItemManager.ItemType itemType = itemManager.selectItemType();
+						boolean added = itemManager.addItem(itemType);
+						if (added) {
+							logger.info(itemType + " added to storage.");
+						} else {
+							logger.info("Storage is full. Item not added.");
 						}
 					}
 				}
@@ -901,7 +924,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Checks if two entities are colliding.
-	 * 
+	 *
 	 * @param a
 	 *            First entity, the bullet.
 	 * @param b
@@ -926,7 +949,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Returns a GameState object representing the status of the game.
-	 * 
+	 *
 	 * @return Current game state.
 	 */
 	public final GameState getGameState() {

@@ -41,6 +41,8 @@ public class ItemManager {
     /** Judging that you ate laser items */
     private boolean LasershootActive = false;
 
+    private final List<ItemType> storedItems = new ArrayList<>();
+
 
     /** Random generator. */
     private final Random rand;
@@ -58,6 +60,10 @@ public class ItemManager {
     private Cooldown ghost_cooldown = Core.getCooldown(0);
     /** Cooldown variable for Time-stop */
     private Cooldown timeStop_cooldown = Core.getCooldown(0);
+    /** Cooldown variable for use item */
+    private final Cooldown itemUseCooldown = Core.getCooldown(500);
+    /** Cooldown variable for swap item */
+    private final Cooldown swapCooldown = Core.getCooldown(500);
 
 
     /** Check if the number of shot is max, (maximum 3). */
@@ -66,6 +72,51 @@ public class ItemManager {
     private int shotNum;
     /** Sound balance for each player*/
     private float balance;
+
+
+    public boolean addItem(ItemType item) {
+        if (storedItems.size() < 2) {
+            storedItems.add(item);
+            System.out.println("아이템 추가됨: " + storedItems);
+            return true;
+        }
+        System.out.println("아이템 추가 실패: 저장 공간이 가득 찼습니다.");
+        return false;
+    }
+
+    public ItemType useStoredItem() {
+        if (!itemUseCooldown.checkFinished()) {
+            return null;
+        }
+
+        if (!storedItems.isEmpty()) {
+            itemUseCooldown.reset();
+            ItemType usedItem = storedItems.remove(0);
+            return usedItem;
+        }
+
+        System.out.println("저장된 아이템이 없습니다.");
+        return null;
+    }
+
+    public void swapItems() {
+        if (!swapCooldown.checkFinished()) {
+            System.out.println("아이템 스왑 대기 중입니다.");
+            return;
+        }
+
+        if (storedItems.size() == 2) {
+            Collections.swap(storedItems, 0, 1);
+            swapCooldown.reset();
+            System.out.println("아이템이 스왑되었습니다: " + storedItems);
+        } else {
+            System.out.println("스왑할 아이템이 충분하지 않습니다.");
+        }
+    }
+
+    public List<ItemType> getStoredItems() {
+        return storedItems;
+    }
 
     /** Types of item */
     public enum ItemType {
@@ -116,7 +167,7 @@ public class ItemManager {
      *
      * @return Item type.
      */
-    private ItemType selectItemType() {
+    public ItemType selectItemType() {
         ItemType[] itemTypes = ItemType.values();
 
         if (isMaxShotNum)
@@ -134,19 +185,20 @@ public class ItemManager {
      * @return If the item is offensive, returns the score to add and the number of ships destroyed.
      *         If the item is non-offensive, returns null.
      */
-    public Entry<Integer, Integer> useItem() {
-        ItemType itemType = selectItemType();
-        logger.info(itemType + " used");
+    public Entry<Integer, Integer> useItem(ItemType usedItem) {
+        if (usedItem == null) {
+            System.out.println("사용할 아이템이 없습니다.");
+            return null;
+        }
 
-        return switch (itemType) {
+        return switch (usedItem) {
             case Bomb -> operateBomb();
             case LineBomb -> operateLineBomb();
             case Barrier -> operateBarrier();
             case Ghost -> operateGhost();
             case TimeStop -> operateTimeStop();
             case MultiShot -> operateMultiShot();
-            case Laser -> operateLaser();  // 새로운 레이저 아이템 처리 추가
-
+            case Laser -> operateLaser();
         };
     }
 
