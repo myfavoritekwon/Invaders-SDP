@@ -11,59 +11,40 @@ import engine.SoundManager;
 
 /**
  * Implements a ship, to be controlled by the player.
- * 
+ *
  * @author <a href="mailto:RobertoIA1987@gmail.com">Roberto Izquierdo Amo</a>
- * 
+ *
  */
 public abstract class Ship extends Entity {
 
-	/**
-	 * Time between shots.
-	 */
+	/** Time between shots. */
 	private static int SHOOTING_INTERVAL = 750;
-	/**
-	 * Speed of the bullets shot by the ship.
-	 */
+	/** Speed of the bullets shot by the ship. */
 	private static int BULLET_SPEED = -6;
-	/**
-	 * Movement of the ship for each unit of time.
-	 */
+	/** Movement of the ship for each unit of time. */
 	private static final int SPEED = 2;
 
-	/**
-	 * Play the sound every 0.5 second
-	 */
+	/** Play the sound every 0.5 second */
 	private static final int SOUND_COOLDOWN_INTERVAL = 500;
-	/**
-	 * Cooldown for playing sound
-	 */
+	/** Cooldown for playing sound */
 	private Cooldown soundCooldown;
 
-	/**
-	 * Multipliers for the ship's properties.
-	 */
+	/** Multipliers for the ship's properties. */
 	protected final ShipMultipliers multipliers;
-	/**
-	 * Name of the ship.
-	 */
+	/** Name of the ship. */
 	public final String name;
-	/**
-	 * Type of sprite to be drawn.
-	 */
+	/** Type of sprite to be drawn. */
 	private final SpriteType baseSprite;
 
-	/**
-	 * Minimum time between shots.
-	 */
+	/** Minimum time between shots. */
 	private Cooldown shootingCooldown;
-	/**
-	 * Time spent inactive between hits.
-	 */
+	/** Time spent inactive between hits. */
 	private Cooldown destructionCooldown;
-	/**
-	 * Singleton instance of SoundManager
-	 */
+	/** Singleton instance of SoundManager */
 	private final SoundManager soundManager = SoundManager.getInstance();
+	private boolean isLaserMode = false;
+
+
 
 
 	private long lastShootTime;
@@ -90,14 +71,22 @@ public abstract class Ship extends Entity {
 	/**
 	 * Constructor, establishes the ship's properties.
 	 *
-	 * @param positionX   Initial position of the ship in the X axis.
-	 * @param positionY   Initial position of the ship in the Y axis.
-	 * @param name        Name of the ship.
-	 * @param multipliers Multipliers for the ship's properties.
-	 * @param spriteType  Type of sprite to be drawn.
-	 * @see ShipMultipliers
-	 * @see SpriteType
+	 * @param positionX
+	 *            Initial position of the ship in the X axis.
+	 * @param positionY
+	 *            Initial position of the ship in the Y axis.
+	 * @param name
+	 * 		  	  Name of the ship.
+	 * @param multipliers
+	 * 		      Multipliers for the ship's properties.
+	 * 		      @see ShipMultipliers
+	 * @param spriteType
+	 * 		      Type of sprite to be drawn.
+	 * 		      @see SpriteType
 	 */
+
+
+
 	protected Ship(final int positionX, final int positionY,
 				   final String name, final ShipMultipliers multipliers,
 				   final SpriteType spriteType) {
@@ -111,6 +100,14 @@ public abstract class Ship extends Entity {
 		this.destructionCooldown = Core.getCooldown(1000);
 		this.lastShootTime = 0;
 		this.soundCooldown = Core.getCooldown(SOUND_COOLDOWN_INTERVAL);
+	}
+
+
+	/**
+	 * shooting cooldown
+	 */
+	public void setShootingCooldown(Cooldown cooldown) {
+		this.shootingCooldown = cooldown;
 	}
 
 	/**
@@ -172,19 +169,28 @@ public abstract class Ship extends Entity {
 	/**
 	 * Shoots a bullet upwards.
 	 *
-	 * @param bullets List of bullets on screen, to add the new bullet.
+	 * @param bullets
+	 *            List of bullets on screen, to add the new bullet.
 	 * @return Checks if the bullet was shot correctly.
 	 */
 	public final boolean shoot(final Set<Bullet> bullets, int shotNum) {
 		return shoot(bullets, shotNum, 0.0f);
 	}
 
+
+	public void setLaserMode(boolean laserMode) {
+		this.isLaserMode = laserMode;
+	}
+
 	/**
 	 * bullet sound (2-players)
+	 * @param bullets
+	 *          List of bullets on screen, to add the new bullet.
+	 * @param balance
+	 * 			1p -1.0, 2p 1.0, both 0.0
+	 * @param shotNum
+	 * 			Upgraded shot.
 	 *
-	 * @param bullets List of bullets on screen, to add the new bullet.
-	 * @param balance 1p -1.0, 2p 1.0, both 0.0
-	 * @param shotNum Upgraded shot.
 	 * @return Checks if the bullet was shot correctly.
 	 */
 	public final boolean shoot(final Set<Bullet> bullets, int shotNum, float balance) {
@@ -198,18 +204,24 @@ public abstract class Ship extends Entity {
 			switch (shotNum) {
 				case 1:
 					bullets.add(BulletPool.getBullet(positionX + this.width / 2, positionY, this.getBulletSpeed()));
-					soundManager.playSound(Sound.PLAYER_LASER, balance);
+					if (!isLaserMode) {
+						soundManager.playSound(Sound.PLAYER_LASER, balance);
+					}
 					break;
 				case 2:
 					bullets.add(BulletPool.getBullet(positionX + this.width, positionY, this.getBulletSpeed()));
 					bullets.add(BulletPool.getBullet(positionX, positionY, this.getBulletSpeed()));
-					soundManager.playSound(Sound.ITEM_2SHOT, balance);
+					if (!isLaserMode) {
+						soundManager.playSound(Sound.ITEM_2SHOT, balance);
+					}
 					break;
 				case 3:
 					bullets.add(BulletPool.getBullet(positionX + this.width, positionY, this.getBulletSpeed()));
 					bullets.add(BulletPool.getBullet(positionX, positionY, this.getBulletSpeed()));
 					bullets.add(BulletPool.getBullet(positionX + this.width / 2, positionY, this.getBulletSpeed()));
-					soundManager.playSound(Sound.ITEM_3SHOT, balance);
+					if (!isLaserMode) {
+						soundManager.playSound(Sound.ITEM_3SHOT, balance);
+					}
 					break;
 			}
 
@@ -265,7 +277,6 @@ public abstract class Ship extends Entity {
 
 	/**
 	 * Getter for the ship's bullet speed.
-	 *
 	 * @return Speed of the bullets.
 	 */
 	public final int getBulletSpeed() {
@@ -274,7 +285,6 @@ public abstract class Ship extends Entity {
 
 	/**
 	 * Getter for the ship's shooting interval.
-	 *
 	 * @return Time between shots.
 	 */
 	public final int getShootingInterval() {
@@ -289,9 +299,9 @@ public abstract class Ship extends Entity {
 	}
 
 
-	public void applyItem(Wallet wallet) {
+	public void applyItem(Wallet wallet){
 		int bulletLv = wallet.getBullet_lv();
-		switch (bulletLv) {
+		switch (bulletLv){
 			case 1:
 				BULLET_SPEED = -6;
 				break;
@@ -309,7 +319,7 @@ public abstract class Ship extends Entity {
 		}
 
 		int intervalLv = wallet.getShot_lv();
-		switch (intervalLv) {
+		switch (intervalLv){
 			case 1: //생성자에서 이미 초기화함
 				break;
 			case 2:
