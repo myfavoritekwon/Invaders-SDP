@@ -62,6 +62,11 @@ public final class Core {
 	private static Server server;
 	private static Client client;
 
+	public static final class PuzzleSettings {
+		public static final int SEQUENCE_LENGTH = 4;
+		public static final int RETRY_DELAY = 2000;
+		public static final int WEB_COOLDOWN = 3000;
+	}
 
 	/**
 	 * Test implementation.

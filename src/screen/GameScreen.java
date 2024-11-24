@@ -25,9 +25,9 @@ import entity.*;
 
 /**
  * Implements the game screen, where the action happens.
- * 
+ *
  * @author <a href="mailto:RobertoIA1987@gmail.com">Roberto Izquierdo Amo</a>
- * 
+ *
  */
 public class GameScreen extends Screen implements Callable<GameState> {
 
@@ -103,7 +103,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	/** Alert Message when a special enemy appears. */
 	private String alertMessage;
 	/** checks if it's executed. */
-  	private boolean isExecuted = false;
+	private boolean isExecuted = false;
 	/** timer.. */
 	private Timer timer;
 	private TimerTask timerTask;
@@ -148,9 +148,13 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	private int hitBullets;
 
-    /**
+	private PuzzleScreen puzzleScreen;
+	private Cooldown puzzleRetryCooldown;
+	private Cooldown webCooldown;
+
+	/**
 	 * Constructor, establishes the properties of the screen.
-	 * 
+	 *
 	 * @param gameState
 	 *            Current game state.
 	 * @param gameSettings
@@ -165,8 +169,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 *            Frames per second, frame rate at which the game is run.
 	 */
 	public GameScreen(final GameState gameState,
-			final GameSettings gameSettings, final boolean bonusLife,
-			final int width, final int height, final int fps, final Wallet wallet) {
+					  final GameSettings gameSettings, final boolean bonusLife,
+					  final int width, final int height, final int fps, final Wallet wallet) {
 		super(width, height, fps);
 
 		this.gameSettings = gameSettings;
@@ -349,7 +353,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		p2pShip.setColor(Color.BLUE);
         this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
-        ship.applyItem(wallet);
+		ship.applyItem(wallet);
 		//Create random Spider Web.
 		int web_count = 1 + level / 3;
 		web = new ArrayList<>();
@@ -382,8 +386,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			block.add(newBlock);
 		}
 
-
-
 		// Appears each 10-30 seconds.
 		this.enemyShipSpecialCooldown = Core.getVariableCooldown(
 				BONUS_SHIP_INTERVAL, BONUS_SHIP_VARIANCE);
@@ -393,7 +395,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.screenFinishedCooldown = Core.getCooldown(SCREEN_CHANGE_INTERVAL);
 		this.bullets = new HashSet<>();
 		this.barriers = new HashSet<>();
-        this.itemBoxes = new HashSet<>();
+		this.itemBoxes = new HashSet<>();
 		this.itemManager = new ItemManager(this.ship, this.enemyShipFormation, this.barriers, this.height, this.width, this.balance);
 
 		// Special input delay / countdown.
@@ -411,15 +413,20 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			case 4: soundManager.loopSound(Sound.BGM_LV4); break;
 			case 5: soundManager.loopSound(Sound.BGM_LV5); break;
 			case 6: soundManager.loopSound(Sound.BGM_LV6); break;
-            case 7:
+			case 7:
 				// From level 7 and above, it continues to play at BGM_LV7.
-            default: soundManager.loopSound(Sound.BGM_LV7); break;
+			default: soundManager.loopSound(Sound.BGM_LV7); break;
 		}
+
+		this.puzzleScreen = null;
+		this.puzzleRetryCooldown = Core.getCooldown(Core.PuzzleSettings.RETRY_DELAY);
+		this.webCooldown = Core.getCooldown(3000);
+		this.webCooldown.reset();
 	}
 
 	/**
 	 * Starts the action.
-	 * 
+	 *
 	 * @return Next screen code.
 	 */
 	public final int run() {
@@ -438,8 +445,33 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	protected final void update() {
 		super.update();
 		if (this.inputDelay.checkFinished() && !this.levelFinished) {
-			boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
-			boolean player2Attacking = inputManager.isKeyDown(KeyEvent.VK_SHIFT);
+			// check web collision and activate puzzle
+			if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
+				boolean webCollision = false;
+				for (int i = 0; i < web.size(); i++) {
+					if (!(ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
+							|| web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6)) {
+						webCollision = true;
+						logger.info("Web collision detected at position" + ship.getPositionX());
+						break;
+					}
+				}
+				if (webCollision && this.puzzleScreen == null) {
+					logger.info("Initializing puzzle...");
+					initializePuzzle();
+				}
+			}
+
+			if (ship.isPuzzleActive() && this.puzzleScreen != null) {
+				updatePuzzleState();
+			}
+
+			this.enemyShipFormation.update();
+			this.enemyShipFormation.shoot(this.bullets, this.level, balance);
+
+			if (!ship.isPuzzleActive()) {
+				boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
+				boolean player2Attacking = inputManager.isKeyDown(KeyEvent.VK_SHIFT);
 
 			if (player1Attacking && player2Attacking) {
 				// Both players are attacking
@@ -508,13 +540,13 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			/*Elapsed Time Update*/
 			long currentTime = System.currentTimeMillis();
 
-			if (this.prevTime != null)
-				this.elapsedTime += (int) (currentTime - this.prevTime);
+				if (this.prevTime != null)
+					this.elapsedTime += (int) (currentTime - this.prevTime);
 
-			this.prevTime = (int) currentTime;
+				this.prevTime = (int) currentTime;
 
-			if(!itemManager.isGhostActive())
-				this.ship.setColor(Color.GREEN);
+				if (!itemManager.isGhostActive())
+					this.ship.setColor(Color.GREEN);
 
 			if (!this.ship.isDestroyed()) {
 				// boolean 초기값 설정
@@ -592,15 +624,18 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					case 1: this.alertMessage = "--! ALERT !--";
 						break;
 
-					case 2: this.alertMessage = "-!! ALERT !!-";
-						break;
+						case 2:
+							this.alertMessage = "-!! ALERT !!-";
+							break;
 
-					case 3: this.alertMessage = "!!! ALERT !!!";
-						break;
+						case 3:
+							this.alertMessage = "!!! ALERT !!!";
+							break;
 
-					default: this.alertMessage = "";
-						break;
-				}
+						default:
+							this.alertMessage = "";
+							break;
+					}
 
 			}
 			if (this.enemyShipSpecial != null
@@ -628,8 +663,14 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				}
 			}
 
-			if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
-				handleBlockerAppearance();
+				if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
+					handleBlockerAppearance();
+				}
+			}
+
+			// when puzzle activated
+			if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
+				updatePuzzleState();
 			}
 		}
 
@@ -655,6 +696,58 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			this.alertMessage = "";
 			this.isRunning = false;
 		}
+	}
+
+	private void updatePuzzleState() {
+		if (ship.isPuzzleActive() && this.puzzleScreen != null) {
+			boolean keyPressed = false;
+			if (playerNumber == 0) {
+				keyPressed = inputManager.isKeyDown(KeyEvent.VK_W) ||
+						inputManager.isKeyDown(KeyEvent.VK_A) ||
+						inputManager.isKeyDown(KeyEvent.VK_S) ||
+						inputManager.isKeyDown(KeyEvent.VK_D);
+			} else {
+				keyPressed = inputManager.isKeyDown(KeyEvent.VK_UP) ||
+						inputManager.isKeyDown(KeyEvent.VK_DOWN) ||
+						inputManager.isKeyDown(KeyEvent.VK_LEFT) ||
+						inputManager.isKeyDown(KeyEvent.VK_RIGHT);
+			}
+			if (keyPressed) {
+				int keyCode = inputManager.getLastKeyPressed();
+				if (puzzleScreen != null && puzzleScreen.handleInput(keyCode)) {
+					completePuzzle();
+				}
+				inputManager.resetLastKeyPressed();
+			}
+		}
+	}
+
+	private void initializePuzzle() {
+		if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
+			ship.setThreadWeb(true);
+			ship.setPlayerShip(true);
+			ship.setPuzzleActive(true);
+
+			this.puzzleScreen = new PuzzleScreen(playerNumber);
+			inputManager.setPuzzleMode(true);
+
+			logger.info("Ship puzzle state: " + ship.isPuzzleActive());  // 상태 확인용 로그
+		}
+	}
+
+	private void resetPuzzle() {
+		if (puzzleRetryCooldown.checkFinished()) {
+			this.puzzleScreen = new PuzzleScreen(playerNumber);
+		}
+	}
+
+	private void completePuzzle() {
+		ship.setPuzzleActive(false);
+		ship.setThreadWeb(false);
+		this.puzzleScreen = null;
+		inputManager.setPuzzleMode(false);
+		webCooldown.reset();
+		logger.info("Puzzle completed successfully");
 	}
 
 	/**
@@ -719,28 +812,36 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 			//Intermediate aggregation
 			if (this.level > 1){
-                if (countdown == 0) {
+				if (countdown == 0) {
 					//Reset mac combo and edit temporary values
-                    this.lapTime = this.elapsedTime;
-                    this.tempScore = this.score;
-                    this.maxCombo = 0;
-                } else {
+					this.lapTime = this.elapsedTime;
+					this.tempScore = this.score;
+					this.maxCombo = 0;
+				} else {
 					// Don't show it just before the game starts, i.e. when the countdown is zero.
-                    drawManager.interAggre(this, this.level - 1, this.maxCombo, this.elapsedTime, this.lapTime, this.score, this.tempScore);
-                }
+					drawManager.interAggre(this, this.level - 1, this.maxCombo, this.elapsedTime, this.lapTime, this.score, this.tempScore);
+				}
 			}
 		}
 
-
 		//add drawRecord method for drawing
 		drawManager.drawRecord(highScores,this);
-
 
 		// Blocker drawing part
 		if (!blockers.isEmpty()) {
 			for (Blocker blocker : blockers) {
 				drawManager.drawRotatedEntity(blocker, blocker.getPositionX(), blocker.getPositionY(), blocker.getAngle());
 			}
+		}
+
+		drawManager.completeDrawing(this);
+
+		// draw puzzle screen
+		if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
+			drawManager.drawPuzzle(this, ship,
+					puzzleScreen.getDirectionSequence(),
+					puzzleScreen.getPlayerInput(),
+					playerNumber);
 		}
 		drawManager.completeDrawing(this);
 	}
@@ -898,7 +999,15 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			}
 		}
 
-		drawManager.flushBuffer(this, playerNumber);
+		// draw puzzle screen
+		if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
+			drawManager.drawPuzzle(this,
+					this.puzzleScreen.getDirectionSequence(),
+					this.puzzleScreen.getPlayerInput(),
+					playerNumber,
+					playerNumber,
+					this.ship.getCollisionX());
+		}
 	}
 
 	/**
@@ -1044,7 +1153,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				for (Block block : this.block) {
 					if (checkCollision(bullet, block)) {
 						recyclable.add(bullet);
-                        soundManager.playSound(Sound.BULLET_BLOCKING, balance);
+						soundManager.playSound(Sound.BULLET_BLOCKING, balance);
 						break;
 					}
 				}
@@ -1075,7 +1184,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Checks if two entities are colliding.
-	 * 
+	 *
 	 * @param a
 	 *            First entity, the bullet.
 	 * @param b
@@ -1100,7 +1209,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Returns a GameState object representing the status of the game.
-	 * 
+	 *
 	 * @return Current game state.
 	 */
 	public final GameState getGameState() {

@@ -111,4 +111,16 @@ public class Cooldown {
 		this.time = System.currentTimeMillis();
 			this.duration = Cooldown;
 	}
+
+	/**
+	 * return current remaining time
+	 *
+	 * @return current remaining time
+	 */
+	public final long getRemainingTime() {
+		if (this.time == 0) {
+			return 0;
+		}
+		return Math.max(0, (this.time + this.duration) - System.currentTimeMillis());
+	}
 }
