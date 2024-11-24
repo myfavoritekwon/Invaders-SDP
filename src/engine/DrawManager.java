@@ -99,8 +99,8 @@ public final class DrawManager {
 		Explosion,
 		/** Barrier. */
 		Barrier,
-		/** Item Box. */
-		ItemBox,
+        /** Item Box. */
+        ItemBox,
 		/** Spider webs restricting player movement */
 		Web,
 		/** Obstacles preventing a player's bullet */
@@ -109,12 +109,12 @@ public final class DrawManager {
 		Blocker1,
 		/** Obstruction 2 (Astronaut) */
 		Blocker2,
-		/** 2nd player ship. */
-		Ship2,
-		/** 3rd player ship. */
-		Ship3,
-		/** 4th player ship. */
-		Ship4,
+        /** 2nd player ship. */
+        Ship2,
+        /** 3rd player ship. */
+        Ship3,
+        /** 4th player ship. */
+        Ship4,
 		/** Fourth enemy ship - first form. */
 		EnemyShipD1,
 		/** Fourth enemy ship - second form. */
