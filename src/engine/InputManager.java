@@ -109,6 +109,7 @@ public final class InputManager implements KeyListener {
 			}
 		}
 	}
+
 	/**
 	 * Changes the state of the key to not pressed.
 	 * 
