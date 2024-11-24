@@ -52,9 +52,23 @@ public abstract class Ship extends Entity {
 
 	private long lastShootTime;
 	private boolean threadWeb = false;
+	private int collisionX = 0;
+	private boolean isPuzzleActive = false;
+	private long webCollisionTime = 0;
+	private static final long WEB_COOLDOWN = Core.PuzzleSettings.WEB_COOLDOWN;
 
 	public void setThreadWeb(boolean threadWeb) {
+		if (threadWeb && !this.threadWeb) {
+			webCollisionTime = System.currentTimeMillis();
+			collisionX = this.positionX;
+		}
 		this.threadWeb = threadWeb;
+	}
+
+	protected boolean isPlayerShip;
+
+	public int getCollisionX() {
+		return collisionX;
 	}
 
 	/**
@@ -136,7 +150,10 @@ public abstract class Ship extends Entity {
 	}
 
 	public final void moveRight(float balance) {
-		if(threadWeb){
+		// can't move when puzzle activated
+		if (this.isPlayerShip && this.isPuzzleActive) return;
+
+		if (threadWeb) {
 			this.positionX += this.getSpeed() / 2;
 		} else {
 			this.positionX += this.getSpeed();
@@ -148,7 +165,10 @@ public abstract class Ship extends Entity {
 	}
 
 	public final void moveLeft(float balance) {
-		if(threadWeb){
+		// can't move when puzzle activated
+		if (this.isPlayerShip && this.isPuzzleActive) return;
+
+		if (threadWeb) {
 			this.positionX -= this.getSpeed() / 2;
 		} else {
 			this.positionX -= this.getSpeed();
@@ -209,12 +229,15 @@ public abstract class Ship extends Entity {
 	 * @return Checks if the bullet was shot correctly.
 	 */
 	public final boolean shoot(final Set<Bullet> bullets, int shotNum, float balance) {
+		if (this.isPlayerShip && this.isPuzzleActive) return false;
+
 		//변화된 각도값을 라디안값으로 변환후 출력
 		angle_shoot = Math.toRadians(angle);
 		if (this.shootingCooldown.checkFinished()) {
 
 			this.shootingCooldown.reset();
 			this.lastShootTime = System.currentTimeMillis();
+
 			//각속도 계산
 			int Xspeed = (int)Math.round(Math.cos(angle_shoot) * this.getBulletSpeed());
 			int Yspeed = (int)Math.round(Math.sin(angle_shoot) * this.getBulletSpeed());
@@ -247,6 +270,7 @@ public abstract class Ship extends Entity {
 
 		return false;
 	}
+
 	// 좌측키 누르면 각도값 감소
 	public void moveAngleToLeft(){
 		if(angle >= 20)
@@ -262,6 +286,14 @@ public abstract class Ship extends Entity {
 			this.spriteType = SpriteType.ShipDestroyed;
 		else
 			this.spriteType = this.baseSprite;
+
+		if (threadWeb && System.currentTimeMillis() - webCollisionTime >= WEB_COOLDOWN) {
+			threadWeb = false;
+		}
+
+		if (isPuzzleActive) {
+			this.shootingCooldown.reset();
+		}
 	}
 
 	/**
@@ -280,6 +312,7 @@ public abstract class Ship extends Entity {
 	public final boolean isDestroyed() {
 		return !this.destructionCooldown.checkFinished();
 	}
+
 	// 각도값 출력
 	public final int getAngle(){return angle;}
 	/**
@@ -354,5 +387,25 @@ public abstract class Ship extends Entity {
 				SHOOTING_INTERVAL = 750;
 				shootingCooldown = Core.getCooldown(this.getShootingInterval());
 		}
+	}
+
+	public void setPlayerShip(boolean isPlayer) {
+		this.isPlayerShip = isPlayer;
+	}
+
+	/**
+	 * Sets puzzle activation state
+	 */
+	public void setPuzzleActive(boolean active) {
+		if (this.isPlayerShip) {
+			this.isPuzzleActive = active;
+		}
+	}
+
+	/**
+	 * Check puzzle is activated
+	 */
+	public boolean isPuzzleActive() {
+		return this.isPuzzleActive;
 	}
 }
