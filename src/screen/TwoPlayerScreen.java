@@ -216,7 +216,12 @@ public class TwoPlayerScreen extends Screen {
                     && gameState.getLivesRemaining() < Core.MAX_LIVES;
             logger.info("difficulty is " + Core.getLevelSetting());
             gameSettings[playerNumber] = gameSettings[playerNumber].LevelSettings(
-                    gameSettings[playerNumber].getFormationWidth(), gameSettings[playerNumber].getFormationHeight(), gameSettings[playerNumber].getBaseSpeed(), gameSettings[playerNumber].getShootingFrecuency(), gameState.getLevel(), Core.getLevelSetting()
+                    gameSettings[playerNumber].getFormationWidth(),
+                    gameSettings[playerNumber].getFormationHeight(),
+                    gameSettings[playerNumber].getBaseSpeed(),
+                    gameSettings[playerNumber].getShootingFrecuency(),
+                    gameState.getLevel(),
+                    Core.getLevelSetting()
             );
             GameScreen gameScreen = new GameScreen(gameState, gameSettings[playerNumber],
                     bonusLife, width / 2, height, fps / 2, wallet, playerNumber);
