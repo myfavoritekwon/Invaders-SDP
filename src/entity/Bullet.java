@@ -86,7 +86,7 @@ public class Bullet extends Entity {
 	 * 
 	 * @return Speed of the bullet.
 	 */
-	public int getSpeed() {
+	public final int getSpeed() {
 		return this.speed;
 	}
 }

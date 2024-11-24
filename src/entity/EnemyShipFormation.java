@@ -167,7 +167,6 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 			}
 		}
 
-
 		this.shipWidth = this.enemyShips.get(0).get(0).getWidth();
 		this.shipHeight = this.enemyShips.get(0).get(0).getHeight();
 
@@ -542,6 +541,5 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	public int getDistroyedship(){return distroyedship; }
 
 	public List<List<EnemyShip>> getEnemyShips() {return enemyShips; }
-	public List<EnemyShip> getShooters() {return shooters; }
 	public List<EnemyShip> getListEnemies(){return listEnemies;}
 }
