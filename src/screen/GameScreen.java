@@ -129,8 +129,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	private int hitBullets;
 
-
-
     /**
 	 * Constructor, establishes the properties of the screen.
 	 * 
@@ -309,7 +307,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 	}
 
-
 	/**
 	 * Starts the action.
 	 * 
@@ -330,13 +327,14 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 */
 	protected final void update() {
 		super.update();
-		if (inputManager.isKeyDown(KeyEvent.VK_O)) {
+		//swap item M
+		if (inputManager.isKeyDown(KeyEvent.VK_N)) {
 			itemManager.swapItems();
 		}
 
 
-		// I 키로 첫 번째 아이템 실행
-		if (inputManager.isKeyDown(KeyEvent.VK_I)) {
+		// use itme N
+		if (inputManager.isKeyDown(KeyEvent.VK_M)) {
 			ItemManager.ItemType usedItem = itemManager.useStoredItem();
 			if (usedItem != null) {
 				Entry<Integer, Integer> result = itemManager.useItem(usedItem);
@@ -513,7 +511,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 
 	}
-
 	/**
 	 * Draws the elements associated with the screen.
 	 */
@@ -874,7 +871,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					isExecuted = true;
 				}
 
-				// 아이템 박스 충돌 로직 수정
+				// edit itembox collpase bullet
 				Iterator<ItemBox> itemBoxIterator = this.itemBoxes.iterator();
 				while (itemBoxIterator.hasNext()) {
 					ItemBox itemBox = itemBoxIterator.next();
@@ -882,7 +879,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						this.hitBullets++;
 						itemBoxIterator.remove();
 						recyclable.add(bullet);
-
 						ItemManager.ItemType itemType = itemManager.selectItemType();
 						boolean added = itemManager.addItem(itemType);
 						if (added) {
