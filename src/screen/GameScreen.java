@@ -53,6 +53,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private EnemyShipFormation enemyShipFormation;
 	/** Player's ship. */
 	private Ship ship;
+	private Ship p2pShip;
 	/** Bonus enemy ship that appears sometimes. */
 	private EnemyShip enemyShipSpecial;
 	/** Minimum time between bonus ship appearances. */
@@ -140,6 +141,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private Client client;
 	private static boolean SORC;
 	private static char Button;
+	private boolean P2PCheck = false;
 
 
 	private int hitBullets;
@@ -209,10 +211,59 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.alertMessage = "";
 
 		this.wallet = wallet;
+	}
 
-		this.server = Core.getServer();
-		this.client = Core.getClient();
-//서버 열렸을 때만 동작 하게 조건문 넣기
+	public GameScreen(final GameState gameState,
+					  final GameSettings gameSettings, final boolean bonusLife,
+					  final int width, final int height, final int fps, final Wallet wallet, Server server, Client client) {
+		super(width, height, fps);
+
+		this.gameSettings = gameSettings;
+		this.gameState = gameState;
+		this.bonusLife = bonusLife;
+		this.level = gameState.getLevel();
+		this.score = gameState.getScore();
+		this.elapsedTime = gameState.getElapsedTime();
+		this.alertMessage = gameState.getAlertMessage();
+		this.shipType = gameState.getShipType();
+		this.lives = gameState.getLivesRemaining();
+		if (this.bonusLife)
+			this.lives++;
+		this.bulletsShot = gameState.getBulletsShot();
+		this.shipsDestroyed = gameState.getShipsDestroyed();
+		this.playerNumber = -1;
+		this.maxCombo = gameState.getMaxCombo();
+		this.lapTime = gameState.getPrevTime();
+		this.tempScore = gameState.getPrevScore();
+
+		try {
+			this.highScores = Core.getFileManager().loadHighScores();
+
+		} catch (IOException e) {
+			logger.warning("Couldn't load high scores!");
+		}
+
+		this.wallet = wallet;
+
+
+		this.random = new Random();
+		this.blockerVisible = false;
+		this.blockerCooldown = Core.getVariableCooldown(10000, 14000);
+		this.blockerCooldown.reset();
+		this.blockerVisibleCooldown = Core.getCooldown(20000);
+
+		try {
+			this.highScores = Core.getFileManager().loadHighScores();
+		} catch (IOException e) {
+			logger.warning("Couldn't load high scores!");
+		}
+		this.alertMessage = "";
+
+		this.wallet = wallet;
+		this.P2PCheck = true;
+		this.server = server;
+		this.client = client;
+
 		KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		manager.addKeyEventDispatcher(new KeyEventDispatcher() {
 			@Override
@@ -291,6 +342,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
         // Appears each 10-30 seconds.
+        this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
+		this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
         this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
         ship.applyItem(wallet);
@@ -579,7 +632,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		// 1인 모드 총알 경로
 		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX() , this.ship.getAngle());
 
+
+		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX());
+		//draw ship
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(), this.ship.getPositionY());
+		if(P2PCheck)
+			drawManager.drawEntity(this.p2pShip, this.p2pShip.getPositionX(), this.p2pShip.getPositionY());
 
 		//draw Spider Web
 		for (int i = 0; i < web.size(); i++) {
