@@ -911,8 +911,8 @@ public final class DrawManager {
 	 *            Screen to draw on.
 	 */
 	public void mergeDrawing(final Screen screen) {
-		backBufferGraphics.drawImage(threadBuffers[0], 0, 0, frame);
-		backBufferGraphics.drawImage(threadBuffers[1], screen.getWidth() / 2 + LINE_WIDTH, 0, frame);
+		backBufferGraphics.drawImage(threadBuffers[2], 0, 0, frame);
+		backBufferGraphics.drawImage(threadBuffers[3], screen.getWidth() / 2 + LINE_WIDTH, 0, frame);
 	}
 
 	/**
@@ -941,7 +941,8 @@ public final class DrawManager {
 	 * @param positionY
 	 *            Coordinates for the upper side of the image.
 	 */
-	public void drawEntity(final Entity entity, final int positionX, final int positionY) {
+	public void drawEntity(final Entity entity, final int positionX,
+                           final int positionY) {
 		boolean[][] image = spriteMap.get(entity.getSpriteType());
 
 		backBufferGraphics.setColor(entity.getColor());
@@ -952,8 +953,8 @@ public final class DrawManager {
 							+ j * 2, 1, 1);
 	}
 
-	/**
-	 * Draws an entity, using the appropriate image.
+    /**
+     * Draws an entity, using the appropriate image.
 	 *
 	 * @param entity
 	 *            Entity to be drawn.
@@ -964,7 +965,7 @@ public final class DrawManager {
 	 * @param threadNumber
 	 *            Thread number for two player mode
 	 */
-	public void drawEntity(final Entity entity, final int positionX,
+    public void drawEntity(final Entity entity, final int positionX,
 						   final int positionY, final int threadNumber) {
 		boolean[][] image = spriteMap.get(entity.getSpriteType());
 
@@ -1123,13 +1124,13 @@ public final class DrawManager {
 		int sec = seconds % 60;
 		int min = seconds / 60;
 
-		String elapsedTimeString;
-		if (min < 1){
-			elapsedTimeString = String.format("%d.%02d", sec, cent);
-		} else {
-			elapsedTimeString = String.format("%d:%02d.%02d", min, sec, cent);
-		}
-		backBufferGraphics.drawString(elapsedTimeString, screen.getWidth()/2, 25);
+        String elapsedTimeString;
+        if (min < 1){
+            elapsedTimeString = String.format("%d.%02d", sec, cent);
+        } else {
+            elapsedTimeString = String.format("%d:%02d.%02d", min, sec, cent);
+        }
+        backBufferGraphics.drawString(elapsedTimeString, screen.getWidth()/2, 25);
 	}
 
 	/**
