@@ -3,6 +3,7 @@ package screen;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.security.Key;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -21,9 +22,9 @@ import entity.*;
 
 /**
  * Implements the game screen, where the action happens.
- *
+ * 
  * @author <a href="mailto:RobertoIA1987@gmail.com">Roberto Izquierdo Amo</a>
- *
+ * 
  */
 public class GameScreen extends Screen implements Callable<GameState> {
 
@@ -98,7 +99,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	/** Alert Message when a special enemy appears. */
 	private String alertMessage;
 	/** checks if it's executed. */
-	private boolean isExecuted = false;
+  	private boolean isExecuted = false;
 	/** timer.. */
 	private Timer timer;
 	private TimerTask timerTask;
@@ -141,7 +142,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Constructor, establishes the properties of the screen.
-	 *
+	 * 
 	 * @param gameState
 	 *            Current game state.
 	 * @param gameSettings
@@ -156,8 +157,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 *            Frames per second, frame rate at which the game is run.
 	 */
 	public GameScreen(final GameState gameState,
-					  final GameSettings gameSettings, final boolean bonusLife,
-					  final int width, final int height, final int fps, final Wallet wallet) {
+			final GameSettings gameSettings, final boolean bonusLife,
+			final int width, final int height, final int fps, final Wallet wallet) {
 		super(width, height, fps);
 
 		this.gameSettings = gameSettings;
@@ -245,10 +246,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
-		// Appears each 10-30 seconds.
-		this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
+        // Appears each 10-30 seconds.
+        this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
-		ship.applyItem(wallet);
+        ship.applyItem(wallet);
 		//Create random Spider Web.
 		int web_count = 1 + level / 3;
 		web = new ArrayList<>();
@@ -281,6 +282,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			block.add(newBlock);
 		}
 
+
+
 		// Appears each 10-30 seconds.
 		this.enemyShipSpecialCooldown = Core.getVariableCooldown(
 				BONUS_SHIP_INTERVAL, BONUS_SHIP_VARIANCE);
@@ -290,7 +293,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.screenFinishedCooldown = Core.getCooldown(SCREEN_CHANGE_INTERVAL);
 		this.bullets = new HashSet<>();
 		this.barriers = new HashSet<>();
-		this.itemBoxes = new HashSet<>();
+        this.itemBoxes = new HashSet<>();
 		this.itemManager = new ItemManager(this.ship, this.enemyShipFormation, this.barriers, this.height, this.width, this.balance);
 
 		// Special input delay / countdown.
@@ -308,9 +311,9 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			case 4: soundManager.loopSound(Sound.BGM_LV4); break;
 			case 5: soundManager.loopSound(Sound.BGM_LV5); break;
 			case 6: soundManager.loopSound(Sound.BGM_LV6); break;
-			case 7:
+            case 7:
 				// From level 7 and above, it continues to play at BGM_LV7.
-			default: soundManager.loopSound(Sound.BGM_LV7); break;
+            default: soundManager.loopSound(Sound.BGM_LV7); break;
 		}
 
 		this.puzzleScreen = null;
@@ -321,7 +324,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Starts the action.
-	 *
+	 * 
 	 * @return Next screen code.
 	 */
 	public final int run() {
@@ -368,147 +371,167 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
 				boolean player2Attacking = inputManager.isKeyDown(KeyEvent.VK_SHIFT);
 
-				if (player1Attacking && player2Attacking) {
-					// Both players are attacking
-					if (this.ship.shoot(this.bullets, this.itemManager.getShotNum()))
-						this.bulletsShot += this.itemManager.getShotNum();
-				} else {
-					switch (playerNumber) {
-						case 1:
-							if (player2Attacking) {
-								if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 1.0f)) // Player 1 attack
-									this.bulletsShot += this.itemManager.getShotNum();
-							}
-							break;
-						case 0:
-							if (player1Attacking) {
-								if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), -1.0f)) // Player 1 attack
-									this.bulletsShot += this.itemManager.getShotNum();
-							}
-							break;
-						default: //playerNumber = -1
-							if (player1Attacking) {
-								if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 0.0f)) // Player 1 attack
-									this.bulletsShot += this.itemManager.getShotNum();
-							}
-							break;
-					}
-				}
-				/*Elapsed Time Update*/
-				long currentTime = System.currentTimeMillis();
-
-				if (this.prevTime != null)
-					this.elapsedTime += (int) (currentTime - this.prevTime);
-
-				this.prevTime = (int) currentTime;
-
-				if (!itemManager.isGhostActive())
-					this.ship.setColor(Color.GREEN);
-
-				if (!this.ship.isDestroyed()) {
-					boolean moveRight;
-					boolean moveLeft;
-					switch (playerNumber) {
-						case 0:
-							moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
-							moveLeft = inputManager.isKeyDown(KeyEvent.VK_A);
-							break;
-						case 1:
-							moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT);
-							moveLeft = inputManager.isKeyDown(KeyEvent.VK_LEFT);
-							break;
-						default:
-							moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT)
-									|| inputManager.isKeyDown(KeyEvent.VK_D);
-							moveLeft = inputManager.isKeyDown(KeyEvent.VK_LEFT)
-									|| inputManager.isKeyDown(KeyEvent.VK_A);
-					}
-
-					boolean isRightBorder = this.ship.getPositionX()
-							+ this.ship.getWidth() + this.ship.getSpeed() > this.width - 1;
-					boolean isLeftBorder = this.ship.getPositionX()
-							- this.ship.getSpeed() < 1;
-
-					if (moveRight && !isRightBorder) {
-						if (playerNumber == -1)
-							this.ship.moveRight();
-						else
-							this.ship.moveRight(balance);
-					}
-					if (moveLeft && !isLeftBorder) {
-						if (playerNumber == -1)
-							this.ship.moveLeft();
-						else
-							this.ship.moveLeft(balance);
-					}
-					for (int i = 0; i < web.size(); i++) {
-						//escape Spider Web
-						if (ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
-								|| web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6) {
-							this.ship.setThreadWeb(false);
+			if (player1Attacking && player2Attacking) {
+				// Both players are attacking
+				if (this.ship.shoot(this.bullets, this.itemManager.getShotNum()))
+					this.bulletsShot += this.itemManager.getShotNum();
+			} else {
+				switch (playerNumber) {
+					case 1:
+						if (player2Attacking) {
+							if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 1.0f)) // Player 1 attack
+								this.bulletsShot += this.itemManager.getShotNum();
 						}
-						//get caught in a spider's web
-						else {
-							this.ship.setThreadWeb(true);
-							break;
+						// 플레이어 2 윗 방향키 누르면 총알 각도 조정 모드 on
+						if(this.inputManager.isKeyDown(KeyEvent.VK_UP)){
+							if(this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
+							if(this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
 						}
-					}
-				}
+						break;
+					case 0:
+						if (player1Attacking) {
+							if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), -1.0f)) // Player 1 attack
+								this.bulletsShot += this.itemManager.getShotNum();
+						}
+						// 플레이어 1 W키 누르면 총알 각도 조정 모드 on
+						if(this.inputManager.isKeyDown(KeyEvent.VK_W)){
+							if(this.inputManager.isKeyDown(KeyEvent.VK_A)) this.ship.moveAngleToLeft();
+							if(this.inputManager.isKeyDown(KeyEvent.VK_D)) this.ship.moveAngleToRight();
+						}
+						break;
+					default: //playerNumber = -1
+						if (player1Attacking) {
+							if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 0.0f)) // Player 1 attack
+								this.bulletsShot += this.itemManager.getShotNum();
+						}
+						// 1인 모드에서 윗 방향키 누르면 총알 각도 조정 모드 on
+						if(this.inputManager.isKeyDown(KeyEvent.VK_UP)){
+							if(this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
+							if(this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
+						}
 
-				if (this.enemyShipSpecial != null) {
-					if (!this.enemyShipSpecial.isDestroyed())
-						this.enemyShipSpecial.move(2, 0);
-					else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
-						this.enemyShipSpecial = null;
-
-				}
-				if (this.enemyShipSpecial == null
-						&& this.enemyShipSpecialCooldown.checkFinished()) {
-					this.enemyShipSpecial = new EnemyShip();
-					this.alertMessage = "";
-					this.enemyShipSpecialCooldown.reset();
-					soundManager.playSound(Sound.UFO_APPEAR, balance);
-					this.logger.info("A special ship appears");
-				}
-				if (this.enemyShipSpecial == null
-						&& this.enemyShipSpecialCooldown.checkAlert()) {
-					switch (this.enemyShipSpecialCooldown.checkAlertAnimation()) {
-						case 1:
-							this.alertMessage = "--! ALERT !--";
-							break;
-
-						case 2:
-							this.alertMessage = "-!! ALERT !!-";
-							break;
-
-						case 3:
-							this.alertMessage = "!!! ALERT !!!";
-							break;
-
-						default:
-							this.alertMessage = "";
-							break;
-					}
-
-				}
-				if (this.enemyShipSpecial != null
-						&& this.enemyShipSpecial.getPositionX() > this.width) {
-					this.enemyShipSpecial = null;
-					this.logger.info("The special ship has escaped");
-				}
-
-				this.ship.update();
-
-				// If Time-stop is active, Stop updating enemy ships' move and their shoots.
-				if (!itemManager.isTimeStopActive()) {
-					this.enemyShipFormation.update();
-					this.enemyShipFormation.shoot(this.bullets, this.level, balance);
-				}
-
-				if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
-					handleBlockerAppearance();
+						break;
 				}
 			}
+			/*Elapsed Time Update*/
+			long currentTime = System.currentTimeMillis();
+
+			if (this.prevTime != null)
+				this.elapsedTime += (int) (currentTime - this.prevTime);
+
+			this.prevTime = (int) currentTime;
+
+			if(!itemManager.isGhostActive())
+				this.ship.setColor(Color.GREEN);
+
+			if (!this.ship.isDestroyed()) {
+				// boolean 초기값 설정
+				boolean moveRight = false;
+				boolean moveLeft = false;
+				switch (playerNumber) {
+					case 0:
+						// 플레이어 1 W를 안눌렀을 때 이동 가능
+						if(!inputManager.isKeyDown(KeyEvent.VK_W)) {
+							moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
+							moveLeft = inputManager.isKeyDown(KeyEvent.VK_A);
+						}
+						break;
+					case 1:
+						// 플레이어 2 윗 방향키 안눌렀을 때 이동 가능
+						if(!inputManager.isKeyDown(KeyEvent.VK_UP)) {
+							moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT);
+							moveLeft = inputManager.isKeyDown(KeyEvent.VK_LEFT);
+						}
+						break;
+					default:
+						// 1인모드에서 윗 방향키 안눌렀을 때 이동 가능
+						moveRight = (inputManager.isKeyDown(KeyEvent.VK_RIGHT)
+								|| inputManager.isKeyDown(KeyEvent.VK_D)) && !inputManager.isKeyDown(KeyEvent.VK_UP) ;
+						moveLeft = (inputManager.isKeyDown(KeyEvent.VK_LEFT)
+								|| inputManager.isKeyDown(KeyEvent.VK_A)) && !inputManager.isKeyDown(KeyEvent.VK_UP);
+				}
+
+				boolean isRightBorder = this.ship.getPositionX()
+						+ this.ship.getWidth() + this.ship.getSpeed() > this.width - 1;
+				boolean isLeftBorder = this.ship.getPositionX()
+						- this.ship.getSpeed() < 1;
+
+				if (moveRight && !isRightBorder) {
+					if (playerNumber == -1)
+						this.ship.moveRight();
+					else
+						this.ship.moveRight(balance);
+				}
+				if (moveLeft && !isLeftBorder) {
+					if (playerNumber == -1)
+						this.ship.moveLeft();
+					else
+						this.ship.moveLeft(balance);
+				}
+				for(int i = 0; i < web.size(); i++) {
+					//escape Spider Web
+					if (ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
+							|| web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6) {
+						this.ship.setThreadWeb(false);
+					}
+					//get caught in a spider's web
+					else {
+						this.ship.setThreadWeb(true);
+						break;
+					}
+				}
+			}
+
+			if (this.enemyShipSpecial != null) {
+				if (!this.enemyShipSpecial.isDestroyed())
+					this.enemyShipSpecial.move(2, 0);
+				else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
+					this.enemyShipSpecial = null;
+
+			}
+			if (this.enemyShipSpecial == null
+					&& this.enemyShipSpecialCooldown.checkFinished()) {
+				this.enemyShipSpecial = new EnemyShip();
+				this.alertMessage = "";
+				this.enemyShipSpecialCooldown.reset();
+				soundManager.playSound(Sound.UFO_APPEAR, balance);
+				this.logger.info("A special ship appears");
+			}
+			if(this.enemyShipSpecial == null
+					&& this.enemyShipSpecialCooldown.checkAlert()) {
+				switch (this.enemyShipSpecialCooldown.checkAlertAnimation()){
+					case 1: this.alertMessage = "--! ALERT !--";
+						break;
+
+					case 2: this.alertMessage = "-!! ALERT !!-";
+						break;
+
+					case 3: this.alertMessage = "!!! ALERT !!!";
+						break;
+
+					default: this.alertMessage = "";
+						break;
+				}
+
+			}
+			if (this.enemyShipSpecial != null
+					&& this.enemyShipSpecial.getPositionX() > this.width) {
+				this.enemyShipSpecial = null;
+				this.logger.info("The special ship has escaped");
+			}
+
+			this.ship.update();
+
+			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
+			if (!itemManager.isTimeStopActive()) {
+				this.enemyShipFormation.update();
+				this.enemyShipFormation.shoot(this.bullets, this.level, balance);
+			}
+
+			if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
+				handleBlockerAppearance();
+			}
+		}
 
 			// when puzzle activated
 			if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
@@ -518,7 +541,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		manageCollisions();
 		cleanBullets();
-
 		if (playerNumber >= 0)
 			drawThread();
 		else
@@ -599,8 +621,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private void draw() {
 		drawManager.initDrawing(this);
 		drawManager.drawGameTitle(this);
-
-		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX());
+		// 1인 모드 총알 경로
+		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX() , this.ship.getAngle());
 
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(), this.ship.getPositionY());
 
@@ -653,20 +675,22 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 			//Intermediate aggregation
 			if (this.level > 1){
-				if (countdown == 0) {
+                if (countdown == 0) {
 					//Reset mac combo and edit temporary values
-					this.lapTime = this.elapsedTime;
-					this.tempScore = this.score;
-					this.maxCombo = 0;
-				} else {
+                    this.lapTime = this.elapsedTime;
+                    this.tempScore = this.score;
+                    this.maxCombo = 0;
+                } else {
 					// Don't show it just before the game starts, i.e. when the countdown is zero.
-					drawManager.interAggre(this, this.level - 1, this.maxCombo, this.elapsedTime, this.lapTime, this.score, this.tempScore);
-				}
+                    drawManager.interAggre(this, this.level - 1, this.maxCombo, this.elapsedTime, this.lapTime, this.score, this.tempScore);
+                }
 			}
 		}
 
+
 		//add drawRecord method for drawing
 		drawManager.drawRecord(highScores,this);
+
 
 		// Blocker drawing part
 		if (!blockers.isEmpty()) {
@@ -754,8 +778,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private void drawThread() {
 		drawManager.initThreadDrawing(this, playerNumber);
 		drawManager.drawGameTitle(this, playerNumber);
-
-		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX(), playerNumber);
+		// 2인모드 총알 각도
+		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX(), playerNumber , this.ship.getAngle());
 
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 				this.ship.getPositionY(), playerNumber);
@@ -984,7 +1008,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				for (Block block : this.block) {
 					if (checkCollision(bullet, block)) {
 						recyclable.add(bullet);
-						soundManager.playSound(Sound.BULLET_BLOCKING, balance);
+                        soundManager.playSound(Sound.BULLET_BLOCKING, balance);
 						break;
 					}
 				}
@@ -1011,7 +1035,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Checks if two entities are colliding.
-	 *
+	 * 
 	 * @param a
 	 *            First entity, the bullet.
 	 * @param b
@@ -1036,7 +1060,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Returns a GameState object representing the status of the game.
-	 *
+	 * 
 	 * @return Current game state.
 	 */
 	public final GameState getGameState() {

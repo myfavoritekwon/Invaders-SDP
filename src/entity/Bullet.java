@@ -17,6 +17,7 @@ public class Bullet extends Entity {
 	 * positive is down.
 	 */
 	private int speed;
+	private int cos_speed; // 각속도 요소 추가
 
 	/**
 	 * Constructor, establishes the bullet's properties.
@@ -33,6 +34,15 @@ public class Bullet extends Entity {
 		super(positionX, positionY, 3 * 2, 5 * 2, Color.WHITE);
 
 		this.speed = speed;
+		this.cos_speed = 0; // 적군 총알은 직선으로만 쏨
+		setSprite();
+	}
+	// 총알의 속도를 각속도로 세분화하여 생성
+	public Bullet(final int positionX, final int positionY, final int cos_speed, final int sin_speed) {
+		super(positionX, positionY, 3 * 2, 5 * 2, Color.WHITE);
+
+		this.speed = sin_speed;
+		this.cos_speed = cos_speed;
 		setSprite();
 	}
 
@@ -50,7 +60,13 @@ public class Bullet extends Entity {
 	 * Updates the bullet's position.
 	 */
 	public final void update() {
+		// 각속도 진행
 		this.positionY += this.speed;
+		this.positionX += this.cos_speed;
+		// 총알이 벽에 부딪히면 반사
+		if(this.positionX <= 0 || this.positionX >= 598){
+			this.cos_speed = -this.cos_speed;
+		}
 	}
 
 	/**
@@ -63,6 +79,8 @@ public class Bullet extends Entity {
 		this.speed = speed;
 	}
 
+	// BulletPool에서 cos_speed값 정의
+	public final void setCosSpeed(final int cos_speed) { this.cos_speed = cos_speed; }
 	/**
 	 * Getter for the speed of the bullet.
 	 * 
