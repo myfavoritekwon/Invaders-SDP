@@ -538,7 +538,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			this.alertMessage = "";
 			this.isRunning = false;
 		}
-
 	}
 	/**
 	 * Draws the elements associated with the screen.
