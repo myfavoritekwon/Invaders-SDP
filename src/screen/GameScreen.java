@@ -179,13 +179,13 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.hitBullets = gameState.getHitBullets();
 		if (this.bonusLife)
 			this.lives++;
-		this.bulletsShot = gameState.getBulletsShot();
 		this.shipsDestroyed = gameState.getShipsDestroyed();
 		this.playerNumber = -1;
 		this.maxCombo = gameState.getMaxCombo();
 		this.lapTime = gameState.getPrevTime();
 		this.tempScore = gameState.getPrevScore();
 
+		this.bulletsShot = gameState.getBulletsShot();
 		try {
 			this.highScores = Core.getFileManager().loadHighScores();
 
