@@ -176,6 +176,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.alertMessage = gameState.getAlertMessage();
 		this.shipType = gameState.getShipType();
 		this.lives = gameState.getLivesRemaining();
+		this.hitBullets = gameState.getHitBullets();
 		if (this.bonusLife)
 			this.lives++;
 		this.bulletsShot = gameState.getBulletsShot();
