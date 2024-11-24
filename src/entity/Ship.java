@@ -44,6 +44,9 @@ public abstract class Ship extends Entity {
 	private final SoundManager soundManager = SoundManager.getInstance();
 	private boolean isLaserMode = false;
 
+	// ship에서 각도값 설정하여 각속도 계산시에 이용
+	private int angle = 90;
+	private double angle_shoot = Math.toRadians(angle);
 
 
 
@@ -174,29 +177,34 @@ public abstract class Ship extends Entity {
 	 * @return Checks if the bullet was shot correctly.
 	 */
 	public final boolean shoot(final Set<Bullet> bullets, int shotNum, float balance) {
+		//변화된 각도값을 라디안값으로 변환후 출력
+		angle_shoot = Math.toRadians(angle);
 		if (this.shootingCooldown.checkFinished()) {
 
 			this.shootingCooldown.reset();
 			this.lastShootTime = System.currentTimeMillis();
 
+			//각속도 계산
+			int Xspeed = (int)Math.round(Math.cos(angle_shoot) * this.getBulletSpeed());
+			int Yspeed = (int)Math.round(Math.sin(angle_shoot) * this.getBulletSpeed());
 			switch (shotNum) {
 				case 1:
-					bullets.add(BulletPool.getBullet(positionX + this.width / 2, positionY, this.getBulletSpeed()));
+					bullets.add(BulletPool.getBullet(positionX + this.width / 2, positionY, Xspeed,Yspeed));
 					if (!isLaserMode) {
 						soundManager.playSound(Sound.PLAYER_LASER, balance);
 					}
 					break;
 				case 2:
-					bullets.add(BulletPool.getBullet(positionX + this.width, positionY, this.getBulletSpeed()));
-					bullets.add(BulletPool.getBullet(positionX, positionY, this.getBulletSpeed()));
+					bullets.add(BulletPool.getBullet(positionX + this.width, positionY, Xspeed,Yspeed));
+					bullets.add(BulletPool.getBullet(positionX, positionY, Xspeed,Yspeed));
 					if (!isLaserMode) {
 						soundManager.playSound(Sound.ITEM_2SHOT, balance);
 					}
 					break;
 				case 3:
-					bullets.add(BulletPool.getBullet(positionX + this.width, positionY, this.getBulletSpeed()));
-					bullets.add(BulletPool.getBullet(positionX, positionY, this.getBulletSpeed()));
-					bullets.add(BulletPool.getBullet(positionX + this.width / 2, positionY, this.getBulletSpeed()));
+					bullets.add(BulletPool.getBullet(positionX + this.width, positionY, Xspeed,Yspeed));
+					bullets.add(BulletPool.getBullet(positionX, positionY, Xspeed,Yspeed));
+					bullets.add(BulletPool.getBullet(positionX + this.width / 2, positionY, Xspeed,Yspeed));
 					if (!isLaserMode) {
 						soundManager.playSound(Sound.ITEM_3SHOT, balance);
 					}
@@ -209,6 +217,13 @@ public abstract class Ship extends Entity {
 		return false;
 	}
 
+	// 좌측키 누르면 각도값 감소
+	public void moveAngleToLeft(){
+		if(angle >= 20)
+		angle -=1; }
+	// 우측키 누르면 각도값 증가
+	public void moveAngleToRight(){
+		if(angle <= 160) angle +=1; }
 	/**
 	 * Updates status of the ship.
 	 */
@@ -236,6 +251,8 @@ public abstract class Ship extends Entity {
 		return !this.destructionCooldown.checkFinished();
 	}
 
+	// 각도값 출력
+	public final int getAngle(){return angle;}
 	/**
 	 * Getter for the ship's speed.
 	 *

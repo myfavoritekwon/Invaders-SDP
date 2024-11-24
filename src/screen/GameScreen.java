@@ -3,6 +3,7 @@ package screen;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.security.Key;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -347,11 +348,21 @@ public class GameScreen extends Screen implements Callable<GameState> {
 							if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 1.0f)) // Player 1 attack
 								this.bulletsShot += this.itemManager.getShotNum();
 						}
+						// 플레이어 2 윗 방향키 누르면 총알 각도 조정 모드 on
+						if(this.inputManager.isKeyDown(KeyEvent.VK_UP)){
+							if(this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
+							if(this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
+						}
 						break;
 					case 0:
 						if (player1Attacking) {
 							if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), -1.0f)) // Player 1 attack
 								this.bulletsShot += this.itemManager.getShotNum();
+						}
+						// 플레이어 1 W키 누르면 총알 각도 조정 모드 on
+						if(this.inputManager.isKeyDown(KeyEvent.VK_W)){
+							if(this.inputManager.isKeyDown(KeyEvent.VK_A)) this.ship.moveAngleToLeft();
+							if(this.inputManager.isKeyDown(KeyEvent.VK_D)) this.ship.moveAngleToRight();
 						}
 						break;
 					default: //playerNumber = -1
@@ -359,6 +370,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 							if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 0.0f)) // Player 1 attack
 								this.bulletsShot += this.itemManager.getShotNum();
 						}
+						// 1인 모드에서 윗 방향키 누르면 총알 각도 조정 모드 on
+						if(this.inputManager.isKeyDown(KeyEvent.VK_UP)){
+							if(this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
+							if(this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
+						}
+
 						break;
 				}
 			}
@@ -374,22 +391,30 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				this.ship.setColor(Color.GREEN);
 
 			if (!this.ship.isDestroyed()) {
-				boolean moveRight;
-				boolean moveLeft;
+				// boolean 초기값 설정
+				boolean moveRight = false;
+				boolean moveLeft = false;
 				switch (playerNumber) {
 					case 0:
-						moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
-						moveLeft = inputManager.isKeyDown(KeyEvent.VK_A);
+						// 플레이어 1 W를 안눌렀을 때 이동 가능
+						if(!inputManager.isKeyDown(KeyEvent.VK_W)) {
+							moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
+							moveLeft = inputManager.isKeyDown(KeyEvent.VK_A);
+						}
 						break;
 					case 1:
-						moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT);
-						moveLeft = inputManager.isKeyDown(KeyEvent.VK_LEFT);
+						// 플레이어 2 윗 방향키 안눌렀을 때 이동 가능
+						if(!inputManager.isKeyDown(KeyEvent.VK_UP)) {
+							moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT);
+							moveLeft = inputManager.isKeyDown(KeyEvent.VK_LEFT);
+						}
 						break;
 					default:
-						moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT)
-								|| inputManager.isKeyDown(KeyEvent.VK_D);
-						moveLeft = inputManager.isKeyDown(KeyEvent.VK_LEFT)
-								|| inputManager.isKeyDown(KeyEvent.VK_A);
+						// 1인모드에서 윗 방향키 안눌렀을 때 이동 가능
+						moveRight = (inputManager.isKeyDown(KeyEvent.VK_RIGHT)
+								|| inputManager.isKeyDown(KeyEvent.VK_D)) && !inputManager.isKeyDown(KeyEvent.VK_UP) ;
+						moveLeft = (inputManager.isKeyDown(KeyEvent.VK_LEFT)
+								|| inputManager.isKeyDown(KeyEvent.VK_A)) && !inputManager.isKeyDown(KeyEvent.VK_UP);
 				}
 
 				boolean isRightBorder = this.ship.getPositionX()
@@ -504,8 +529,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private void draw() {
 		drawManager.initDrawing(this);
 		drawManager.drawGameTitle(this);
-
-		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX());
+		// 1인 모드 총알 경로
+		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX() , this.ship.getAngle());
 
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(), this.ship.getPositionY());
 
@@ -652,8 +677,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private void drawThread() {
 		drawManager.initThreadDrawing(this, playerNumber);
 		drawManager.drawGameTitle(this, playerNumber);
-
-		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX(), playerNumber);
+		// 2인모드 총알 각도
+		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX(), playerNumber , this.ship.getAngle());
 
 		drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 				this.ship.getPositionY(), playerNumber);
