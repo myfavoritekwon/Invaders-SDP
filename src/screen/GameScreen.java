@@ -347,8 +347,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
 				boolean webCollision = false;
 				for (int i = 0; i < web.size(); i++) {
-					if (!(ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
-							|| web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6)) {
+					// 거미줄 충돌 시 webCollision 값 true
+					if(checkCollision(ship,web.get(i))){
 						webCollision = true;
 						logger.info("Web collision detected at position" + ship.getPositionX());
 						break;
@@ -515,10 +515,20 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						break;
 					}
 				}
+				// 플레이어 함선이 움직이던 중 배리어와 겹쳐졌을 버그 발생 시 플레이어 함선을 아래로 강제 이동시킴
+				if(!barriers.isEmpty()){
+					for(Barrier check : barriers){
+						if(checkCollision(ship,check)){
+							ship.moveDown(10);
+						}
+					}
+				}
 
 			}
 
 			if (this.enemyShipSpecial != null) {
+				// special 함선돠 만나면 아래로 강제 이동
+				if( checkCollision(ship,enemyShipSpecial)) ship.moveDown(5);
 				if (!this.enemyShipSpecial.isDestroyed())
 					this.enemyShipSpecial.move(2, 0);
 				else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
@@ -648,6 +658,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	}
 	private boolean checkCollision(final int x1, final int y1, final int width1, final int height1,
 								   final Entity entity) {
+		if(entity == null) return false; // 파괴된 적군함선은 listEnemy에 null로 저장되어 있기에 예외처리
 		int x2 = entity.getPositionX();
 		int y2 = entity.getPositionY();
 		int width2 = entity.getWidth();

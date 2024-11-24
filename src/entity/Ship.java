@@ -178,7 +178,10 @@ public abstract class Ship extends Entity {
 			soundCooldown.reset();
 		}
 	}
+	//아랫방향으로 이동
 	public final void moveDown(float balance) {
+		if (this.isPlayerShip && this.isPuzzleActive) return; // 퍼즐이 안나와 있을 때
+
 		if(threadWeb){
 			this.positionY += this.getSpeed() / 2;
 		} else {
@@ -189,7 +192,10 @@ public abstract class Ship extends Entity {
 			soundCooldown.reset();
 		}
 	}
+	// 윗 방향으로 이동
 	public final void moveUp(float balance) {
+		if (this.isPlayerShip && this.isPuzzleActive) return;
+
 		if(threadWeb){
 			this.positionY -= this.getSpeed() / 2;
 		} else {

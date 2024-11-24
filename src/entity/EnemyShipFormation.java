@@ -286,6 +286,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 			for (int i = 0; i < this.enemyShips.size(); i++)
 				for (int j = 0; j < this.enemyShips.get(i).size(); j++)
 					if (this.enemyShips.get(i).get(j) != null && this.enemyShips.get(i).get(j).isDestroyed()) {
+						listEnemies.set(i * this.enemyShips.get(i).size() + j, null); // 파괴된 에너미쉽 갱신
 						this.logger.info("Removed enemy " + j + " from column " + i);
 						this.enemyShips.get(i).set(j, null);
 					}
