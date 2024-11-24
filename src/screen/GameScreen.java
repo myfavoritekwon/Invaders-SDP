@@ -185,8 +185,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.lapTime = gameState.getPrevTime();
 		this.tempScore = gameState.getPrevScore();
 
-		this.hitBullets = gameState.getHitBullets();
-
 		try {
 			this.highScores = Core.getFileManager().loadHighScores();
 
