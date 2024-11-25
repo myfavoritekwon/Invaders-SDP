@@ -49,8 +49,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private int level;
 	/** Formation of enemy ships. */
 	private EnemyShipFormation enemyShipFormation;
-	/** 중력 함선 */
-	private ArrayList<PhysicsEnemyShip> physicsEnemyShips;
+//	/** 중력 함선 */
+//	private ArrayList<PhysicsEnemyShip> physicsEnemyShips;
 	/** Player's ship. */
 	private Ship ship;
 	/** Bonus enemy ship that appears sometimes. */
@@ -249,25 +249,24 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
         ship.applyItem(wallet);
 
-		//Create Gravity Enemy
-		int bonus = gameState.getLevel() % 1;
-
-		if(bonus == 0){
-			physicsEnemyShips = new ArrayList<>();
-			int mob_num = level * 4;
-			Random random = new Random();
-			for(int i = 0; i < mob_num; i++){
-				int init_x = getWidth();
-				int x_result = random.nextBoolean() ? 0 : init_x;
-				int y_result = random.nextInt(getHeight() - 100 + 1);
-				System.out.println("x_result = " + x_result + " " + "y_result = " + y_result);
-				SpriteType[] spriteTypes = {SpriteType.EnemyShipA1, SpriteType.EnemyShipB1, SpriteType.EnemyShipC1, SpriteType.EnemyShipD1, SpriteType.EnemyShipE1, SpriteType.EnemyShipF1};
-				SpriteType sprite_result = spriteTypes[random.nextInt(spriteTypes.length)];
-				PhysicsEnemyShip physicsEnemyShip = new PhysicsEnemyShip(x_result, y_result, sprite_result, gameState, this);
-
-				physicsEnemyShips.add(physicsEnemyShip);
-			}
-		}
+//		//Create Gravity Enemy
+//		int bonus = gameState.getLevel() % 1;
+//
+//		if(bonus == 0){
+//			physicsEnemyShips = new ArrayList<>();
+//			int mob_num = level * 4;
+//			Random random = new Random();
+//			for(int i = 0; i < mob_num; i++){
+//				int init_x = getWidth() - 12 * 2;
+//				int x_result = random.nextBoolean() ? 0 : init_x;
+//				int y_result = random.nextInt(getHeight() - 100 + 1);
+//				SpriteType[] spriteTypes = {SpriteType.EnemyShipA1, SpriteType.EnemyShipB1, SpriteType.EnemyShipC1, SpriteType.EnemyShipD1, SpriteType.EnemyShipE1};
+//				SpriteType sprite_result = spriteTypes[random.nextInt(spriteTypes.length)];
+//				PhysicsEnemyShip physicsEnemyShip = new PhysicsEnemyShip(x_result, y_result, sprite_result, gameState, this);
+//
+//				physicsEnemyShips.add(physicsEnemyShip);
+//			}
+//		}
 
 		//Create random Spider Web.
 		int web_count = 1 + level / 3;
@@ -520,9 +519,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
 				handleBlockerAppearance();
 			}
-			for(int i = 0; i < physicsEnemyShips.size(); i++) {
-				physicsEnemyShips.get(i).update();
-			}
+
+//			//update physicsEnemy
+//			for(int i = 0; i < physicsEnemyShips.size(); i++) {
+//				physicsEnemyShips.get(i).update();
+//			}
 		}
 
 		manageCollisions();
@@ -560,11 +561,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
 
-		//draw Gravity Enemy
-		for(int i = 0; i < physicsEnemyShips.size(); i++){
-			drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
-					(int) this.physicsEnemyShips.get(i).getPositionY());
-		}
+//		//draw Gravity Enemy
+//		for(int i = 0; i < physicsEnemyShips.size(); i++){
+//			drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
+//					(int) this.physicsEnemyShips.get(i).getPositionY());
+//		}
 		//draw Spider Web
 		for (int i = 0; i < web.size(); i++) {
 			drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
