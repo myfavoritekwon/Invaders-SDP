@@ -209,7 +209,6 @@ public class EnemyShip extends Entity {
 
     public final void HealthManageDestroy() { //Determine whether to destroy the enemy ship based on its health
         if(this.health <= 0){
-			this.health--;
             this.isDestroyed = true;
             this.spriteType = SpriteType.Explosion;
         }else{
@@ -220,7 +219,9 @@ public class EnemyShip extends Entity {
 
 	public int getHealth(){return this.health; }  //Receive enemy ship health
 
-
+	public void setHealth(int health) {
+		this.health = health;
+	}
 
 	/**
 	 * Checks if the ship has been destroyed.
