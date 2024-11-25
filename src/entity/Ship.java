@@ -213,6 +213,8 @@ public abstract class Ship extends Entity {
 	 * @return Checks if the bullet was shot correctly.
 	 */
 	public final boolean shoot(final Set<Bullet> bullets, int shotNum, float balance) {
+		if (this.isPlayerShip && this.isPuzzleActive) return false;
+
 		//변화된 각도값을 라디안값으로 변환후 출력
 		angle_shoot = Math.toRadians(angle);
 		if (this.isPlayerShip && this.isPuzzleActive) return false;

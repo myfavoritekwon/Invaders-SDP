@@ -674,6 +674,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			}
 		}
 
+			// when puzzle activated
+			if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
+				updatePuzzleState();
+			}
+		}
+
 		manageCollisions();
 		cleanBullets();
 		if (playerNumber >= 0)
