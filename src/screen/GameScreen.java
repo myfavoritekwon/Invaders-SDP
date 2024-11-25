@@ -17,14 +17,17 @@ import java.util.TimerTask;
 
 
 import engine.*;
+import engine.Socket.Client;
+import engine.Socket.Server;
+import engine.ServerManager;
 import entity.*;
 
 
 /**
  * Implements the game screen, where the action happens.
- * 
+ *
  * @author <a href="mailto:RobertoIA1987@gmail.com">Roberto Izquierdo Amo</a>
- * 
+ *
  */
 public class GameScreen extends Screen implements Callable<GameState> {
 
@@ -51,6 +54,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private EnemyShipFormation enemyShipFormation;
 	/** Player's ship. */
 	private Ship ship;
+	private Ship p2pShip;
 	/** Bonus enemy ship that appears sometimes. */
 	private EnemyShip enemyShipSpecial;
 	/** Minimum time between bonus ship appearances. */
@@ -99,7 +103,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	/** Alert Message when a special enemy appears. */
 	private String alertMessage;
 	/** checks if it's executed. */
-  	private boolean isExecuted = false;
+	private boolean isExecuted = false;
 	/** timer.. */
 	private Timer timer;
 	private TimerTask timerTask;
@@ -134,6 +138,14 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	private GameState gameState;
 
+	private Server server;
+	private Client client;
+	private static boolean SORC;
+	private static String Button;
+	private boolean P2PCheck = false;
+	private ServerManager serverManager;
+	private List<String> giveShooter;
+
 	private int hitBullets;
 
 	private PuzzleScreen puzzleScreen;
@@ -142,7 +154,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Constructor, establishes the properties of the screen.
-	 * 
+	 *
 	 * @param gameState
 	 *            Current game state.
 	 * @param gameSettings
@@ -157,8 +169,59 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 *            Frames per second, frame rate at which the game is run.
 	 */
 	public GameScreen(final GameState gameState,
-			final GameSettings gameSettings, final boolean bonusLife,
-			final int width, final int height, final int fps, final Wallet wallet) {
+					  final GameSettings gameSettings, final boolean bonusLife,
+					  final int width, final int height, final int fps, final Wallet wallet) {
+		super(width, height, fps);
+
+		this.gameSettings = gameSettings;
+		this.gameState = gameState;
+		this.bonusLife = bonusLife;
+		this.level = gameState.getLevel();
+		this.score = gameState.getScore();
+		this.elapsedTime = gameState.getElapsedTime();
+		this.alertMessage = gameState.getAlertMessage();
+		this.shipType = gameState.getShipType();
+		this.lives = gameState.getLivesRemaining();
+		this.hitBullets = gameState.getHitBullets();
+		if (this.bonusLife)
+			this.lives++;
+		this.shipsDestroyed = gameState.getShipsDestroyed();
+		this.playerNumber = -1;
+		this.maxCombo = gameState.getMaxCombo();
+		this.lapTime = gameState.getPrevTime();
+		this.tempScore = gameState.getPrevScore();
+
+		this.bulletsShot = gameState.getBulletsShot();
+		try {
+			this.highScores = Core.getFileManager().loadHighScores();
+
+		} catch (IOException e) {
+			logger.warning("Couldn't load high scores!");
+		}
+
+		this.wallet = wallet;
+
+
+		this.random = new Random();
+		this.blockerVisible = false;
+		this.blockerCooldown = Core.getVariableCooldown(10000, 14000);
+		this.blockerCooldown.reset();
+		this.blockerVisibleCooldown = Core.getCooldown(20000);
+
+		try {
+			this.highScores = Core.getFileManager().loadHighScores();
+		} catch (IOException e) {
+			logger.warning("Couldn't load high scores!");
+		}
+		this.alertMessage = "";
+
+		this.wallet = wallet;
+	}
+
+	public GameScreen(final GameState gameState,
+					  final GameSettings gameSettings, final boolean bonusLife,
+					  final int width, final int height, final int fps, final Wallet wallet, final Server server, final Client client,
+					  final ServerManager serverManager) {
 		super(width, height, fps);
 
 		this.gameSettings = gameSettings;
@@ -178,8 +241,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.maxCombo = gameState.getMaxCombo();
 		this.lapTime = gameState.getPrevTime();
 		this.tempScore = gameState.getPrevScore();
-
-		this.hitBullets = gameState.getHitBullets();
+		this.serverManager = serverManager;
 
 		try {
 			this.highScores = Core.getFileManager().loadHighScores();
@@ -205,6 +267,46 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.alertMessage = "";
 
 		this.wallet = wallet;
+		this.P2PCheck = true;
+		this.server = server;
+		this.client = client;
+
+		KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+		manager.addKeyEventDispatcher(new KeyEventDispatcher() {
+			@Override
+			public boolean dispatchKeyEvent(KeyEvent e) {
+				if (e.getID() == KeyEvent.KEY_PRESSED) {
+					Button = KeyMapping(e);
+					if(SORC) server.setButton(Button);
+					else client.setButton(Button);
+				} else if (e.getID() == KeyEvent.KEY_RELEASED) {
+					System.out.println("Key Released: " + Button);
+					Button= "0"; // 키가 떼어지면 초기화
+					if(SORC) server.setButton(Button);
+					else client.setButton(Button);
+				}
+				return false; // 이벤트를 다른 리스너에게도 전달
+			}
+		});
+	}
+
+	private static String KeyMapping(KeyEvent e) {
+		switch (e.getKeyCode()) {
+			case KeyEvent.VK_UP:
+				return "U"; // 위 방향키를 'U'로 매핑
+			case KeyEvent.VK_DOWN:
+				return "D"; // 아래 방향키를 'D'로 매핑
+			case KeyEvent.VK_LEFT:
+				return "L"; // 왼쪽 방향키를 'L'로 매핑
+			case KeyEvent.VK_RIGHT:
+				return "R"; // 오른쪽 방향키를 'R'로 매핑
+			case KeyEvent.VK_SPACE:
+				return "S"; // 스페이스바 'S'로 매핑
+			case KeyEvent.VK_ESCAPE:
+				return "E"; // ESC 키를 'E'로 매핑
+			default:
+				return String.valueOf(e.getKeyChar()); // 다른 키는 원래 문자 그대로 반환
+		}
 	}
 
 	/**
@@ -247,9 +349,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
         // Appears each 10-30 seconds.
+		this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
+		p2pShip.setColor(Color.BLUE);
         this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
-        ship.applyItem(wallet);
+		ship.applyItem(wallet);
 		//Create random Spider Web.
 		int web_count = 1 + level / 3;
 		web = new ArrayList<>();
@@ -282,8 +386,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			block.add(newBlock);
 		}
 
-
-
 		// Appears each 10-30 seconds.
 		this.enemyShipSpecialCooldown = Core.getVariableCooldown(
 				BONUS_SHIP_INTERVAL, BONUS_SHIP_VARIANCE);
@@ -293,7 +395,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.screenFinishedCooldown = Core.getCooldown(SCREEN_CHANGE_INTERVAL);
 		this.bullets = new HashSet<>();
 		this.barriers = new HashSet<>();
-        this.itemBoxes = new HashSet<>();
+		this.itemBoxes = new HashSet<>();
 		this.itemManager = new ItemManager(this.ship, this.enemyShipFormation, this.barriers, this.height, this.width, this.balance);
 
 		// Special input delay / countdown.
@@ -311,9 +413,9 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			case 4: soundManager.loopSound(Sound.BGM_LV4); break;
 			case 5: soundManager.loopSound(Sound.BGM_LV5); break;
 			case 6: soundManager.loopSound(Sound.BGM_LV6); break;
-            case 7:
+			case 7:
 				// From level 7 and above, it continues to play at BGM_LV7.
-            default: soundManager.loopSound(Sound.BGM_LV7); break;
+			default: soundManager.loopSound(Sound.BGM_LV7); break;
 		}
 
 		this.puzzleScreen = null;
@@ -324,7 +426,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Starts the action.
-	 * 
+	 *
 	 * @return Next screen code.
 	 */
 	public final int run() {
@@ -412,17 +514,39 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 						break;
 				}
+				if(P2PCheck){
+
+					if(Server.checkConnect()){
+						String button = serverManager.getClientButton();
+						switch (button){
+							case "L": this.p2pShip.moveLeft(); break;
+							case "R": this.p2pShip.moveRight(); break;
+							case "S": this.p2pShip.shoot(this.bullets, this.itemManager.getShotNum()); break;
+							case null: break;
+							default: break;
+						}
+					}else{
+						String button = serverManager.getServerButton();
+						switch (button){
+							case "L": this.p2pShip.moveLeft(); break;
+							case "R": this.p2pShip.moveRight(); break;
+							case "S": this.p2pShip.shoot(this.bullets, this.itemManager.getShotNum()); break;
+							case null: break;
+							default: break;
+						}
+					}
+				}
 			}
 			/*Elapsed Time Update*/
 			long currentTime = System.currentTimeMillis();
 
-			if (this.prevTime != null)
-				this.elapsedTime += (int) (currentTime - this.prevTime);
+				if (this.prevTime != null)
+					this.elapsedTime += (int) (currentTime - this.prevTime);
 
-			this.prevTime = (int) currentTime;
+				this.prevTime = (int) currentTime;
 
-			if(!itemManager.isGhostActive())
-				this.ship.setColor(Color.GREEN);
+				if (!itemManager.isGhostActive())
+					this.ship.setColor(Color.GREEN);
 
 			if (!this.ship.isDestroyed()) {
 				// boolean 초기값 설정
@@ -549,15 +673,18 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					case 1: this.alertMessage = "--! ALERT !--";
 						break;
 
-					case 2: this.alertMessage = "-!! ALERT !!-";
-						break;
+						case 2:
+							this.alertMessage = "-!! ALERT !!-";
+							break;
 
-					case 3: this.alertMessage = "!!! ALERT !!!";
-						break;
+						case 3:
+							this.alertMessage = "!!! ALERT !!!";
+							break;
 
-					default: this.alertMessage = "";
-						break;
-				}
+						default:
+							this.alertMessage = "";
+							break;
+					}
 
 			}
 			if (this.enemyShipSpecial != null
@@ -567,15 +694,32 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			}
 
 			this.ship.update();
+			if(P2PCheck)
+				this.p2pShip.update();
 
 			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
 			if (!itemManager.isTimeStopActive()) {
-				this.enemyShipFormation.update();
-				this.enemyShipFormation.shoot(this.bullets, this.level, balance);
+				if(Server.checkConnect()) {
+					this.enemyShipFormation.update();
+					giveShooter = this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
+					String Cooldown = giveShooter.getLast();
+					giveShooter.removeLast();
+					serverManager.setGiveShooter(giveShooter);
+					serverManager.setCooldown(Cooldown);
+				}else{
+					this.enemyShipFormation.update();
+					this.enemyShipFormation.P2PShoot(this.bullets, this.level, this.balance, serverManager.getGiveShooter(), serverManager.getCooldown());
+				}
 			}
 
-			if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
-				handleBlockerAppearance();
+				if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
+					handleBlockerAppearance();
+				}
+			}
+
+			// when puzzle activated
+			if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
+				updatePuzzleState();
 			}
 		}
 
@@ -583,7 +727,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
 				updatePuzzleState();
 			}
-		}
 
 		manageCollisions();
 		cleanBullets();
@@ -729,8 +872,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawGameTitle(this);
 		// 1인 모드 총알 경로
 		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX() , this.ship.getPositionY(), this.ship.getAngle());
-
-		drawManager.drawEntity(this.ship, this.ship.getPositionX(), this.ship.getPositionY());
+		
+    drawManager.drawEntity(this.ship, this.ship.getPositionX(), this.ship.getPositionY());
+		if(P2PCheck)
+			drawManager.drawEntity(this.p2pShip, this.p2pShip.getPositionX(), this.p2pShip.getPositionY());
 
 		//draw Spider Web
 		for (int i = 0; i < web.size(); i++) {
@@ -781,22 +926,20 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 			//Intermediate aggregation
 			if (this.level > 1){
-                if (countdown == 0) {
+				if (countdown == 0) {
 					//Reset mac combo and edit temporary values
-                    this.lapTime = this.elapsedTime;
-                    this.tempScore = this.score;
-                    this.maxCombo = 0;
-                } else {
+					this.lapTime = this.elapsedTime;
+					this.tempScore = this.score;
+					this.maxCombo = 0;
+				} else {
 					// Don't show it just before the game starts, i.e. when the countdown is zero.
-                    drawManager.interAggre(this, this.level - 1, this.maxCombo, this.elapsedTime, this.lapTime, this.score, this.tempScore);
-                }
+					drawManager.interAggre(this, this.level - 1, this.maxCombo, this.elapsedTime, this.lapTime, this.score, this.tempScore);
+				}
 			}
 		}
 
-
 		//add drawRecord method for drawing
 		drawManager.drawRecord(highScores,this);
-
 
 		// Blocker drawing part
 		if (!blockers.isEmpty()) {
@@ -1035,6 +1178,16 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						this.logger.info("Hit on player ship, " + this.lives + " lives remaining.");
 					}
 				}
+				if (checkCollision(bullet, this.p2pShip) && !this.levelFinished && !itemManager.isGhostActive()) {
+					recyclable.add(bullet);
+					if (!this.p2pShip.isDestroyed()) {
+						this.p2pShip.destroy(balance);
+						lvdamage();
+						this.logger.info("Hit on p2player ship, " + this.lives + " lives remaining.");
+					}
+
+				}
+
 
 				if (this.barriers != null) {
 					Iterator<Barrier> barrierIterator = this.barriers.iterator();
@@ -1114,7 +1267,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				for (Block block : this.block) {
 					if (checkCollision(bullet, block)) {
 						recyclable.add(bullet);
-                        soundManager.playSound(Sound.BULLET_BLOCKING, balance);
+						soundManager.playSound(Sound.BULLET_BLOCKING, balance);
 						break;
 					}
 				}
@@ -1139,9 +1292,13 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		BulletPool.recycle(recyclable);
 	}
 
+	public static void setSORC(boolean sorc){
+		SORC = sorc;
+	}
+
 	/**
 	 * Checks if two entities are colliding.
-	 * 
+	 *
 	 * @param a
 	 *            First entity, the bullet.
 	 * @param b
@@ -1166,7 +1323,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	/**
 	 * Returns a GameState object representing the status of the game.
-	 * 
+	 *
 	 * @return Current game state.
 	 */
 	public final GameState getGameState() {
@@ -1194,4 +1351,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			this.lives = 0;
 		}
 	}
+
+    public List<String> getGiveShooter() {
+        return giveShooter;
+    }
+
+    public void setGiveShooter(List<String> giveShooter) {
+        this.giveShooter = giveShooter;
+    }
 }

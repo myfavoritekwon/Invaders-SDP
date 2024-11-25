@@ -1,12 +1,17 @@
 package engine;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import engine.Socket.Client;
+import engine.Socket.Server;
+import entity.Room;
 import entity.Ship;
 import entity.Wallet;
 import screen.*;
@@ -50,6 +55,13 @@ public final class Core {
 
 	private static int DifficultySetting;// <- setting EASY(0), NORMAL(1), HARD(2);
 
+	private static final List<Room> rooms = new ArrayList<Room>();
+	private static Room room;
+
+	private static ServerManager serverManager;
+	private static Server server;
+	private static Client client;
+
 	public static final class PuzzleSettings {
 		public static final int SEQUENCE_LENGTH = 4;
 		public static final int RETRY_DELAY = 2000;
@@ -75,7 +87,6 @@ public final class Core {
 			LOGGER.addHandler(fileHandler);
 			LOGGER.addHandler(consoleHandler);
 			LOGGER.setLevel(Level.ALL);
-
 		} catch (Exception e) {
 			// TODO handle exception
 			e.printStackTrace();
@@ -225,6 +236,60 @@ public final class Core {
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Closing score screen.");
 				break;
+			case 9: //Connect Server-Client
+				serverManager = new ServerManager(DifficultySetting, rooms);
+				client = new Client(serverManager);
+				server = new Server(serverManager, client);
+				currentScreen = new MultiRoomScreen(width, height, FPS, server, client);
+				returnCode = frame.setScreen(currentScreen);
+				LOGGER.info("Loading success multi room screen.");
+				break;
+			case 10: //Draw game multi
+				//Multi
+				// Game & score.
+				do {
+					// One extra live every few levels.
+					startTime = System.currentTimeMillis();
+					boolean bonusLife = gameState.getLevel()
+							% EXTRA_LIFE_FRECUENCY == 0
+							&& gameState.getLivesRemaining() < MAX_LIVES;
+					LOGGER.info("difficulty is " + 1);
+					//add variation
+					gameSetting = gameSetting.LevelSettings(gameSetting.getFormationWidth(),
+							gameSetting.getFormationHeight(),
+							gameSetting.getBaseSpeed(),
+							gameSetting.getShootingFrecuency(),
+							gameState.getLevel(),1);
+
+					currentScreen = new GameScreen(gameState,
+							gameSetting,
+							bonusLife, width, height, FPS, wallet, server, client, serverManager);
+					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+
+							+ " game screen at " + FPS + " fps.");
+					frame.setScreen(currentScreen);
+					LOGGER.info("Closing game screen.");
+
+					gameState = ((GameScreen) currentScreen).getGameState();
+
+					gameState = new GameState(gameState, gameState.getLevel() + 1);
+					endTime = System.currentTimeMillis();
+					achievementManager.updatePlaying(gameState.getMaxCombo(),(int) (endTime - startTime) / 1000, MAX_LIVES, gameState.getLivesRemaining(), gameState.getLevel()-1);
+				} while (gameState.getLivesRemaining() > 0);
+				achievementManager.updatePlayed(gameState.getAccuracy(), gameState.getScore());
+				achievementManager.updateAllAchievements();
+				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+						+ " score screen at " + FPS + " fps, with a score of "
+						+ gameState.getScore() + ", "
+						+ gameState.getShipType().toString() + " ship, "
+						+ gameState.getLivesRemaining() + " lives remaining, "
+						+ gameState.getBulletsShot() + " bullets shot and "
+						+ gameState.getShipsDestroyed() + " ships destroyed.");
+				currentScreen = new ScoreScreen(GameSettingScreen.getName(0), width, height, FPS, gameState, wallet, achievementManager, false);
+
+				returnCode = frame.setScreen(currentScreen);
+				LOGGER.info("Closing score screen.");
+				break;
 			default:
 				break;
 			}
@@ -314,5 +379,21 @@ public final class Core {
 
 	public static int getLevelSetting(){
 		return DifficultySetting;
+	}
+
+	public static List<Room> getRooms(){
+		return rooms;
+	}
+
+	public static void setRoom(int roomNB) {
+		room = rooms.get(roomNB);
+	}
+
+	public static Server getServer() {
+		return server;
+	}
+
+	public static Client getClient() {
+		return client;
 	}
 }

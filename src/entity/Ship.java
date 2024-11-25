@@ -17,30 +17,52 @@ import engine.SoundManager;
  */
 public abstract class Ship extends Entity {
 
-	/** Time between shots. */
+	/**
+	 * Time between shots.
+	 */
 	private static int SHOOTING_INTERVAL = 750;
-	/** Speed of the bullets shot by the ship. */
+	/**
+	 * Speed of the bullets shot by the ship.
+	 */
 	private static int BULLET_SPEED = -6;
-	/** Movement of the ship for each unit of time. */
+	/**
+	 * Movement of the ship for each unit of time.
+	 */
 	private static final int SPEED = 2;
 
-	/** Play the sound every 0.5 second */
+	/**
+	 * Play the sound every 0.5 second
+	 */
 	private static final int SOUND_COOLDOWN_INTERVAL = 500;
-	/** Cooldown for playing sound */
+	/**
+	 * Cooldown for playing sound
+	 */
 	private Cooldown soundCooldown;
 
-	/** Multipliers for the ship's properties. */
+	/**
+	 * Multipliers for the ship's properties.
+	 */
 	protected final ShipMultipliers multipliers;
-	/** Name of the ship. */
+	/**
+	 * Name of the ship.
+	 */
 	public final String name;
-	/** Type of sprite to be drawn. */
+	/**
+	 * Type of sprite to be drawn.
+	 */
 	private final SpriteType baseSprite;
 
-	/** Minimum time between shots. */
+	/**
+	 * Minimum time between shots.
+	 */
 	private Cooldown shootingCooldown;
-	/** Time spent inactive between hits. */
+	/**
+	 * Time spent inactive between hits.
+	 */
 	private Cooldown destructionCooldown;
-	/** Singleton instance of SoundManager */
+	/**
+	 * Singleton instance of SoundManager
+	 */
 	private final SoundManager soundManager = SoundManager.getInstance();
 	private boolean isLaserMode = false;
 
@@ -87,9 +109,6 @@ public abstract class Ship extends Entity {
 	 * 		      Type of sprite to be drawn.
 	 * 		      @see SpriteType
 	 */
-
-
-
 	protected Ship(final int positionX, final int positionY,
 				   final String name, final ShipMultipliers multipliers,
 				   final SpriteType spriteType) {
@@ -225,13 +244,10 @@ public abstract class Ship extends Entity {
 
 	/**
 	 * bullet sound (2-players)
-	 * @param bullets
-	 *          List of bullets on screen, to add the new bullet.
-	 * @param balance
-	 * 			1p -1.0, 2p 1.0, both 0.0
-	 * @param shotNum
-	 * 			Upgraded shot.
 	 *
+	 * @param bullets List of bullets on screen, to add the new bullet.
+	 * @param balance 1p -1.0, 2p 1.0, both 0.0
+	 * @param shotNum Upgraded shot.
 	 * @return Checks if the bullet was shot correctly.
 	 */
 	public final boolean shoot(final Set<Bullet> bullets, int shotNum, float balance) {
@@ -239,6 +255,8 @@ public abstract class Ship extends Entity {
 
 		//변화된 각도값을 라디안값으로 변환후 출력
 		angle_shoot = Math.toRadians(angle);
+		if (this.isPlayerShip && this.isPuzzleActive) return false;
+
 		if (this.shootingCooldown.checkFinished()) {
 
 			this.shootingCooldown.reset();
@@ -332,6 +350,7 @@ public abstract class Ship extends Entity {
 
 	/**
 	 * Getter for the ship's bullet speed.
+	 *
 	 * @return Speed of the bullets.
 	 */
 	public final int getBulletSpeed() {
@@ -340,13 +359,14 @@ public abstract class Ship extends Entity {
 
 	/**
 	 * Getter for the ship's shooting interval.
+	 *
 	 * @return Time between shots.
 	 */
 	public final int getShootingInterval() {
 		return Math.round(SHOOTING_INTERVAL * this.multipliers.shootingInterval());
 	}
 
-	public long getRemainingReloadTime(){
+	public long getRemainingReloadTime() {
 		long currentTime = System.currentTimeMillis();
 		long elapsedTime = currentTime - this.lastShootTime;
 		long remainingTime = this.getShootingInterval() - elapsedTime;
@@ -354,9 +374,9 @@ public abstract class Ship extends Entity {
 	}
 
 
-	public void applyItem(Wallet wallet){
+	public void applyItem(Wallet wallet) {
 		int bulletLv = wallet.getBullet_lv();
-		switch (bulletLv){
+		switch (bulletLv) {
 			case 1:
 				BULLET_SPEED = -6;
 				break;
@@ -374,7 +394,7 @@ public abstract class Ship extends Entity {
 		}
 
 		int intervalLv = wallet.getShot_lv();
-		switch (intervalLv){
+		switch (intervalLv) {
 			case 1: //생성자에서 이미 초기화함
 				break;
 			case 2:

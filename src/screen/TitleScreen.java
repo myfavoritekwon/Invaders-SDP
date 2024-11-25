@@ -102,6 +102,8 @@ public class TitleScreen extends Screen {
 		if (this.returnCode == 5)
 			this.returnCode = 0;
 		else if (this.returnCode == 0)
+			this.returnCode = 9;
+		else if (this.returnCode == 9)
 			this.returnCode = 6;
 		else if (this.returnCode == 6)
 			this.returnCode = 3;
@@ -118,10 +120,12 @@ public class TitleScreen extends Screen {
 	 */
 		if (this.returnCode == 0)
 			this.returnCode = 5;
-		else if (this.returnCode == 6)
+		else if (this.returnCode == 9)
 			this.returnCode = 0;
 		else if (this.returnCode == 3)
 			this.returnCode = 6;
+		else if(this.returnCode == 6)
+			this.returnCode = 9;
 		else
 			this.returnCode--;
 	}
