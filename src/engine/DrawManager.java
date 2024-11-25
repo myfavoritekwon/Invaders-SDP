@@ -1478,8 +1478,8 @@ public final class DrawManager {
 		backBufferGraphics.setColor(Color.WHITE);
 		if(remainingTime > 0){
 
-			int shipX = ship.getPositionX();
-			int shipY = ship.getPositionY();
+			int shipX = (int) ship.getPositionX();
+			int shipY = (int) ship.getPositionY();
 			int shipWidth = ship.getWidth();
 			int circleSize = 16;
 			int startAngle = 90;
@@ -1522,8 +1522,8 @@ public final class DrawManager {
 		threadBufferGraphics[threadNumber].setColor(Color.WHITE);
 		if(remainingTime > 0){
 
-			int shipX = ship.getPositionX();
-			int shipY = ship.getPositionY();
+			int shipX = (int) ship.getPositionX();
+			int shipY = (int) ship.getPositionY();
 			int shipWidth = ship.getWidth();
 			int circleSize = 16;
 			int startAngle = 90;

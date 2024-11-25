@@ -189,22 +189,22 @@ public abstract class Ship extends Entity {
 			int Yspeed = (int)Math.round(Math.sin(angle_shoot) * this.getBulletSpeed());
 			switch (shotNum) {
 				case 1:
-					bullets.add(BulletPool.getBullet(positionX + this.width / 2, positionY, Xspeed,Yspeed));
+					bullets.add(BulletPool.getBullet((int) (positionX + this.width / 2), (int) positionY, Xspeed,Yspeed));
 					if (!isLaserMode) {
 						soundManager.playSound(Sound.PLAYER_LASER, balance);
 					}
 					break;
 				case 2:
-					bullets.add(BulletPool.getBullet(positionX + this.width, positionY, Xspeed,Yspeed));
-					bullets.add(BulletPool.getBullet(positionX, positionY, Xspeed,Yspeed));
+					bullets.add(BulletPool.getBullet((int) (positionX + this.width), (int) positionY, Xspeed,Yspeed));
+					bullets.add(BulletPool.getBullet((int) positionX, (int) positionY, Xspeed,Yspeed));
 					if (!isLaserMode) {
 						soundManager.playSound(Sound.ITEM_2SHOT, balance);
 					}
 					break;
 				case 3:
-					bullets.add(BulletPool.getBullet(positionX + this.width, positionY, Xspeed,Yspeed));
-					bullets.add(BulletPool.getBullet(positionX, positionY, Xspeed,Yspeed));
-					bullets.add(BulletPool.getBullet(positionX + this.width / 2, positionY, Xspeed,Yspeed));
+					bullets.add(BulletPool.getBullet((int) (positionX + this.width), (int) positionY, Xspeed,Yspeed));
+					bullets.add(BulletPool.getBullet((int) positionX, (int) positionY, Xspeed,Yspeed));
+					bullets.add(BulletPool.getBullet((int) (positionX + this.width / 2), (int) positionY, Xspeed,Yspeed));
 					if (!isLaserMode) {
 						soundManager.playSound(Sound.ITEM_3SHOT, balance);
 					}

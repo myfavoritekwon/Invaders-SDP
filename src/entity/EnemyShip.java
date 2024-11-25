@@ -32,7 +32,7 @@ public class EnemyShip extends Entity {
 	private static final int BONUS_TYPE_POINTS = 100;
 
 	/** Cooldown between sprite changes. */
-	private Cooldown animationCooldown;
+	protected Cooldown animationCooldown;
 	/** Checks if the ship has been hit by a bullet. */
 	private boolean isDestroyed;
 	/** Values of the ship, in points, when destroyed. */
@@ -143,7 +143,7 @@ public class EnemyShip extends Entity {
 
 	/**
 	 * Moves the ship the specified distance.
-	 * 
+	 *
 	 * @param distanceX
 	 *            Distance to move in the X axis.
 	 * @param distanceY
@@ -157,7 +157,7 @@ public class EnemyShip extends Entity {
 	/**
 	 * Updates attributes, mainly used for animation purposes.
 	 */
-	public final void update() {
+	public void update() {
 		if (this.animationCooldown.checkFinished()) {
 			this.animationCooldown.reset();
 

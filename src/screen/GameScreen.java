@@ -15,7 +15,7 @@ import java.util.concurrent.Callable;
 import java.util.Timer;
 import java.util.TimerTask;
 
-
+import engine.DrawManager.SpriteType;
 import engine.*;
 import entity.*;
 
@@ -49,6 +49,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private int level;
 	/** Formation of enemy ships. */
 	private EnemyShipFormation enemyShipFormation;
+	/** 중력 함선 */
+	private ArrayList<PhysicsEnemyShip> physicsEnemyShips;
 	/** Player's ship. */
 	private Ship ship;
 	/** Bonus enemy ship that appears sometimes. */
@@ -246,6 +248,27 @@ public class GameScreen extends Screen implements Callable<GameState> {
         this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
         ship.applyItem(wallet);
+
+		//Create Gravity Enemy
+		int bonus = gameState.getLevel() % 1;
+
+		if(bonus == 0){
+			physicsEnemyShips = new ArrayList<>();
+			int mob_num = level * 4;
+			Random random = new Random();
+			for(int i = 0; i < mob_num; i++){
+				int init_x = getWidth();
+				int x_result = random.nextBoolean() ? 0 : init_x;
+				int y_result = random.nextInt(getHeight() - 100 + 1);
+				System.out.println("x_result = " + x_result + " " + "y_result = " + y_result);
+				SpriteType[] spriteTypes = {SpriteType.EnemyShipA1, SpriteType.EnemyShipB1, SpriteType.EnemyShipC1, SpriteType.EnemyShipD1, SpriteType.EnemyShipE1, SpriteType.EnemyShipF1};
+				SpriteType sprite_result = spriteTypes[random.nextInt(spriteTypes.length)];
+				PhysicsEnemyShip physicsEnemyShip = new PhysicsEnemyShip(x_result, y_result, sprite_result, gameState, this);
+
+				physicsEnemyShips.add(physicsEnemyShip);
+			}
+		}
+
 		//Create random Spider Web.
 		int web_count = 1 + level / 3;
 		web = new ArrayList<>();
@@ -497,6 +520,9 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
 				handleBlockerAppearance();
 			}
+			for(int i = 0; i < physicsEnemyShips.size(); i++) {
+				physicsEnemyShips.get(i).update();
+			}
 		}
 
 		manageCollisions();
@@ -530,37 +556,42 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.initDrawing(this);
 		drawManager.drawGameTitle(this);
 		// 1인 모드 총알 경로
-		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX() , this.ship.getAngle());
+		drawManager.drawLaunchTrajectory( this, (int) this.ship.getPositionX(), this.ship.getAngle());
 
-		drawManager.drawEntity(this.ship, this.ship.getPositionX(), this.ship.getPositionY());
+		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
 
+		//draw Gravity Enemy
+		for(int i = 0; i < physicsEnemyShips.size(); i++){
+			drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
+					(int) this.physicsEnemyShips.get(i).getPositionY());
+		}
 		//draw Spider Web
 		for (int i = 0; i < web.size(); i++) {
-			drawManager.drawEntity(this.web.get(i), this.web.get(i).getPositionX(),
-					this.web.get(i).getPositionY());
+			drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
+                    (int) this.web.get(i).getPositionY());
 		}
 		//draw Blocks
 		for (Block block : block)
-			drawManager.drawEntity(block, block.getPositionX(),
-					block.getPositionY());
+			drawManager.drawEntity(block, (int) block.getPositionX(),
+                    (int) block.getPositionY());
 
 
 		if (this.enemyShipSpecial != null)
 			drawManager.drawEntity(this.enemyShipSpecial,
-					this.enemyShipSpecial.getPositionX(),
-					this.enemyShipSpecial.getPositionY());
+                    (int) this.enemyShipSpecial.getPositionX(),
+                    (int) this.enemyShipSpecial.getPositionY());
 
 		enemyShipFormation.draw();
 
 		for (ItemBox itemBox : this.itemBoxes)
-			drawManager.drawEntity(itemBox, itemBox.getPositionX(), itemBox.getPositionY());
+			drawManager.drawEntity(itemBox, (int) itemBox.getPositionX(), (int) itemBox.getPositionY());
 
 		for (Barrier barrier : this.barriers)
-			drawManager.drawEntity(barrier, barrier.getPositionX(), barrier.getPositionY());
+			drawManager.drawEntity(barrier, (int) barrier.getPositionX(), (int) barrier.getPositionY());
 
 		for (Bullet bullet : this.bullets)
-			drawManager.drawEntity(bullet, bullet.getPositionX(),
-					bullet.getPositionY());
+			drawManager.drawEntity(bullet, (int) bullet.getPositionX(),
+                    (int) bullet.getPositionY());
 
 
 		// Interface.
@@ -603,7 +634,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		// Blocker drawing part
 		if (!blockers.isEmpty()) {
 			for (Blocker blocker : blockers) {
-				drawManager.drawRotatedEntity(blocker, blocker.getPositionX(), blocker.getPositionY(), blocker.getAngle());
+				drawManager.drawRotatedEntity(blocker, (int) blocker.getPositionX(), (int) blocker.getPositionY(), blocker.getAngle());
 			}
 		}
 
@@ -678,37 +709,37 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.initThreadDrawing(this, playerNumber);
 		drawManager.drawGameTitle(this, playerNumber);
 		// 2인모드 총알 각도
-		drawManager.drawLaunchTrajectory( this,this.ship.getPositionX(), playerNumber , this.ship.getAngle());
+		drawManager.drawLaunchTrajectory( this, (int) this.ship.getPositionX(), playerNumber , this.ship.getAngle());
 
-		drawManager.drawEntity(this.ship, this.ship.getPositionX(),
-				this.ship.getPositionY(), playerNumber);
+		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(),
+                (int) this.ship.getPositionY(), playerNumber);
 
 		//draw Spider Web
 		for (int i = 0; i < web.size(); i++) {
-			drawManager.drawEntity(this.web.get(i), this.web.get(i).getPositionX(),
-					this.web.get(i).getPositionY(), playerNumber);
+			drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
+                    (int) this.web.get(i).getPositionY(), playerNumber);
 		}
 		//draw Blocks
 		for (Block block : block)
-			drawManager.drawEntity(block, block.getPositionX(),
-					block.getPositionY(), playerNumber);
+			drawManager.drawEntity(block, (int) block.getPositionX(),
+                    (int) block.getPositionY(), playerNumber);
 
 		if (this.enemyShipSpecial != null)
 			drawManager.drawEntity(this.enemyShipSpecial,
-					this.enemyShipSpecial.getPositionX(),
-					this.enemyShipSpecial.getPositionY(), playerNumber);
+                    (int) this.enemyShipSpecial.getPositionX(),
+                    (int) this.enemyShipSpecial.getPositionY(), playerNumber);
 
 		enemyShipFormation.draw(playerNumber);
 
 		for (ItemBox itemBox : this.itemBoxes)
-			drawManager.drawEntity(itemBox, itemBox.getPositionX(), itemBox.getPositionY(), playerNumber);
+			drawManager.drawEntity(itemBox, (int) itemBox.getPositionX(), (int) itemBox.getPositionY(), playerNumber);
 
 		for (Barrier barrier : this.barriers)
-			drawManager.drawEntity(barrier, barrier.getPositionX(), barrier.getPositionY(), playerNumber);
+			drawManager.drawEntity(barrier, (int) barrier.getPositionX(), (int) barrier.getPositionY(), playerNumber);
 
 		for (Bullet bullet : this.bullets)
-			drawManager.drawEntity(bullet, bullet.getPositionX(),
-					bullet.getPositionY(), playerNumber);
+			drawManager.drawEntity(bullet, (int) bullet.getPositionX(),
+                    (int) bullet.getPositionY(), playerNumber);
 
 		// Interface.
 		drawManager.drawScore(this, this.score, playerNumber);
@@ -759,7 +790,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		// Blocker drawing part
 		if (!blockers.isEmpty()) {
 			for (Blocker blocker : blockers) {
-				drawManager.drawRotatedEntity(blocker, blocker.getPositionX(), blocker.getPositionY(), blocker.getAngle(), playerNumber);
+				drawManager.drawRotatedEntity(blocker, (int) blocker.getPositionX(), (int) blocker.getPositionY(), blocker.getAngle(), playerNumber);
 			}
 		}
 
@@ -801,11 +832,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		int topEnemyY = Integer.MAX_VALUE;
 		for (EnemyShip enemyShip : this.enemyShipFormation) {
 			if (enemyShip != null && !enemyShip.isDestroyed() && enemyShip.getPositionY() < topEnemyY) {
-				topEnemyY = enemyShip.getPositionY();
+				topEnemyY = (int) enemyShip.getPositionY();
 			}
 		}
 		if (this.enemyShipSpecial != null && !this.enemyShipSpecial.isDestroyed() && this.enemyShipSpecial.getPositionY() < topEnemyY) {
-			topEnemyY = this.enemyShipSpecial.getPositionY();
+			topEnemyY = (int) this.enemyShipSpecial.getPositionY();
 		}
 
 		for (Bullet bullet : this.bullets) {
@@ -853,7 +884,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						recyclable.add(bullet);
 
 						if (enemyShip.getHealth() < 0 && itemManager.dropItem()) {
-							this.itemBoxes.add(new ItemBox(enemyShip.getPositionX() + 6, enemyShip.getPositionY() + 1, balance));
+							this.itemBoxes.add(new ItemBox((int) (enemyShip.getPositionX() + 6), (int) (enemyShip.getPositionY() + 1), balance));
 							logger.info("Item box dropped");
 						}
 					}
@@ -935,10 +966,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 */
 	private boolean checkCollision(final Entity a, final Entity b) {
 		// Calculate center point of the entities in both axis.
-		int centerAX = a.getPositionX() + a.getWidth() / 2;
-		int centerAY = a.getPositionY() + a.getHeight() / 2;
-		int centerBX = b.getPositionX() + b.getWidth() / 2;
-		int centerBY = b.getPositionY() + b.getHeight() / 2;
+		int centerAX = (int) (a.getPositionX() + a.getWidth() / 2);
+		int centerAY = (int) (a.getPositionY() + a.getHeight() / 2);
+		int centerBX = (int) (b.getPositionX() + b.getWidth() / 2);
+		int centerBY = (int) (b.getPositionY() + b.getHeight() / 2);
 		// Calculate maximum distance without collision.
 		int maxDistanceX = a.getWidth() / 2 + b.getWidth() / 2;
 		int maxDistanceY = a.getHeight() / 2 + b.getHeight() / 2;
