@@ -4,6 +4,7 @@ import engine.Socket.Client;
 import engine.Socket.Server;
 import entity.Room;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -14,15 +15,14 @@ public class ServerManager {
     private static List<Room> rooms;
     private String hostIp;
 
-    public ServerManager() {
-    }
-
-    public ServerManager(int difficulty, List<Room> rooms, Server server, Client client) {
-        this.client = client;
-        this.server = server;
+    public ServerManager(int difficulty, List<Room> rooms) {
         this.difficulty = difficulty;
         this.rooms = rooms;
 
+    }
+
+    public void setServer(Server server) {
+        this.server = server;
         if(rooms.isEmpty())
             server.setIp();
         hostIp = server.getHostIp();
@@ -31,6 +31,10 @@ public class ServerManager {
         Server.startInfoServer();
         //게임 서버
         Server.startMainServer();
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 
     public void startGameServer(){
@@ -43,11 +47,41 @@ public class ServerManager {
         System.out.println(rooms.size());
     }
 
-    public static List<Room> getRooms(){
-        return rooms;
+
+    private String ServerMessage;
+    private String ClientMessage;
+    private List<String> giveShooter;
+    private String Cooldown;
+
+    public void setServerButton(String takeButton){
+        this.ServerMessage = takeButton;
     }
 
-    public static void deleteRoom(boolean check){
-        rooms.removeFirst();
+    public void setClientButton(String takeButton){
+        this.ClientMessage = takeButton;
+    }
+
+    public String getServerButton() {
+        return ClientMessage;
+    }
+
+    public String getClientButton() {
+        return ServerMessage;
+    }
+
+    public List<String> getGiveShooter() {
+        return giveShooter;
+    }
+
+    public void setGiveShooter(List<String> giveShooter) {
+        this.giveShooter = giveShooter;
+    }
+
+    public void setCooldown(String Cooldown) {
+        this.Cooldown = Cooldown;
+    }
+
+    public String getCooldown() {
+        return Cooldown;
     }
 }

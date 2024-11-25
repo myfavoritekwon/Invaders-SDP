@@ -19,6 +19,7 @@ import java.util.TimerTask;
 import engine.*;
 import engine.Socket.Client;
 import engine.Socket.Server;
+import engine.ServerManager;
 import entity.*;
 
 
@@ -140,9 +141,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private Server server;
 	private Client client;
 	private static boolean SORC;
-	private static char Button;
+	private static String Button;
 	private boolean P2PCheck = false;
-
+	private ServerManager serverManager;
+	private List<String> giveShooter;
 
 	private int hitBullets;
 
@@ -214,7 +216,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	public GameScreen(final GameState gameState,
 					  final GameSettings gameSettings, final boolean bonusLife,
-					  final int width, final int height, final int fps, final Wallet wallet, Server server, Client client) {
+					  final int width, final int height, final int fps, final Wallet wallet, final Server server, final Client client,
+					  final ServerManager serverManager) {
 		super(width, height, fps);
 
 		this.gameSettings = gameSettings;
@@ -234,6 +237,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.maxCombo = gameState.getMaxCombo();
 		this.lapTime = gameState.getPrevTime();
 		this.tempScore = gameState.getPrevScore();
+		this.serverManager = serverManager;
 
 		try {
 			this.highScores = Core.getFileManager().loadHighScores();
@@ -273,7 +277,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					else client.setButton(Button);
 				} else if (e.getID() == KeyEvent.KEY_RELEASED) {
 					System.out.println("Key Released: " + Button);
-					Button= '\0'; // 키가 떼어지면 초기화
+					Button= "0"; // 키가 떼어지면 초기화
 					if(SORC) server.setButton(Button);
 					else client.setButton(Button);
 				}
@@ -282,22 +286,22 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		});
 	}
 
-	private static char KeyMapping(KeyEvent e) {
+	private static String KeyMapping(KeyEvent e) {
 		switch (e.getKeyCode()) {
 			case KeyEvent.VK_UP:
-				return 'U'; // 위 방향키를 'U'로 매핑
+				return "U"; // 위 방향키를 'U'로 매핑
 			case KeyEvent.VK_DOWN:
-				return 'D'; // 아래 방향키를 'D'로 매핑
+				return "D"; // 아래 방향키를 'D'로 매핑
 			case KeyEvent.VK_LEFT:
-				return 'L'; // 왼쪽 방향키를 'L'로 매핑
+				return "L"; // 왼쪽 방향키를 'L'로 매핑
 			case KeyEvent.VK_RIGHT:
-				return 'R'; // 오른쪽 방향키를 'R'로 매핑
+				return "R"; // 오른쪽 방향키를 'R'로 매핑
 			case KeyEvent.VK_SPACE:
-				return 'S'; // 스페이스바 'S'로 매핑
+				return "S"; // 스페이스바 'S'로 매핑
 			case KeyEvent.VK_ESCAPE:
-				return 'E'; // ESC 키를 'E'로 매핑
+				return "E"; // ESC 키를 'E'로 매핑
 			default:
-				return e.getKeyChar(); // 다른 키는 원래 문자 그대로 반환
+				return String.valueOf(e.getKeyChar()); // 다른 키는 원래 문자 그대로 반환
 		}
 	}
 
@@ -341,8 +345,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
         // Appears each 10-30 seconds.
-        this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
 		this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
+		p2pShip.setColor(Color.BLUE);
         this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
         ship.applyItem(wallet);
@@ -478,6 +482,28 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 						break;
 				}
+				if(P2PCheck){
+
+					if(Server.checkConnect()){
+						String button = serverManager.getClientButton();
+						switch (button){
+							case "L": this.p2pShip.moveLeft(); break;
+							case "R": this.p2pShip.moveRight(); break;
+							case "S": this.p2pShip.shoot(this.bullets, this.itemManager.getShotNum()); break;
+							case null: break;
+							default: break;
+						}
+					}else{
+						String button = serverManager.getServerButton();
+						switch (button){
+							case "L": this.p2pShip.moveLeft(); break;
+							case "R": this.p2pShip.moveRight(); break;
+							case "S": this.p2pShip.shoot(this.bullets, this.itemManager.getShotNum()); break;
+							case null: break;
+							default: break;
+						}
+					}
+				}
 			}
 			/*Elapsed Time Update*/
 			long currentTime = System.currentTimeMillis();
@@ -584,11 +610,22 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			}
 
 			this.ship.update();
+			if(P2PCheck)
+				this.p2pShip.update();
 
 			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
 			if (!itemManager.isTimeStopActive()) {
-				this.enemyShipFormation.update();
-				this.enemyShipFormation.shoot(this.bullets, this.level, balance);
+				if(Server.checkConnect()) {
+					this.enemyShipFormation.update();
+					giveShooter = this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
+					String Cooldown = giveShooter.getLast();
+					giveShooter.removeLast();
+					serverManager.setGiveShooter(giveShooter);
+					serverManager.setCooldown(Cooldown);
+				}else{
+					this.enemyShipFormation.update();
+					this.enemyShipFormation.P2PShoot(this.bullets, this.level, this.balance, serverManager.getGiveShooter(), serverManager.getCooldown());
+				}
 			}
 
 			if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
@@ -918,6 +955,16 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						this.logger.info("Hit on player ship, " + this.lives + " lives remaining.");
 					}
 				}
+				if (checkCollision(bullet, this.p2pShip) && !this.levelFinished && !itemManager.isGhostActive()) {
+					recyclable.add(bullet);
+					if (!this.p2pShip.isDestroyed()) {
+						this.p2pShip.destroy(balance);
+						lvdamage();
+						this.logger.info("Hit on p2player ship, " + this.lives + " lives remaining.");
+					}
+
+				}
+
 
 				if (this.barriers != null) {
 					Iterator<Barrier> barrierIterator = this.barriers.iterator();
@@ -1081,4 +1128,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			this.lives = 0;
 		}
 	}
+
+    public List<String> getGiveShooter() {
+        return giveShooter;
+    }
+
+    public void setGiveShooter(List<String> giveShooter) {
+        this.giveShooter = giveShooter;
+    }
 }

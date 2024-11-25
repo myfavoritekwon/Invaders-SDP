@@ -58,7 +58,7 @@ public final class Core {
 	private static final List<Room> rooms = new ArrayList<Room>();
 	private static Room room;
 
-	private static ServerManager serverManager = new ServerManager();
+	private static ServerManager serverManager;
 	private static Server server;
 	private static Client client;
 
@@ -233,9 +233,9 @@ public final class Core {
 				LOGGER.info("Closing score screen.");
 				break;
 			case 9: //Connect Server-Client
-				client = new Client();
-				server = new Server();
-				serverManager = new ServerManager(DifficultySetting, rooms, server, client);
+				serverManager = new ServerManager(DifficultySetting, rooms);
+				client = new Client(serverManager);
+				server = new Server(serverManager, client);
 				currentScreen = new MultiRoomScreen(width, height, FPS, server, client);
 				returnCode = frame.setScreen(currentScreen);
 				LOGGER.info("Loading success multi room screen.");
@@ -259,7 +259,7 @@ public final class Core {
 
 					currentScreen = new GameScreen(gameState,
 							gameSetting,
-							bonusLife, width, height, FPS, wallet, server, client);
+							bonusLife, width, height, FPS, wallet, server, client, serverManager);
 					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
 
 							+ " game screen at " + FPS + " fps.");

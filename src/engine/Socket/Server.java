@@ -1,5 +1,7 @@
 package engine.Socket;
 
+import engine.Core;
+import engine.ServerManager;
 import entity.Room;
 import screen.GameScreen;
 import screen.MultiRoomScreen;
@@ -12,15 +14,24 @@ import java.net.Socket;
 import java.util.*;
 // !!!!!!!!!아이피 고정으로 바꾸기!!!!!!!!!!
 public class Server {
-    private static Client client = new Client();
+    private static ServerManager serverManager;
+    private static Client client;
     private static String hostIp; //
     private static final int INFO_PORT = 9000;
     private static int MAIN_PORT = 9001;
-    private static int sleepTime = 250;
-    private static char Button; // 초기화
+    private static int sleepTime = 50;
+    private static String Button; // 초기화
     private static boolean checkConnect = false;
     private static int returnCode;
     private static ServerSocket infoServerSocket = null;
+    public static String takeButton;
+    private static List<String> giveShooter;
+
+    public Server(ServerManager serverManager, Client client) {
+        Server.serverManager = serverManager;
+        Server.client = client;
+        serverManager.setServer(this);
+    }
 
     // 서버 정보 전송용 서버
     public static void startInfoServer() {
@@ -99,19 +110,21 @@ public class Server {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
                 BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in));
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+                ObjectInputStream objectInputStream = new ObjectInputStream(clientSocket.getInputStream());
         ) {
             int t = Integer.parseInt(reader.readLine());
-            System.out.println(t);
             returnCode = t;
-            writer.println("Welcome to the main server!");
 
             // 수신 스레드
             Thread receiveThread = new Thread(() -> {
                 try {
-                    String message;
-                    while ((message = reader.readLine()) != null) {
-                        System.out.println("Client: " + message);
+                    while (true) {//(message = reader.readLine()) != null
+                        takeButton = reader.readLine();
+                        serverManager.setServerButton(takeButton);
+                        System.out.println("Client: " + takeButton);
                         try {
+                            takeButton = null;
                             Thread.sleep(sleepTime);
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
@@ -125,9 +138,15 @@ public class Server {
             // 송신 스레드
             Thread sendThread = new Thread(() -> {
                 String message;
-                while ((message = String.valueOf(Button)) != null) {
-                    writer.println(message);
-                    System.out.println("You: " + message);
+                while (true) {//(message = String.valueOf(Button)) != null
+                    DataPacket data;
+                    try {
+                        data = new DataPacket(Button, serverManager.getGiveShooter(), serverManager.getCooldown());
+                        objectOutputStream.writeObject(data);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.out.println("You: " + data.getCommand());
                     try {
                         Thread.sleep(sleepTime);
                     } catch (InterruptedException e) {
@@ -169,7 +188,7 @@ public class Server {
         }
     }
 
-    public void setButton(char button) {
+    public void setButton(String button) {
         Button = button;
     }
 
