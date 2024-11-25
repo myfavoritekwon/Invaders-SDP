@@ -60,7 +60,7 @@ public abstract class Ship extends Entity {
 	public void setThreadWeb(boolean threadWeb) {
 		if (threadWeb && !this.threadWeb) {
 			webCollisionTime = System.currentTimeMillis();
-			collisionX = this.positionX;
+			collisionX = (int) this.positionX;
 		}
 		this.threadWeb = threadWeb;
 	}

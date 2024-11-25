@@ -386,6 +386,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				updatePuzzleState();
 			}
 
+//			//update physicsEnemy
+//			for(int i = 0; i < physicsEnemyShips.size(); i++) {
+//				physicsEnemyShips.get(i).update();
+//			}
+
 			this.enemyShipFormation.update();
 			this.enemyShipFormation.shoot(this.bullets, this.level, balance);
 
@@ -554,10 +559,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				handleBlockerAppearance();
 			}
 
-//			//update physicsEnemy
-//			for(int i = 0; i < physicsEnemyShips.size(); i++) {
-//				physicsEnemyShips.get(i).update();
-//			}
 		}
 
 			// when puzzle activated
