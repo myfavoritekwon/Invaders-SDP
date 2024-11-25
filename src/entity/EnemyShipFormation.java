@@ -94,6 +94,8 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	/** Number of not destroyed ships. */
 	private int shipCount;
 
+	private List<EnemyShip> listEnemies = new ArrayList<>();
+
 	private int point = 0;
 
 	private int distroyedship = 0;
@@ -155,10 +157,12 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 				else
 					spriteType = SpriteType.EnemyShipA1;
 
-				column.add(new EnemyShip((SEPARATION_DISTANCE 
+				EnemyShip insert = new EnemyShip((SEPARATION_DISTANCE
 						* this.enemyShips.indexOf(column))
-								+ positionX, (SEPARATION_DISTANCE * i)
-								+ positionY, spriteType, gameState));
+						+ positionX, (SEPARATION_DISTANCE * i)
+						+ positionY, spriteType, gameState);
+				column.add(insert);
+				listEnemies.add(insert);
 				this.shipCount++;
 			}
 		}
@@ -281,6 +285,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 			for (int i = 0; i < this.enemyShips.size(); i++)
 				for (int j = 0; j < this.enemyShips.get(i).size(); j++)
 					if (this.enemyShips.get(i).get(j) != null && this.enemyShips.get(i).get(j).isDestroyed()) {
+						listEnemies.set(i * this.enemyShips.get(i).size() + j, null); // 파괴된 에너미쉽 갱신
 						this.logger.info("Removed enemy " + j + " from column " + i);
 						this.enemyShips.get(i).set(j, null);
 					}
@@ -574,4 +579,5 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	public int getDistroyedship(){return distroyedship; }
 
 	public List<List<EnemyShip>> getEnemyShips() {return enemyShips; }
+	public List<EnemyShip> getListEnemies(){return listEnemies;}
 }
