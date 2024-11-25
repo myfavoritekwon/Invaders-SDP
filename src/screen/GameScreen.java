@@ -382,7 +382,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 							if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 1.0f)) // Player 1 attack
 								this.bulletsShot += this.itemManager.getShotNum();
 						}
-						// 플레이어 2 윗 방향키 누르면 총알 각도 조정 모드 on
+						// 플레이어 2 ENTER 누르면 총알 각도 조정 모드 on
 						if(this.inputManager.isKeyDown(KeyEvent.VK_ENTER)){
 							if(this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
 							if(this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
@@ -393,7 +393,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 							if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), -1.0f)) // Player 1 attack
 								this.bulletsShot += this.itemManager.getShotNum();
 						}
-						// 플레이어 1 W키 누르면 총알 각도 조정 모드 on
+						// 플레이어 1 E키 누르면 총알 각도 조정 모드 on
 						if(this.inputManager.isKeyDown(KeyEvent.VK_E)){
 							if(this.inputManager.isKeyDown(KeyEvent.VK_A)) this.ship.moveAngleToLeft();
 							if(this.inputManager.isKeyDown(KeyEvent.VK_D)) this.ship.moveAngleToRight();
@@ -404,7 +404,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 							if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 0.0f)) // Player 1 attack
 								this.bulletsShot += this.itemManager.getShotNum();
 						}
-						// 1인 모드에서 윗 방향키 누르면 총알 각도 조정 모드 on
+						// 1인 모드에서 SHIFT 누르면 총알 각도 조정 모드 on
 						if(this.inputManager.isKeyDown(KeyEvent.VK_SHIFT)){
 							if(this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
 							if(this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
@@ -432,7 +432,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				boolean moveDown = false;
 				switch (playerNumber) {
 					case 0:
-						// 플레이어 1 W를 안눌렀을 때 이동 가능
+						// 플레이어 1 E를 안눌렀을 때 이동 가능
 						if(!inputManager.isKeyDown(KeyEvent.VK_E)) {
 							moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
 							moveLeft = inputManager.isKeyDown(KeyEvent.VK_A);
@@ -441,7 +441,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						}
 						break;
 					case 1:
-						// 플레이어 2 윗 방향키 안눌렀을 때 이동 가능
+						// 플레이어 2 ENTER 안눌렀을 때 이동 가능
 						if(!inputManager.isKeyDown(KeyEvent.VK_ENTER)) {
 							moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT);
 							moveLeft = inputManager.isKeyDown(KeyEvent.VK_LEFT);
@@ -450,7 +450,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						}
 						break;
 					default:
-						// 1인모드에서 윗 방향키 안눌렀을 때 이동 가능
+						// 1인모드에서 SHIFT 안눌렀을 때 이동 가능
 						moveRight = (inputManager.isKeyDown(KeyEvent.VK_RIGHT)
 								|| inputManager.isKeyDown(KeyEvent.VK_D)) && !inputManager.isKeyDown(KeyEvent.VK_SHIFT);
 						moveLeft = (inputManager.isKeyDown(KeyEvent.VK_LEFT)
