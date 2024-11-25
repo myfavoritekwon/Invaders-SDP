@@ -751,6 +751,7 @@ public final class DrawManager {
 	 *            Option selected.
 	 */
 	public void drawMenu(final Screen screen, final int option, final int coin) {
+		String Multi = "Multi";
 		String playString = "Play";
 		String shopString = "SHOP";
 		String coinString = "YOUR COIN: " + coin;
@@ -758,7 +759,12 @@ public final class DrawManager {
 		String settingString = "SETTING";
 		String exitString = "EXIT";
 
-
+		if(option == 9)//Multi
+			backBufferGraphics.setColor(Color.GREEN);
+		else
+			backBufferGraphics.setColor(Color.WHITE);
+		drawCenteredRegularString(screen, Multi,
+				screen.getHeight() / 7 * 4 - fontRegularMetrics.getHeight() * 2);
 		if (option == 6) /*option2 => Game Settings */
 			backBufferGraphics.setColor(Color.GREEN);
 		else
@@ -2089,5 +2095,13 @@ public final class DrawManager {
 				default -> "";
 			};
 		}
+	}
+
+	public void drawMatching(final Screen screen){
+		//새로 방 만드는 칸
+		String makeNewRoom = "Matching...";
+		backBufferGraphics.setColor(Color.GREEN);
+		drawCenteredBigString(screen, makeNewRoom, screen.getHeight()/2);
+
 	}
 }
