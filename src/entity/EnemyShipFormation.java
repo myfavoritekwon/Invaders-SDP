@@ -368,21 +368,23 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	 * @param bullets
 	 *            Bullets set to add the bullet being shot.
 	 */
-	public final void shoot(final Set<Bullet> bullets, int level, float balance) {
+	public final List<String> shoot(final Set<Bullet> bullets, int level, float balance) {
 		// Increasing the number of projectiles per level 3 (levels 1 to 3, 4 to 6, 2, 7 to 9, etc.)
 		int numberOfShooters = Math.min((level / 3) + 1, this.shooters.size());
 		int numberOfBullets = (level / 3) + 1;
 
 		// Randomly select enemy to fire in proportion to the level
 		List<EnemyShip> selectedShooters = new ArrayList<>();
+		List<String> giveShooters = new ArrayList<>();
 		for (int i = 0; i < numberOfShooters; i++) {
 			int index = (int) (Math.random() * this.shooters.size());
+			giveShooters.add(String.valueOf(index));
 			selectedShooters.add(this.shooters.get(index));
 		}
 
 		// Fire when the cool down is over
 		if (this.shootingCooldown.checkFinished()) {
-			this.shootingCooldown.reset();
+			giveShooters.add(String.valueOf(this.shootingCooldown.reset()));
 
 			// Each selected enemy fires a bullet
 			for (EnemyShip shooter : selectedShooters) {
@@ -392,6 +394,42 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 
 				// Additional launches based on levels (more launches based on each level)
 				for (int i = 1; i < numberOfBullets; i++) {
+					bullets.add(BulletPool.getBullet(shooter.getPositionX()
+							+ shooter.width / 2 + (10 * (i + 1)), shooter.getPositionY(), BULLET_SPEED));
+				}
+				soundManager.playSound(Sound.ALIEN_LASER, balance);
+			}
+		}
+		return giveShooters;
+	}
+
+	public final void P2PShoot(final Set<Bullet> bullets, int level, float balance, List<String> shooters, String Cooldown) {
+		// Increasing the number of projectiles per level 3 (levels 1 to 3, 4 to 6, 2, 7 to 9, etc.)
+		int numberOfShooters = Math.min((level / 3) + 1, this.shooters.size());
+		int numberOfBullets = (level / 3) + 1;
+		// Randomly select enemy to fire in proportion to the level
+		if(shooters==null || shooters.isEmpty()) return;
+		List<EnemyShip> selectedShooters = new ArrayList<>();
+        for (String s : shooters) {
+			System.out.println(s);
+            selectedShooters.add(this.shooters.get(Integer.parseInt(s)));
+        }
+
+		// Fire when the cool down is over
+		if (this.shootingCooldown.checkFinished()) {
+			if(Cooldown==null)
+				return;
+			System.out.println(Cooldown);
+			this.shootingCooldown.reset(Integer.parseInt(Cooldown));
+
+			// Each selected enemy fires a bullet
+			for (EnemyShip shooter : selectedShooters) {
+				// One shot at the base
+				bullets.add(BulletPool.getBullet(shooter.getPositionX()
+						+ shooter.width / 2 + 10, shooter.getPositionY(), BULLET_SPEED));
+
+				// Additional launches based on levels (more launches based on each level)
+				for (int i = 1; i < shooters.size(); i++) {
 					bullets.add(BulletPool.getBullet(shooter.getPositionX()
 							+ shooter.width / 2 + (10 * (i + 1)), shooter.getPositionY(), BULLET_SPEED));
 				}
