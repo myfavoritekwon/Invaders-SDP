@@ -30,7 +30,6 @@ public class EnemyShip extends Entity {
 	private static final int F_TYPE_POINTS = 60;
 	/** Point value of a bonus enemy. */
 	private static final int BONUS_TYPE_POINTS = 100;
-
 	/** Cooldown between sprite changes. */
 	protected Cooldown animationCooldown;
 	/** Checks if the ship has been hit by a bullet. */
