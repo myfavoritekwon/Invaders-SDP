@@ -143,7 +143,6 @@ public final class Core {
 							+ " game screen at " + FPS + " fps.");
 					frame.setScreen(currentScreen);
 					LOGGER.info("Closing game screen.");
-
 					gameState = ((GameScreen) currentScreen).getGameState();
 
 					gameState = new GameState(gameState, gameState.getLevel() + 1);
@@ -157,7 +156,7 @@ public final class Core {
 						+ gameState.getScore() + ", "
 						+ gameState.getShipType().toString() + " ship, "
 						+ gameState.getLivesRemaining() + " lives remaining, "
-						+ gameState.getBulletsShot() + " bullets shot and "
+						+ gameState.getBulletsShot() + " bullets shot and  "
 						+ gameState.getShipsDestroyed() + " ships destroyed.");
 				currentScreen = new ScoreScreen(GameSettingScreen.getName(0), width, height, FPS, gameState, wallet, achievementManager, false);
 

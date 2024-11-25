@@ -605,25 +605,26 @@ public final class DrawManager {
 	 * @param positionX
 	 *            X coordinate of the line.
 	 */
-	// 1인플레이어 전용 총알 경로 출력
-	public void drawLaunchTrajectory(final Screen screen, final int positionX, final double angle) {
+	public void drawLaunchTrajectory(final Screen screen, final int positionX, final int positionY, final double angle) {
 		backBufferGraphics.setColor(Color.DARK_GRAY);
-		double shoot_angle = Math.toRadians(angle);
-		// 시작점은 플레이어 위치를 기준으로 설정
-		int startX = positionX + 13; // 플레이어의 중앙
-		int startY = screen.getHeight() - 30; // 바닥에서 플레이어 위치
+		double shootAngle = Math.toRadians(angle);
 
-		// 속도를 조정 (이 값으로 경로 길이를 조정 가능)
-		double speed = 10; // 한 번의 반복마다 이동하는 거리 크기
+		// 시작점 설정
+		int startX = positionX + 13; // 플레이어 중앙
+		int startY = positionY ; // 플레이어 위치
 
-		// 반복문을 통해 경로를 따라 점 그리기
-		for (int i = 0; i < screen.getHeight() + 1000; i += 20) {
-			// 삼각 함수로 각도에 따른 x, y 좌표 계산
-			int offsetX = (int) (Math.cos(shoot_angle) * speed * i / 20);
-			int offsetY = (int) (Math.sin(shoot_angle) * speed * i / 20);
+		// 속도 및 이동 간격 조정
+		double speed = 10; // 총알 이동 속도
+		double step = 1; // 경로 갱신 간격 (값이 작을수록 더 부드러움)
 
-			// 직사각형 그리기 (경로 표시)
-			backBufferGraphics.drawRect(startX - offsetX, startY - offsetY, 1, 10);
+		// 경로 그리기
+		for (double i = 0; i < screen.getHeight() + 1000; i += step) {
+			// 각도에 따른 x, y 좌표 계산
+			int offsetX = (int) (Math.cos(shootAngle) * speed * i / 20);
+			int offsetY = (int) (Math.sin(shootAngle) * speed * i / 20);
+
+			// 직사각형 그리기
+			backBufferGraphics.drawRect(startX - offsetX, startY - offsetY, 1, 1); // 작게 설정
 		}
 	}
 	/**
@@ -635,7 +636,7 @@ public final class DrawManager {
 	 *            X coordinate of the line.
 	 */
 	// 2인플레이어 전용 총알 경로 출력
-	public void drawLaunchTrajectory(final Screen screen, final int positionX,
+	public void drawLaunchTrajectory(final Screen screen, final int positionX, final int positionY,
 									 final int threadNumber, final double angle) {
 		// threadNumber 유효성 검사
 		if (threadNumber < 0 || threadNumber >= threadBufferGraphics.length) {
@@ -651,19 +652,20 @@ public final class DrawManager {
 
 		// 시작점 설정
 		int startX = positionX + 13; // 플레이어의 x 위치
-		int startY = screen.getHeight() - 30; // 플레이어의 y 위치 (조정 가능)
+		int startY = positionY ; // 플레이어의 y 위치 (조정 가능)
 
-		// 속도 조정 (경로 길이와 곡률에 영향)
-		double speed = 10;
+		// 속도 및 이동 간격 조정
+		double speed = 10; // 이동 속도
+		double step = 1; // 경로 갱신 간격 (값이 작을수록 부드러움)
 
 		// 경로 그리기
-		for (int i = 0; i < screen.getHeight() + 1000; i += 20) {
-			// 삼각 함수로 각도에 따른 x, y 좌표 계산
+		for (double i = 0; i < screen.getHeight() + 1000; i += step) {
+			// 각도에 따른 x, y 좌표 계산
 			int offsetX = (int) (Math.cos(angleShoot) * speed * i / 20);
 			int offsetY = (int) (Math.sin(angleShoot) * speed * i / 20);
 
 			// 직사각형 그리기 (경로 표시)
-			threadBufferGraphics[threadNumber].drawRect(startX - offsetX, startY - offsetY, 1, 10);
+			threadBufferGraphics[threadNumber].drawRect(startX - offsetX, startY - offsetY, 1, 1);
 		}
 	}
 
