@@ -1041,6 +1041,30 @@ public final class DrawManager {
 
 
 
+	public void drawStory(final Screen screen){
+		backBuffer = new BufferedImage(screen.getWidth(), screen.getHeight(),
+				BufferedImage.TYPE_INT_RGB);
+
+		graphics = frame.getGraphics();
+		backBufferGraphics = backBuffer.getGraphics();
+
+		backBufferGraphics.setColor(Color.BLACK);
+		backBufferGraphics
+				.fillRect(0, 0, screen.getWidth(), screen.getHeight());
+
+
+		// 텍스트 박스 채우기
+		backBufferGraphics.setColor(Color.BLACK);
+		backBufferGraphics.fillRect(42, 400, 500, 160); // (x, y, width, height)
+
+		// 직사각형 테두리를 흰색으로 그리기
+		backBufferGraphics.setColor(Color.WHITE);
+		backBufferGraphics.drawRect(42, 400, 500, 160); // (x, y, width, height)
+
+	}
+
+	public static Graphics getBackBufferGraphics() {return backBufferGraphics; }
+
 
 	/**
 	 * Countdown to game start.
