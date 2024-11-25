@@ -95,11 +95,32 @@ public class Cooldown {
 	/**
 	 * Restarts the cooldown.
 	 */
-	public final void reset() {
+	public final int reset() {
+        this.time = System.currentTimeMillis();
+        int rest = 0;
+        if (this.variance != 0) {
+            rest = (this.milliseconds - this.variance)
+                    + (int) (Math.random()
+                    * (this.milliseconds + this.variance));
+            this.duration = rest;
+        }
+        return rest;
+    }
+
+	public final void reset(int Cooldown) {
 		this.time = System.currentTimeMillis();
-		if (this.variance != 0)
-			this.duration = (this.milliseconds - this.variance)
-					+ (int) (Math.random()
-							* (this.milliseconds + this.variance));
+			this.duration = Cooldown;
+	}
+
+	/**
+	 * return current remaining time
+	 *
+	 * @return current remaining time
+	 */
+	public final long getRemainingTime() {
+		if (this.time == 0) {
+			return 0;
+		}
+		return Math.max(0, (this.time + this.duration) - System.currentTimeMillis());
 	}
 }

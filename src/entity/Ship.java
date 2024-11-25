@@ -17,30 +17,52 @@ import engine.SoundManager;
  */
 public abstract class Ship extends Entity {
 
-	/** Time between shots. */
+	/**
+	 * Time between shots.
+	 */
 	private static int SHOOTING_INTERVAL = 750;
-	/** Speed of the bullets shot by the ship. */
+	/**
+	 * Speed of the bullets shot by the ship.
+	 */
 	private static int BULLET_SPEED = -6;
-	/** Movement of the ship for each unit of time. */
+	/**
+	 * Movement of the ship for each unit of time.
+	 */
 	private static final int SPEED = 2;
 
-	/** Play the sound every 0.5 second */
+	/**
+	 * Play the sound every 0.5 second
+	 */
 	private static final int SOUND_COOLDOWN_INTERVAL = 500;
-	/** Cooldown for playing sound */
+	/**
+	 * Cooldown for playing sound
+	 */
 	private Cooldown soundCooldown;
 
-	/** Multipliers for the ship's properties. */
+	/**
+	 * Multipliers for the ship's properties.
+	 */
 	protected final ShipMultipliers multipliers;
-	/** Name of the ship. */
+	/**
+	 * Name of the ship.
+	 */
 	public final String name;
-	/** Type of sprite to be drawn. */
+	/**
+	 * Type of sprite to be drawn.
+	 */
 	private final SpriteType baseSprite;
 
-	/** Minimum time between shots. */
+	/**
+	 * Minimum time between shots.
+	 */
 	private Cooldown shootingCooldown;
-	/** Time spent inactive between hits. */
+	/**
+	 * Time spent inactive between hits.
+	 */
 	private Cooldown destructionCooldown;
-	/** Singleton instance of SoundManager */
+	/**
+	 * Singleton instance of SoundManager
+	 */
 	private final SoundManager soundManager = SoundManager.getInstance();
 	private boolean isLaserMode = false;
 
@@ -52,9 +74,23 @@ public abstract class Ship extends Entity {
 
 	private long lastShootTime;
 	private boolean threadWeb = false;
+	private int collisionX = 0;
+	private boolean isPuzzleActive = false;
+	private long webCollisionTime = 0;
+	private static final long WEB_COOLDOWN = Core.PuzzleSettings.WEB_COOLDOWN;
 
 	public void setThreadWeb(boolean threadWeb) {
+		if (threadWeb && !this.threadWeb) {
+			webCollisionTime = System.currentTimeMillis();
+			collisionX = this.positionX;
+		}
 		this.threadWeb = threadWeb;
+	}
+
+	protected boolean isPlayerShip;
+
+	public int getCollisionX() {
+		return collisionX;
 	}
 
 	/**
@@ -73,9 +109,6 @@ public abstract class Ship extends Entity {
 	 * 		      Type of sprite to be drawn.
 	 * 		      @see SpriteType
 	 */
-
-
-
 	protected Ship(final int positionX, final int positionY,
 				   final String name, final ShipMultipliers multipliers,
 				   final SpriteType spriteType) {
@@ -116,6 +149,10 @@ public abstract class Ship extends Entity {
 	public final void moveRight() {
 		moveRight(0.0f);
 	}
+	public final void moveRight(int move){this.positionX += move;}
+	public final void moveLeft(int move){this.positionX -= move;}
+	public final void moveUp(int move){this.positionY -= move;}
+	public final void moveDown(int move){this.positionY += move;}
 
 	/**
 	 * Moves the ship speed units left, or until the left screen border is
@@ -124,9 +161,18 @@ public abstract class Ship extends Entity {
 	public final void moveLeft() {
 		moveLeft(0.0f);
 	}
+	public final void moveDown() {
+		moveDown(0.0f);
+	}
+	public final void moveUp() {
+		moveUp(0.0f);
+	}
 
 	public final void moveRight(float balance) {
-		if(threadWeb){
+		// can't move when puzzle activated
+		if (this.isPlayerShip && this.isPuzzleActive) return;
+
+		if (threadWeb) {
 			this.positionX += this.getSpeed() / 2;
 		} else {
 			this.positionX += this.getSpeed();
@@ -138,10 +184,41 @@ public abstract class Ship extends Entity {
 	}
 
 	public final void moveLeft(float balance) {
-		if(threadWeb){
+		// can't move when puzzle activated
+		if (this.isPlayerShip && this.isPuzzleActive) return;
+
+		if (threadWeb) {
 			this.positionX -= this.getSpeed() / 2;
 		} else {
 			this.positionX -= this.getSpeed();
+		}
+		if (soundCooldown.checkFinished()) {
+			soundManager.playSound(Sound.PLAYER_MOVE, balance);
+			soundCooldown.reset();
+		}
+	}
+	//아랫방향으로 이동
+	public final void moveDown(float balance) {
+		if (this.isPlayerShip && this.isPuzzleActive) return; // 퍼즐이 안나와 있을 때
+
+		if(threadWeb){
+			this.positionY += this.getSpeed() / 2;
+		} else {
+			this.positionY += this.getSpeed();
+		}
+		if (soundCooldown.checkFinished()) {
+			soundManager.playSound(Sound.PLAYER_MOVE, balance);
+			soundCooldown.reset();
+		}
+	}
+	// 윗 방향으로 이동
+	public final void moveUp(float balance) {
+		if (this.isPlayerShip && this.isPuzzleActive) return;
+
+		if(threadWeb){
+			this.positionY -= this.getSpeed() / 2;
+		} else {
+			this.positionY -= this.getSpeed();
 		}
 		if (soundCooldown.checkFinished()) {
 			soundManager.playSound(Sound.PLAYER_MOVE, balance);
@@ -167,18 +244,19 @@ public abstract class Ship extends Entity {
 
 	/**
 	 * bullet sound (2-players)
-	 * @param bullets
-	 *          List of bullets on screen, to add the new bullet.
-	 * @param balance
-	 * 			1p -1.0, 2p 1.0, both 0.0
-	 * @param shotNum
-	 * 			Upgraded shot.
 	 *
+	 * @param bullets List of bullets on screen, to add the new bullet.
+	 * @param balance 1p -1.0, 2p 1.0, both 0.0
+	 * @param shotNum Upgraded shot.
 	 * @return Checks if the bullet was shot correctly.
 	 */
 	public final boolean shoot(final Set<Bullet> bullets, int shotNum, float balance) {
+		if (this.isPlayerShip && this.isPuzzleActive) return false;
+
 		//변화된 각도값을 라디안값으로 변환후 출력
 		angle_shoot = Math.toRadians(angle);
+		if (this.isPlayerShip && this.isPuzzleActive) return false;
+
 		if (this.shootingCooldown.checkFinished()) {
 
 			this.shootingCooldown.reset();
@@ -232,6 +310,14 @@ public abstract class Ship extends Entity {
 			this.spriteType = SpriteType.ShipDestroyed;
 		else
 			this.spriteType = this.baseSprite;
+
+		if (threadWeb && System.currentTimeMillis() - webCollisionTime >= WEB_COOLDOWN) {
+			threadWeb = false;
+		}
+
+		if (isPuzzleActive) {
+			this.shootingCooldown.reset();
+		}
 	}
 
 	/**
@@ -264,6 +350,7 @@ public abstract class Ship extends Entity {
 
 	/**
 	 * Getter for the ship's bullet speed.
+	 *
 	 * @return Speed of the bullets.
 	 */
 	public final int getBulletSpeed() {
@@ -272,13 +359,14 @@ public abstract class Ship extends Entity {
 
 	/**
 	 * Getter for the ship's shooting interval.
+	 *
 	 * @return Time between shots.
 	 */
 	public final int getShootingInterval() {
 		return Math.round(SHOOTING_INTERVAL * this.multipliers.shootingInterval());
 	}
 
-	public long getRemainingReloadTime(){
+	public long getRemainingReloadTime() {
 		long currentTime = System.currentTimeMillis();
 		long elapsedTime = currentTime - this.lastShootTime;
 		long remainingTime = this.getShootingInterval() - elapsedTime;
@@ -286,9 +374,9 @@ public abstract class Ship extends Entity {
 	}
 
 
-	public void applyItem(Wallet wallet){
+	public void applyItem(Wallet wallet) {
 		int bulletLv = wallet.getBullet_lv();
-		switch (bulletLv){
+		switch (bulletLv) {
 			case 1:
 				BULLET_SPEED = -6;
 				break;
@@ -306,7 +394,7 @@ public abstract class Ship extends Entity {
 		}
 
 		int intervalLv = wallet.getShot_lv();
-		switch (intervalLv){
+		switch (intervalLv) {
 			case 1: //생성자에서 이미 초기화함
 				break;
 			case 2:
@@ -325,5 +413,25 @@ public abstract class Ship extends Entity {
 				SHOOTING_INTERVAL = 750;
 				shootingCooldown = Core.getCooldown(this.getShootingInterval());
 		}
+	}
+
+	public void setPlayerShip(boolean isPlayer) {
+		this.isPlayerShip = isPlayer;
+	}
+
+	/**
+	 * Sets puzzle activation state
+	 */
+	public void setPuzzleActive(boolean active) {
+		if (this.isPlayerShip) {
+			this.isPuzzleActive = active;
+		}
+	}
+
+	/**
+	 * Check puzzle is activated
+	 */
+	public boolean isPuzzleActive() {
+		return this.isPuzzleActive;
 	}
 }
