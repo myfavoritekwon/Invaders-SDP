@@ -136,6 +136,7 @@ public final class DrawManager {
 			backBufferGraphics.setColor(Color.BLACK);
 			backBufferGraphics.drawRect(x, y, rectWidth, rectHeight);
 		}
+
 	}
 
 

@@ -392,7 +392,7 @@ public class ItemManager {
                 public void run() {
                     LasershootActive = false;
                     ship.setLaserMode(false);
-                    ship.setShootingCooldown(Core.getCooldown(750));
+                    ship.setShootingCooldown(Core.getCooldown(ship.getShootingInterval()));
                 }
             }, LASER_COOLDOWN);
         }
