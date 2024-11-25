@@ -138,7 +138,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	private int hitBullets;
 
-    /**
+	private PuzzleScreen puzzleScreen;
+	private Cooldown puzzleRetryCooldown;
+	private Cooldown webCooldown;
+
+	/**
 	 * Constructor, establishes the properties of the screen.
 	 * 
 	 * @param gameState
@@ -333,6 +337,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				// From level 7 and above, it continues to play at BGM_LV7.
             default: soundManager.loopSound(Sound.BGM_LV7); break;
 		}
+
+		this.puzzleScreen = null;
+		this.puzzleRetryCooldown = Core.getCooldown(Core.PuzzleSettings.RETRY_DELAY);
+		this.webCooldown = Core.getCooldown(3000);
+		this.webCooldown.reset();
 	}
 
 	/**
@@ -356,8 +365,33 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	protected final void update() {
 		super.update();
 		if (this.inputDelay.checkFinished() && !this.levelFinished) {
-			boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
-			boolean player2Attacking = inputManager.isKeyDown(KeyEvent.VK_SHIFT);
+			// check web collision and activate puzzle
+			if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
+				boolean webCollision = false;
+				for (int i = 0; i < web.size(); i++) {
+					if (!(ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
+							|| web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6)) {
+						webCollision = true;
+						logger.info("Web collision detected at position" + ship.getPositionX());
+						break;
+					}
+				}
+				if (webCollision && this.puzzleScreen == null) {
+					logger.info("Initializing puzzle...");
+					initializePuzzle();
+				}
+			}
+
+			if (ship.isPuzzleActive() && this.puzzleScreen != null) {
+				updatePuzzleState();
+			}
+
+			this.enemyShipFormation.update();
+			this.enemyShipFormation.shoot(this.bullets, this.level, balance);
+
+			if (!ship.isPuzzleActive()) {
+				boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
+				boolean player2Attacking = inputManager.isKeyDown(KeyEvent.VK_SHIFT);
 
 			if (player1Attacking && player2Attacking) {
 				// Both players are attacking
@@ -526,6 +560,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 //			}
 		}
 
+			// when puzzle activated
+			if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
+				updatePuzzleState();
+			}
+		}
+
 		manageCollisions();
 		cleanBullets();
 		if (playerNumber >= 0)
@@ -548,6 +588,58 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			this.alertMessage = "";
 			this.isRunning = false;
 		}
+	}
+
+	private void updatePuzzleState() {
+		if (ship.isPuzzleActive() && this.puzzleScreen != null) {
+			boolean keyPressed = false;
+			if (playerNumber == 0) {
+				keyPressed = inputManager.isKeyDown(KeyEvent.VK_W) ||
+						inputManager.isKeyDown(KeyEvent.VK_A) ||
+						inputManager.isKeyDown(KeyEvent.VK_S) ||
+						inputManager.isKeyDown(KeyEvent.VK_D);
+			} else {
+				keyPressed = inputManager.isKeyDown(KeyEvent.VK_UP) ||
+						inputManager.isKeyDown(KeyEvent.VK_DOWN) ||
+						inputManager.isKeyDown(KeyEvent.VK_LEFT) ||
+						inputManager.isKeyDown(KeyEvent.VK_RIGHT);
+			}
+			if (keyPressed) {
+				int keyCode = inputManager.getLastKeyPressed();
+				if (puzzleScreen != null && puzzleScreen.handleInput(keyCode)) {
+					completePuzzle();
+				}
+				inputManager.resetLastKeyPressed();
+			}
+		}
+	}
+
+	private void initializePuzzle() {
+		if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
+			ship.setThreadWeb(true);
+			ship.setPlayerShip(true);
+			ship.setPuzzleActive(true);
+
+			this.puzzleScreen = new PuzzleScreen(playerNumber);
+			inputManager.setPuzzleMode(true);
+
+			logger.info("Ship puzzle state: " + ship.isPuzzleActive());  // 상태 확인용 로그
+		}
+	}
+
+	private void resetPuzzle() {
+		if (puzzleRetryCooldown.checkFinished()) {
+			this.puzzleScreen = new PuzzleScreen(playerNumber);
+		}
+	}
+
+	private void completePuzzle() {
+		ship.setPuzzleActive(false);
+		ship.setThreadWeb(false);
+		this.puzzleScreen = null;
+		inputManager.setPuzzleMode(false);
+		webCooldown.reset();
+		logger.info("Puzzle completed successfully");
 	}
 
 	/**
@@ -639,6 +731,15 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			}
 		}
 
+		drawManager.completeDrawing(this);
+
+		// draw puzzle screen
+		if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
+			drawManager.drawPuzzle(this, ship,
+					puzzleScreen.getDirectionSequence(),
+					puzzleScreen.getPlayerInput(),
+					playerNumber);
+		}
 		drawManager.completeDrawing(this);
 	}
 
@@ -795,7 +896,15 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			}
 		}
 
-		drawManager.flushBuffer(this, playerNumber);
+		// draw puzzle screen
+		if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
+			drawManager.drawPuzzle(this,
+					this.puzzleScreen.getDirectionSequence(),
+					this.puzzleScreen.getPlayerInput(),
+					playerNumber,
+					playerNumber,
+					this.ship.getCollisionX());
+		}
 	}
 
 	/**
