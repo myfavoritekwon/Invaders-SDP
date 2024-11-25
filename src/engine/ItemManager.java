@@ -6,13 +6,14 @@ import entity.Ship;
 import entity.Barrier;
 
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.Random;
-import java.util.Set;
 import java.util.logging.Logger;
+import java.util.TimerTask;
+import java.util.Timer;
+
 
 /**
  * Manages item drop and use.
@@ -27,15 +28,19 @@ import java.util.logging.Logger;
  */
 public class ItemManager {
     /** Width of game screen. */
-    private static final int WIDTH = 600;
+    private int WIDTH;
     /** Height of game screen. */
-    private static final int HEIGHT = 650;
+    private int HEIGHT;
     /** Item drop probability, (1 ~ 100). */
     private static final int ITEM_DROP_PROBABILITY = 30;
     /** Cooldown of Ghost */
     private static final int GHOST_COOLDOWN = 3000;
     /** Cooldown of Time-stop */
     private static final int TIMESTOP_COOLDOWN = 4000;
+    private static final int  LASER_COOLDOWN = 2000;
+    /** Judging that you ate laser items */
+    private boolean LasershootActive = false;
+
 
     /** Random generator. */
     private final Random rand;
@@ -54,10 +59,13 @@ public class ItemManager {
     /** Cooldown variable for Time-stop */
     private Cooldown timeStop_cooldown = Core.getCooldown(0);
 
+
     /** Check if the number of shot is max, (maximum 3). */
     private boolean isMaxShotNum;
     /** Number of bullets that player's ship shoot. */
     private int shotNum;
+    /** Sound balance for each player*/
+    private float balance;
 
     /** Types of item */
     public enum ItemType {
@@ -66,7 +74,9 @@ public class ItemManager {
         Barrier,
         Ghost,
         TimeStop,
-        MultiShot
+        MultiShot,
+        Laser
+
     }
 
     /**
@@ -75,15 +85,21 @@ public class ItemManager {
      * @param ship Player's ship.
      * @param enemyShipFormation Formation of enemy ships.
      * @param barriers Set of barriers in game screen.
+     * @param balance 1p -1.0, 2p 1.0, both 0.0
      *
      */
-    public ItemManager(Ship ship, EnemyShipFormation enemyShipFormation, Set<Barrier> barriers) {
+    public ItemManager(Ship ship, EnemyShipFormation enemyShipFormation, Set<Barrier> barriers, int WIDTH, int HEIGHT, float balance) {
         this.shotNum = 1;
         this.rand = new Random();
         this.ship = ship;
         this.enemyShipFormation = enemyShipFormation;
         this.barriers = barriers;
         this.logger = Core.getLogger();
+        this.WIDTH = WIDTH;
+        this.HEIGHT = HEIGHT;
+        this.balance = balance;
+
+
     }
 
     /**
@@ -106,8 +122,11 @@ public class ItemManager {
         if (isMaxShotNum)
             return itemTypes[rand.nextInt(5)];
 
-        return itemTypes[rand.nextInt(6)];
+        return itemTypes[rand.nextInt(7)];
     }
+
+
+
 
     /**
      * Uses a randomly selected item.
@@ -126,8 +145,13 @@ public class ItemManager {
             case Ghost -> operateGhost();
             case TimeStop -> operateTimeStop();
             case MultiShot -> operateMultiShot();
+            case Laser -> operateLaser();  // 새로운 레이저 아이템 처리 추가
+
         };
     }
+
+
+
 
     /**
      * Operate Bomb item.
@@ -135,7 +159,7 @@ public class ItemManager {
      * @return The score to add and the number of ships destroyed.
      */
     private Entry<Integer, Integer> operateBomb() {
-        this.soundManager.playSound(Sound.ITEM_BOMB);
+        this.soundManager.playSound(Sound.ITEM_BOMB, balance);
 
         int addScore = 0;
         int addShipsDestroyed = 0;
@@ -190,7 +214,7 @@ public class ItemManager {
             for (EnemyShip destroyedShip : targetEnemyShips) {
                 addScore += destroyedShip.getPointValue();
                 addShipsDestroyed++;
-                enemyShipFormation.destroy(destroyedShip);
+                enemyShipFormation.destroy(destroyedShip, balance);
             }
         }
 
@@ -203,37 +227,28 @@ public class ItemManager {
      * @return The score to add and the number of ships destroyed.
      */
     private Entry<Integer, Integer> operateLineBomb() {
-        this.soundManager.playSound(Sound.ITEM_BOMB);
+        this.soundManager.playSound(Sound.ITEM_BOMB, balance);
 
         int addScore = 0;
         int addShipsDestroyed = 0;
 
-        List<List<EnemyShip>> enemyships = this.enemyShipFormation.getEnemyShips();
+        List<List<EnemyShip>> enemyShips = this.enemyShipFormation.getEnemyShips();
 
-        int targetRow = -1;
-        int maxCnt = -1;
+        int destroyRow = -1;
 
-        for (int i = 0; i < enemyships.size(); i++) {
-            int aliveCnt = 0;
-            for (int j = 0; j < enemyships.get(i).size(); j++) {
-                if (enemyships.get(i).get(j) != null && !enemyships.get(i).get(j).isDestroyed()) {
-                    aliveCnt++;
-                }
-            }
-
-            if (aliveCnt > maxCnt) {
-                maxCnt = aliveCnt;
-                targetRow = i;
+        for (List<EnemyShip> column : enemyShips) {
+            for (int i = 0; i < column.size(); i++) {
+                if (column.get(i) != null && !column.get(i).isDestroyed())
+                    destroyRow = Math.max(destroyRow, i);
             }
         }
 
-        if (targetRow != -1) {
-            List<EnemyShip> destroyList = new ArrayList<>(enemyships.get(targetRow));
-            for (EnemyShip destroyedShip : destroyList) {
-                if (destroyedShip != null && !destroyedShip.isDestroyed()) {
-                    addScore += destroyedShip.getPointValue();
+        if (destroyRow != -1) {
+            for (List<EnemyShip> column : enemyShips) {
+                if (column.get(destroyRow) != null && !column.get(destroyRow).isDestroyed()) {
+                    addScore += column.get(destroyRow).getPointValue();
                     addShipsDestroyed++;
-                    enemyShipFormation.destroy(destroyedShip);
+                    enemyShipFormation.destroy(column.get(destroyRow), balance);
                 }
             }
         }
@@ -247,16 +262,19 @@ public class ItemManager {
      * @return null
      */
     private Entry<Integer, Integer> operateBarrier() {
-        this.soundManager.playSound(Sound.ITEM_BARRIER_ON);
+        this.soundManager.playSound(Sound.ITEM_BARRIER_ON, balance);
 
+        int BarrierY = HEIGHT - 70;
         int middle = WIDTH / 2 - 39;
         int range = 200;
         this.barriers.clear();
 
-        this.barriers.add(new Barrier(middle, HEIGHT - 100));
-        this.barriers.add(new Barrier(middle - range, HEIGHT - 100));
-        this.barriers.add(new Barrier(middle + range, HEIGHT - 100));
-
+        this.barriers.add(new Barrier(middle, BarrierY));
+        this.barriers.add(new Barrier(middle - range, BarrierY));
+        this.barriers.add(new Barrier(middle + range, BarrierY));
+        logger.info("Barrier created at positions: (" + middle + ", " + (BarrierY) + "), ("
+                + (middle - range) + ", " + (BarrierY) + "), ("
+                + (middle + range) + ", " + (BarrierY) + ")");
         return null;
     }
 
@@ -266,7 +284,7 @@ public class ItemManager {
      * @return null
      */
     private Entry<Integer, Integer> operateGhost() {
-        this.soundManager.playSound(Sound.ITEM_GHOST);
+        this.soundManager.playSound(Sound.ITEM_GHOST, balance);
 
         this.ship.setColor(Color.DARK_GRAY);
         this.ghost_cooldown = Core.getCooldown(GHOST_COOLDOWN);
@@ -281,7 +299,7 @@ public class ItemManager {
      * @return null
      */
     private Entry<Integer, Integer> operateTimeStop() {
-        this.soundManager.playSound(Sound.ITEM_TIMESTOP_ON);
+        this.soundManager.playSound(Sound.ITEM_TIMESTOP_ON, balance);
 
         this.timeStop_cooldown = Core.getCooldown(TIMESTOP_COOLDOWN);
         this.timeStop_cooldown.reset();
@@ -306,6 +324,33 @@ public class ItemManager {
     }
 
     /**
+     * operate Laser_shoot item.
+     */
+    private Entry<Integer, Integer> operateLaser() {
+        this.soundManager.playSound(Sound.ITEM_shooting_laser, 3.0f);
+        if (!LasershootActive) {
+            LasershootActive = true;
+            this.ship.setLaserMode(true);
+            this.ship.setShootingCooldown(Core.getCooldown(0));
+
+            // set timer activating laser two second
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    LasershootActive = false;
+                    ship.setLaserMode(false);
+                    ship.setShootingCooldown(Core.getCooldown(750));
+                }
+            }, LASER_COOLDOWN);
+        }
+        return new SimpleEntry<>(0, 0);
+    }
+
+
+
+
+    /**
      * Checks if Ghost is active.
      *
      * @return True when Ghost is active.
@@ -313,6 +358,7 @@ public class ItemManager {
     public boolean isGhostActive() {
         return !this.ghost_cooldown.checkFinished();
     }
+
 
     /**
      * Checks if Time-stop is active.
@@ -330,4 +376,7 @@ public class ItemManager {
     public int getShotNum() {
         return this.shotNum;
     }
+
+
+
 }
