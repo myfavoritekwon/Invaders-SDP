@@ -707,8 +707,13 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					serverManager.setGiveShooter(giveShooter);
 					serverManager.setCooldown(Cooldown);
 				}else{
-					this.enemyShipFormation.update();
-					this.enemyShipFormation.P2PShoot(this.bullets, this.level, this.balance, serverManager.getGiveShooter(), serverManager.getCooldown());
+					if(P2PCheck) {
+						this.enemyShipFormation.update();
+						this.enemyShipFormation.P2PShoot(this.bullets, this.level, this.balance, serverManager.getGiveShooter(), serverManager.getCooldown());
+					}else{
+						this.enemyShipFormation.update();
+						this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
+					}
 				}
 			}
 
