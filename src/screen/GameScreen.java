@@ -351,8 +351,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
         // Appears each 10-30 seconds.
-		this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
-		p2pShip.setColor(Color.BLUE);
+		if(P2PCheck) {
+			this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
+			p2pShip.setColor(Color.BLUE);
+		}
         this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
         ship.applyItem(wallet);
@@ -774,22 +776,22 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private boolean checkCollision(final Ship ship, List< ? extends Entity> wanted ,final String direction) {
 		for (Entity entity : wanted) {
 			if (direction.equals("down")) {
-				if (checkCollision(ship.getPositionX(), ship.getPositionY() + ship.getSpeed(),
+				if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() + ship.getSpeed(),
 						ship.getWidth(), ship.getHeight(), entity)) {
 					return true; // 아래쪽 충돌
 				}
 			} else if (direction.equals("up")) {
-				if (checkCollision(ship.getPositionX(), ship.getPositionY() - ship.getSpeed(),
+				if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() - ship.getSpeed(),
 						ship.getWidth(), ship.getHeight(), entity)) {
 					return true; // 위쪽 충돌
 				}
 			} else if (direction.equals("right")) {
-				if (checkCollision(ship.getPositionX() + ship.getSpeed(), ship.getPositionY(),
+				if (checkCollision((int) ship.getPositionX() + ship.getSpeed(), (int) ship.getPositionY(),
 						ship.getWidth(), ship.getHeight(), entity)) {
 					return true; // 오른쪽 충돌
 				}
 			} else if (direction.equals("left")) {
-				if (checkCollision(ship.getPositionX() - ship.getSpeed(), ship.getPositionY(),
+				if (checkCollision((int) ship.getPositionX() - ship.getSpeed(), (int) ship.getPositionY(),
 						ship.getWidth(), ship.getHeight(), entity)) {
 					return true; // 왼쪽 충돌
 				}
@@ -1203,7 +1205,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						this.logger.info("Hit on player ship, " + this.lives + " lives remaining.");
 					}
 				}
-				if (checkCollision(bullet, this.p2pShip) && !this.levelFinished && !itemManager.isGhostActive()) {
+				if (P2PCheck && checkCollision(bullet, this.p2pShip) && !this.levelFinished && !itemManager.isGhostActive()) {
 					recyclable.add(bullet);
 					if (!this.p2pShip.isDestroyed()) {
 						this.p2pShip.destroy(balance);
