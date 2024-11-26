@@ -497,6 +497,49 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			this.enemyShipFormation.update();
 			this.enemyShipFormation.shoot(this.bullets, this.level, balance);
 
+			if (this.enemyShipSpecial != null) {
+				// special 함선돠 만나면 아래로 강제 이동
+				if( checkCollision(ship,enemyShipSpecial)) ship.moveDown(5);
+				if (!this.enemyShipSpecial.isDestroyed())
+					this.enemyShipSpecial.move(2, 0);
+				else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
+					this.enemyShipSpecial = null;
+
+			}
+			if (this.enemyShipSpecial == null
+					&& this.enemyShipSpecialCooldown.checkFinished()) {
+				this.enemyShipSpecial = new EnemyShip();
+				this.alertMessage = "";
+				this.enemyShipSpecialCooldown.reset();
+				soundManager.playSound(Sound.UFO_APPEAR, balance);
+				this.logger.info("A special ship appears");
+			}
+			if(this.enemyShipSpecial == null
+					&& this.enemyShipSpecialCooldown.checkAlert()) {
+				switch (this.enemyShipSpecialCooldown.checkAlertAnimation()){
+					case 1: this.alertMessage = "--! ALERT !--";
+						break;
+
+					case 2:
+						this.alertMessage = "-!! ALERT !!-";
+						break;
+
+					case 3:
+						this.alertMessage = "!!! ALERT !!!";
+						break;
+
+					default:
+						this.alertMessage = "";
+						break;
+				}
+
+			}
+			if (this.enemyShipSpecial != null
+					&& this.enemyShipSpecial.getPositionX() > this.width) {
+				this.enemyShipSpecial = null;
+				this.logger.info("The special ship has escaped");
+			}
+
 			if (!ship.isPuzzleActive()) {
 				boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
 				boolean player2Attacking = inputManager.isKeyDown(KeyEvent.VK_SHIFT);
@@ -678,49 +721,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 			}
 
-			if (this.enemyShipSpecial != null) {
-				// special 함선돠 만나면 아래로 강제 이동
-				if( checkCollision(ship,enemyShipSpecial)) ship.moveDown(5);
-				if (!this.enemyShipSpecial.isDestroyed())
-					this.enemyShipSpecial.move(2, 0);
-				else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
-					this.enemyShipSpecial = null;
-
-			}
-			if (this.enemyShipSpecial == null
-					&& this.enemyShipSpecialCooldown.checkFinished()) {
-				this.enemyShipSpecial = new EnemyShip();
-				this.alertMessage = "";
-				this.enemyShipSpecialCooldown.reset();
-				soundManager.playSound(Sound.UFO_APPEAR, balance);
-				this.logger.info("A special ship appears");
-			}
-			if(this.enemyShipSpecial == null
-					&& this.enemyShipSpecialCooldown.checkAlert()) {
-				switch (this.enemyShipSpecialCooldown.checkAlertAnimation()){
-					case 1: this.alertMessage = "--! ALERT !--";
-						break;
-
-						case 2:
-							this.alertMessage = "-!! ALERT !!-";
-							break;
-
-						case 3:
-							this.alertMessage = "!!! ALERT !!!";
-							break;
-
-						default:
-							this.alertMessage = "";
-							break;
-					}
-
-			}
-			if (this.enemyShipSpecial != null
-					&& this.enemyShipSpecial.getPositionX() > this.width) {
-				this.enemyShipSpecial = null;
-				this.logger.info("The special ship has escaped");
-			}
-
 			this.ship.update();
 			if(P2PCheck)
 				this.p2pShip.update();
@@ -728,7 +728,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
 			if (!itemManager.isTimeStopActive()) {
 				if(Server.checkConnect()) {
-					this.enemyShipFormation.update();
 					giveShooter = this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
 					String Cooldown = giveShooter.getLast();
 					giveShooter.removeLast();
@@ -736,10 +735,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					serverManager.setCooldown(Cooldown);
 				}else{
 					if(P2PCheck) {
-						this.enemyShipFormation.update();
 						this.enemyShipFormation.P2PShoot(this.bullets, this.level, this.balance, serverManager.getGiveShooter(), serverManager.getCooldown());
 					}else{
-						this.enemyShipFormation.update();
 						this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
 					}
 				}
@@ -749,17 +746,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					handleBlockerAppearance();
 				}
 			}
-
-			// when puzzle activated
-			if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
-				updatePuzzleState();
-			}
 		}
-
-			// when puzzle activated
-			if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
-				updatePuzzleState();
-			}
 
 		manageCollisions();
 		cleanBullets();
