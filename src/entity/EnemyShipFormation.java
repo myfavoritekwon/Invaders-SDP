@@ -110,7 +110,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		LEFT,
 		/** Movement to the bottom of the screen. */
 		DOWN
-	};
+	}
 
 	/**
 	 * Constructor, sets the initial conditions.
@@ -196,7 +196,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		for (List<EnemyShip> column : this.enemyShips)
 			for (EnemyShip enemyShip : column)
 				if (enemyShip != null)
-				    drawManager.drawEntity(enemyShip, enemyShip.getPositionX(), enemyShip.getPositionY());
+				    drawManager.drawEntity(enemyShip, (int) enemyShip.getPositionX(), (int) enemyShip.getPositionY());
 	}
 
 	/**
@@ -206,8 +206,8 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		for (List<EnemyShip> column : this.enemyShips)
 			for (EnemyShip enemyShip : column)
 				if (enemyShip != null)
-					drawManager.drawEntity(enemyShip, enemyShip.getPositionX(),
-							enemyShip.getPositionY(), playerNumber);
+					drawManager.drawEntity(enemyShip, (int) enemyShip.getPositionX(),
+                            (int) enemyShip.getPositionY(), playerNumber);
 	}
 
 	/**
@@ -328,9 +328,9 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 				}
 
 				// Calculate the height of this column
-				int columnSize = lastNonNullShip.getPositionY() - this.positionY + this.shipHeight;
+				int columnSize = (int) (lastNonNullShip.getPositionY() - this.positionY + this.shipHeight);
 				maxColumn = Math.max(maxColumn, columnSize);
-				minPositionY = Math.min(minPositionY, firstNonNullShip.getPositionY());
+				minPositionY = (int) Math.min(minPositionY, firstNonNullShip.getPositionY());
 			}
 		}
 
@@ -353,9 +353,9 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 				// Perform calculations only if a non-null ship is found
 				if (firstNonNullShip != null) {
 					if (leftMostPoint == 0) {
-						leftMostPoint = firstNonNullShip.getPositionX();
+						leftMostPoint = (int) firstNonNullShip.getPositionX();
 					}
-					rightMostPoint = firstNonNullShip.getPositionX();
+					rightMostPoint = (int) firstNonNullShip.getPositionX();
 				}
 			}
 		}
@@ -394,13 +394,13 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 			// Each selected enemy fires a bullet
 			for (EnemyShip shooter : selectedShooters) {
 				// One shot at the base
-				bullets.add(BulletPool.getBullet(shooter.getPositionX()
-						+ shooter.width / 2 + 10, shooter.getPositionY(), BULLET_SPEED));
+				bullets.add(BulletPool.getBullet((int) (shooter.getPositionX()
+                                        + shooter.width / 2 + 10), (int) shooter.getPositionY(), BULLET_SPEED));
 
 				// Additional launches based on levels (more launches based on each level)
 				for (int i = 1; i < numberOfBullets; i++) {
-					bullets.add(BulletPool.getBullet(shooter.getPositionX()
-							+ shooter.width / 2 + (10 * (i + 1)), shooter.getPositionY(), BULLET_SPEED));
+					bullets.add(BulletPool.getBullet((int) (shooter.getPositionX()
+                                                + shooter.width / 2 + (10 * (i + 1))), (int) shooter.getPositionY(), BULLET_SPEED));
 				}
 				soundManager.playSound(Sound.ALIEN_LASER, balance);
 			}
@@ -430,13 +430,13 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 			// Each selected enemy fires a bullet
 			for (EnemyShip shooter : selectedShooters) {
 				// One shot at the base
-				bullets.add(BulletPool.getBullet(shooter.getPositionX()
-						+ shooter.width / 2 + 10, shooter.getPositionY(), BULLET_SPEED));
+				bullets.add(BulletPool.getBullet((int)shooter.getPositionX()
+						+ shooter.width / 2 + 10,(int) shooter.getPositionY(), BULLET_SPEED));
 
 				// Additional launches based on levels (more launches based on each level)
 				for (int i = 1; i < shooters.size(); i++) {
-					bullets.add(BulletPool.getBullet(shooter.getPositionX()
-							+ shooter.width / 2 + (10 * (i + 1)), shooter.getPositionY(), BULLET_SPEED));
+					bullets.add(BulletPool.getBullet((int)shooter.getPositionX()
+							+ shooter.width / 2 + (10 * (i + 1)), (int)shooter.getPositionY(), BULLET_SPEED));
 				}
 				soundManager.playSound(Sound.ALIEN_LASER, balance);
 			}
