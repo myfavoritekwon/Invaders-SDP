@@ -914,10 +914,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawGameTitle(this);
 		// 1인 모드 총알 경로
 		drawManager.drawLaunchTrajectory( this, (int) this.ship.getPositionX(), (int) this.ship.getPositionY(), this.ship.getAngle());
-
     drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
 		if(P2PCheck)
 			drawManager.drawEntity(this.p2pShip, (int) this.p2pShip.getPositionX(), (int) this.p2pShip.getPositionY());
+		drawManager.drawItemHud(this, this.height, itemManager.getStoredItems());
+
 
 //		//draw Gravity Enemy
 //		for(int i = 0; i < physicsEnemyShips.size(); i++){
