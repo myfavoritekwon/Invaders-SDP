@@ -110,7 +110,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		LEFT,
 		/** Movement to the bottom of the screen. */
 		DOWN
-	};
+	}
 
 	/**
 	 * Constructor, sets the initial conditions.
@@ -430,13 +430,13 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 			// Each selected enemy fires a bullet
 			for (EnemyShip shooter : selectedShooters) {
 				// One shot at the base
-				bullets.add(BulletPool.getBullet(shooter.getPositionX()
-						+ shooter.width / 2 + 10, shooter.getPositionY(), BULLET_SPEED));
+				bullets.add(BulletPool.getBullet((int)shooter.getPositionX()
+						+ shooter.width / 2 + 10,(int) shooter.getPositionY(), BULLET_SPEED));
 
 				// Additional launches based on levels (more launches based on each level)
 				for (int i = 1; i < shooters.size(); i++) {
-					bullets.add(BulletPool.getBullet(shooter.getPositionX()
-							+ shooter.width / 2 + (10 * (i + 1)), shooter.getPositionY(), BULLET_SPEED));
+					bullets.add(BulletPool.getBullet((int)shooter.getPositionX()
+							+ shooter.width / 2 + (10 * (i + 1)), (int)shooter.getPositionY(), BULLET_SPEED));
 				}
 				soundManager.playSound(Sound.ALIEN_LASER, balance);
 			}
