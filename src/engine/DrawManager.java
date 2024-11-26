@@ -1486,8 +1486,8 @@ public final class DrawManager {
 		backBufferGraphics.setColor(Color.WHITE);
 		if(remainingTime > 0){
 
-			int shipX = ship.getPositionX();
-			int shipY = ship.getPositionY();
+			int shipX = (int) ship.getPositionX();
+			int shipY = (int) ship.getPositionY();
 			int shipWidth = ship.getWidth();
 			int circleSize = 16;
 			int startAngle = 90;
@@ -1530,8 +1530,8 @@ public final class DrawManager {
 		threadBufferGraphics[threadNumber].setColor(Color.WHITE);
 		if(remainingTime > 0){
 
-			int shipX = ship.getPositionX();
-			int shipY = ship.getPositionY();
+			int shipX = (int) ship.getPositionX();
+			int shipY = (int) ship.getPositionY();
 			int shipWidth = ship.getWidth();
 			int circleSize = 16;
 			int startAngle = 90;
@@ -2010,13 +2010,13 @@ public final class DrawManager {
 		Graphics2D g2d = (Graphics2D) backBufferGraphics;
 		g2d.setFont(fontRegular);
 
-		int sequenceY = ship.getPositionY() - 30;
+		int sequenceY = (int) (ship.getPositionY() - 30);
 
 		String fullSequence = sequence.stream()
 				.map(i -> getDirectionSymbol(i, playerNumber))
 				.reduce("", (a, b) -> a + " " + b).trim();
 		int textWidth = fontRegularMetrics.stringWidth(fullSequence);
-		int textX = ship.getPositionX() + (ship.getWidth() - textWidth) / 2;
+		int textX = (int) (ship.getPositionX() + (ship.getWidth() - textWidth) / 2);
 
 		if (textX < 10) textX = 10;
 		if (textX + textWidth > screen.getWidth() - 10) {
