@@ -137,6 +137,15 @@ public final class Core {
 							gameSetting.getShootingFrecuency(),
 							gameState.getLevel(), DifficultySetting);
 
+
+					if (gameState.getLevel() == 1 || gameState.getLevel() == 3) {
+						LOGGER.info("Starting story screen for level " + gameState.getLevel());
+						currentScreen = new StoryScreen(gameState, width, height, FPS);
+						frame.setScreen(currentScreen); // StoryScreen 실행
+						LOGGER.info("Closing story screen for level " + gameState.getLevel());
+					}
+
+
 					currentScreen = new GameScreen(gameState,
 							gameSetting,
 							bonusLife, width, height, FPS, wallet);
