@@ -6,8 +6,7 @@ import java.io.IOException;
 import java.security.Key;
 import java.util.HashSet;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
@@ -410,6 +409,9 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			} while (overlapping);
 			block.add(newBlock);
 		}
+		/** initialinze images*/
+		DrawManager.initializeItemImages();
+
 
 		// Appears each 10-30 seconds.
 		this.enemyShipSpecialCooldown = Core.getVariableCooldown(
@@ -469,6 +471,24 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 */
 	protected final void update() {
 		super.update();
+		//swap item M
+		if (inputManager.isKeyDown(KeyEvent.VK_N)) {
+			itemManager.swapItems();
+		}
+
+
+		// use itme N
+		if (inputManager.isKeyDown(KeyEvent.VK_M)) {
+			ItemManager.ItemType usedItem = itemManager.useStoredItem();
+			if (usedItem != null) {
+				Entry<Integer, Integer> result = itemManager.useItem(usedItem);
+				if (result != null) {
+					this.score += result.getKey();
+					this.shipsDestroyed += result.getValue();
+				}
+			}
+		}
+
 		if (this.inputDelay.checkFinished() && !this.levelFinished) {
 			// check web collision and activate puzzle
 			if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
@@ -1274,6 +1294,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					isExecuted = true;
 				}
 
+				// edit itembox collpase bullet
 				Iterator<ItemBox> itemBoxIterator = this.itemBoxes.iterator();
 				while (itemBoxIterator.hasNext()) {
 					ItemBox itemBox = itemBoxIterator.next();
@@ -1281,11 +1302,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						this.hitBullets++;
 						itemBoxIterator.remove();
 						recyclable.add(bullet);
-						Entry<Integer, Integer> itemResult = this.itemManager.useItem();
-
-						if (itemResult != null) {
-							this.score += itemResult.getKey();
-							this.shipsDestroyed += itemResult.getValue();
+						ItemManager.ItemType itemType = itemManager.selectItemType();
+						boolean added = itemManager.addItem(itemType);
+						if (added) {
+							logger.info(itemType + " added to storage.");
+						} else {
+							logger.info("Storage is full. Item not added.");
 						}
 					}
 				}

@@ -10,13 +10,13 @@ import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.URL;
+import java.util.*;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 import entity.*;
+import screen.GameScreen;
 import screen.GameSettingScreen;
 import screen.Screen;
 
@@ -69,6 +69,76 @@ public final class DrawManager {
 	private static BufferedImage img_coin;
 	private static BufferedImage img_coingain;
 	private static BufferedImage img_shotinterval;
+	/** For item image */
+	private static final Map<ItemManager.ItemType, BufferedImage> itemImages = new HashMap<>();
+
+
+	/** For initialize item images */
+	public static void initializeItemImages() {
+		try {
+			itemImages.put(ItemManager.ItemType.Bomb, loadImage("res/image/bomb.png"));
+			itemImages.put(ItemManager.ItemType.LineBomb, loadImage("res/image/bomb.png"));
+			itemImages.put(ItemManager.ItemType.Barrier, loadImage("res/image/barrier.png"));
+			itemImages.put(ItemManager.ItemType.Ghost, loadImage("res/image/ghost.png"));
+			itemImages.put(ItemManager.ItemType.TimeStop, loadImage("res/image/timestop.png"));
+			itemImages.put(ItemManager.ItemType.MultiShot, loadImage("res/image/multishot.png"));
+			itemImages.put(ItemManager.ItemType.Laser, loadImage("res/image/laser.png"));
+		} catch (Exception e) {
+			System.err.println("아이템 이미지를 로드할 수 없습니다: " + e.getMessage());
+		}
+	}
+
+	/** For loading item images */
+	private static BufferedImage loadImage(String filePath) {
+		try {
+			File file = new File(filePath); // referencing file path
+			if (!file.exists()) {
+				throw new IllegalArgumentException("리소스 파일을 찾을 수 없습니다: " + filePath);
+			}
+			return ImageIO.read(file);
+		} catch (IOException e) {
+			System.err.println("이미지 로드 실패: " + filePath + " (" + e.getMessage() + ")");
+			return null;
+		}
+	}
+
+	/** Drawing item Hud */
+	public void drawItemHud(Screen screen, int screenHeight, List<ItemManager.ItemType> storedItems) {
+		int rectWidth = 50;
+		int rectHeight = 50;
+		int startX = 10;
+		int startY = screenHeight - 70;
+		int padding = 10;
+
+		for (int i = 0; i < 2; i++) {
+			int x = startX + i * (rectWidth + padding);
+			int y = startY;
+
+			if (i < storedItems.size()) {
+				// bringing storedItem
+				ItemManager.ItemType itemType = storedItems.get(i);
+				BufferedImage itemImage = itemImages.get(itemType);
+				if (itemImage != null) {
+					// if item have image, print itemimage
+					backBufferGraphics.drawImage(itemImage, x, y, rectWidth, rectHeight, null);
+				} else {
+					// if item don't have image, print red
+					backBufferGraphics.setColor(Color.RED);
+					backBufferGraphics.fillRect(x, y, rectWidth, rectHeight);
+				}
+			} else {
+				// if no storeditem, print lightGRAY
+				backBufferGraphics.setColor(Color.LIGHT_GRAY);
+				backBufferGraphics.fillRect(x, y, rectWidth, rectHeight);
+			}
+
+			// drawing rectangle
+			backBufferGraphics.setColor(Color.BLACK);
+			backBufferGraphics.drawRect(x, y, rectWidth, rectHeight);
+		}
+
+	}
+
 
 
 	/** Sprite types. */
