@@ -78,7 +78,7 @@ public class Entity {
 
 	/**
 	 * Getter for the Y axis position of the entity.
-	 * 
+	 *
 	 * @return Position of the entity in the Y axis.
 	 */
 	public final double getPositionY() {

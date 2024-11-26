@@ -787,22 +787,22 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private boolean checkCollision(final Ship ship, List< ? extends Entity> wanted ,final String direction) {
 		for (Entity entity : wanted) {
 			if (direction.equals("down")) {
-				if (checkCollision(ship.getPositionX(), ship.getPositionY() + ship.getSpeed(),
+				if (checkCollision((int) ship.getPositionX(), (int) (ship.getPositionY() + ship.getSpeed()),
 						ship.getWidth(), ship.getHeight(), entity)) {
 					return true; // 아래쪽 충돌
 				}
 			} else if (direction.equals("up")) {
-				if (checkCollision(ship.getPositionX(), ship.getPositionY() - ship.getSpeed(),
+				if (checkCollision((int) ship.getPositionX(), (int) (ship.getPositionY() - ship.getSpeed()),
 						ship.getWidth(), ship.getHeight(), entity)) {
 					return true; // 위쪽 충돌
 				}
 			} else if (direction.equals("right")) {
-				if (checkCollision(ship.getPositionX() + ship.getSpeed(), ship.getPositionY(),
+				if (checkCollision((int) (ship.getPositionX() + ship.getSpeed()), (int) ship.getPositionY(),
 						ship.getWidth(), ship.getHeight(), entity)) {
 					return true; // 오른쪽 충돌
 				}
 			} else if (direction.equals("left")) {
-				if (checkCollision(ship.getPositionX() - ship.getSpeed(), ship.getPositionY(),
+				if (checkCollision((int) (ship.getPositionX() - ship.getSpeed()), (int) ship.getPositionY(),
 						ship.getWidth(), ship.getHeight(), entity)) {
 					return true; // 왼쪽 충돌
 				}
