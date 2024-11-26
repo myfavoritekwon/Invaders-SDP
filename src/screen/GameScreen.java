@@ -6,8 +6,7 @@ import java.io.IOException;
 import java.security.Key;
 import java.util.HashSet;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
@@ -15,7 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.Timer;
 import java.util.TimerTask;
 
-
+import engine.DrawManager.SpriteType;
 import engine.*;
 import engine.Socket.Client;
 import engine.Socket.Server;
@@ -52,6 +51,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private int level;
 	/** Formation of enemy ships. */
 	private EnemyShipFormation enemyShipFormation;
+//	/** 중력 함선 */
+//	private ArrayList<PhysicsEnemyShip> physicsEnemyShips;
 	/** Player's ship. */
 	private Ship ship;
 	private Ship p2pShip;
@@ -359,11 +360,34 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
-		// Appears each 10-30 seconds.
-		this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
-		p2pShip.setColor(Color.BLUE);
-		this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
+        // Appears each 10-30 seconds.
+		if(P2PCheck) {
+			this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
+			p2pShip.setColor(Color.BLUE);
+		}
+        this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
+        ship.applyItem(wallet);
+
+//		//Create Gravity Enemy
+//		int bonus = gameState.getLevel() % 1;
+//
+//		if(bonus == 0){
+//			physicsEnemyShips = new ArrayList<>();
+//			int mob_num = level * 4;
+//			Random random = new Random();
+//			for(int i = 0; i < mob_num; i++){
+//				int init_x = getWidth() - 12 * 2;
+//				int x_result = random.nextBoolean() ? 0 : init_x;
+//				int y_result = random.nextInt(getHeight() - 100 + 1);
+//				SpriteType[] spriteTypes = {SpriteType.EnemyShipA1, SpriteType.EnemyShipB1, SpriteType.EnemyShipC1, SpriteType.EnemyShipD1, SpriteType.EnemyShipE1};
+//				SpriteType sprite_result = spriteTypes[random.nextInt(spriteTypes.length)];
+//				PhysicsEnemyShip physicsEnemyShip = new PhysicsEnemyShip(x_result, y_result, sprite_result, gameState, this);
+//
+//				physicsEnemyShips.add(physicsEnemyShip);
+//			}
+//		}
+
 		ship.applyItem(wallet);
 		//Create random Spider Web.
 		if (!bonusBossLevels.contains(level)) {
@@ -466,6 +490,24 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 */
 	protected final void update() {
 		super.update();
+		//swap item M
+		if (inputManager.isKeyDown(KeyEvent.VK_N)) {
+			itemManager.swapItems();
+		}
+
+
+		// use itme N
+		if (inputManager.isKeyDown(KeyEvent.VK_M)) {
+			ItemManager.ItemType usedItem = itemManager.useStoredItem();
+			if (usedItem != null) {
+				Entry<Integer, Integer> result = itemManager.useItem(usedItem);
+				if (result != null) {
+					this.score += result.getKey();
+					this.shipsDestroyed += result.getValue();
+				}
+			}
+		}
+
 		if (this.inputDelay.checkFinished() && !this.levelFinished) {
 			// check web collision and activate puzzle
 			if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
@@ -490,8 +532,56 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				updatePuzzleState();
 			}
 
+//			//update physicsEnemy
+//			for(int i = 0; i < physicsEnemyShips.size(); i++) {
+//				physicsEnemyShips.get(i).update();
+//			}
+
 			this.enemyShipFormation.update();
 			this.enemyShipFormation.shoot(this.bullets, this.level, balance);
+
+			if (this.enemyShipSpecial != null) {
+				// special 함선돠 만나면 아래로 강제 이동
+				if( checkCollision(ship,enemyShipSpecial)) ship.moveDown(5);
+				if (!this.enemyShipSpecial.isDestroyed())
+					this.enemyShipSpecial.move(2, 0);
+				else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
+					this.enemyShipSpecial = null;
+
+			}
+			if (this.enemyShipSpecial == null
+					&& this.enemyShipSpecialCooldown.checkFinished()) {
+				this.enemyShipSpecial = new EnemyShip();
+				this.alertMessage = "";
+				this.enemyShipSpecialCooldown.reset();
+				soundManager.playSound(Sound.UFO_APPEAR, balance);
+				this.logger.info("A special ship appears");
+			}
+			if(this.enemyShipSpecial == null
+					&& this.enemyShipSpecialCooldown.checkAlert()) {
+				switch (this.enemyShipSpecialCooldown.checkAlertAnimation()){
+					case 1: this.alertMessage = "--! ALERT !--";
+						break;
+
+					case 2:
+						this.alertMessage = "-!! ALERT !!-";
+						break;
+
+					case 3:
+						this.alertMessage = "!!! ALERT !!!";
+						break;
+
+					default:
+						this.alertMessage = "";
+						break;
+				}
+
+			}
+			if (this.enemyShipSpecial != null
+					&& this.enemyShipSpecial.getPositionX() > this.width) {
+				this.enemyShipSpecial = null;
+				this.logger.info("The special ship has escaped");
+			}
 
 			if (!ship.isPuzzleActive()) {
 				boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
@@ -923,10 +1013,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawGameTitle(this);
 		// 1인 모드 총알 경로
 		drawManager.drawLaunchTrajectory( this, (int) this.ship.getPositionX(), (int) this.ship.getPositionY(), this.ship.getAngle());
-
-		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
+        drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
 		if(P2PCheck)
 			drawManager.drawEntity(this.p2pShip, (int) this.p2pShip.getPositionX(), (int) this.p2pShip.getPositionY());
+		drawManager.drawItemHud(this, this.height, itemManager.getStoredItems());
+
 
 		if (!bonusBossLevels.contains(level)) {
 			//draw Spider Web
@@ -1085,7 +1176,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.initThreadDrawing(this, playerNumber);
 		drawManager.drawGameTitle(this, playerNumber);
 		// 2인모드 총알 각도
-		drawManager.drawLaunchTrajectory( this, (int) this.ship.getPositionX(), (int) this.ship.getPositionY(),playerNumber , this.ship.getAngle());
+		drawManager.drawLaunchTrajectory( this, (int)this.ship.getPositionX(), (int)this.ship.getPositionY(),playerNumber , this.ship.getAngle());
 
 		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(),
                 (int) this.ship.getPositionY(), playerNumber);
@@ -1306,6 +1397,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					isExecuted = true;
 				}
 
+				// edit itembox collpase bullet
 				Iterator<ItemBox> itemBoxIterator = this.itemBoxes.iterator();
 				while (itemBoxIterator.hasNext()) {
 					ItemBox itemBox = itemBoxIterator.next();
@@ -1313,11 +1405,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						this.hitBullets++;
 						itemBoxIterator.remove();
 						recyclable.add(bullet);
-						Entry<Integer, Integer> itemResult = this.itemManager.useItem();
-
-						if (itemResult != null) {
-							this.score += itemResult.getKey();
-							this.shipsDestroyed += itemResult.getValue();
+						ItemManager.ItemType itemType = itemManager.selectItemType();
+						boolean added = itemManager.addItem(itemType);
+						if (added) {
+							logger.info(itemType + " added to storage.");
+						} else {
+							logger.info("Storage is full. Item not added.");
 						}
 					}
 				}
@@ -1438,11 +1531,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 	}
 
-	public List<String> getGiveShooter() {
-		return giveShooter;
-	}
+    public List<String> getGiveShooter() {
+        return giveShooter;
+    }
 
-	public void setGiveShooter(List<String> giveShooter) {
-		this.giveShooter = giveShooter;
-	}
+    public void setGiveShooter(List<String> giveShooter) {
+        this.giveShooter = giveShooter;
+    }
 }
