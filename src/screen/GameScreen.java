@@ -153,6 +153,17 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private Cooldown puzzleRetryCooldown;
 	private Cooldown webCooldown;
 
+
+	private BonusBoss bonusBoss;
+	private Set<Integer> bonusBossLevels = Set.of(2,4);
+	private Cooldown bonusLevelCountdown;
+	private int barWidth;
+	private int barInitialWidth = 330;
+	private int barHeight = 12;
+	private int barX = 133;
+	private int barY = 78;
+	private Cooldown barDisappear;
+
 	/**
 	 * Constructor, establishes the properties of the screen.
 	 *
@@ -379,35 +390,37 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		ship.applyItem(wallet);
 		//Create random Spider Web.
-		int web_count = 1 + level / 3;
-		web = new ArrayList<>();
-		for(int i = 0; i < web_count; i++) {
-			double randomValue = Math.random();
-			this.web.add(new Web((int) Math.max(0, randomValue * width - 12 * 2), this.height - 30));
-			this.logger.info("Spider web creation location : " + web.get(i).getPositionX());
-		}
-		//Create random Block.
-		int blockCount = level / 2;
-		int playerTopY_contain_barrier = this.height - 40 - 150;
-		int enemyBottomY = 100 + (gameSettings.getFormationHeight() - 1) * 48;
-		this.block = new ArrayList<Block>();
-		for (int i = 0; i < blockCount; i++) {
-			Block newBlock;
-			boolean overlapping;
-			do {
-				newBlock = new Block(0,0);
-				int positionX = (int) (Math.random() * (this.width - newBlock.getWidth()));
-				int positionY = (int) (Math.random() * (playerTopY_contain_barrier - enemyBottomY - newBlock.getHeight())) + enemyBottomY;
-				newBlock = new Block(positionX, positionY);
-				overlapping = false;
-				for (Block block : block) {
-					if (checkCollision(newBlock, block)) {
-						overlapping = true;
-						break;
+		if (!bonusBossLevels.contains(level)) {
+			int web_count = 1 + level / 3;
+			web = new ArrayList<>();
+			for(int i = 0; i < web_count; i++) {
+				double randomValue = Math.random();
+				this.web.add(new Web((int) Math.max(0, randomValue * width - 12 * 2), this.height - 30));
+				this.logger.info("Spider web creation location : " + web.get(i).getPositionX());
+			}
+			//Create random Block.
+			int blockCount = level / 2;
+			int playerTopY_contain_barrier = this.height - 40 - 150;
+			int enemyBottomY = 100 + (gameSettings.getFormationHeight() - 1) * 48;
+			this.block = new ArrayList<Block>();
+			for (int i = 0; i < blockCount; i++) {
+				Block newBlock;
+				boolean overlapping;
+				do {
+					newBlock = new Block(0,0);
+					int positionX = (int) (Math.random() * (this.width - newBlock.getWidth()));
+					int positionY = (int) (Math.random() * (playerTopY_contain_barrier - enemyBottomY - newBlock.getHeight())) + enemyBottomY;
+					newBlock = new Block(positionX, positionY);
+					overlapping = false;
+					for (Block block : block) {
+						if (checkCollision(newBlock, block)) {
+							overlapping = true;
+							break;
+						}
 					}
-				}
-			} while (overlapping);
-			block.add(newBlock);
+				} while (overlapping);
+				block.add(newBlock);
+			}
 		}
 		/** initialinze images*/
 		DrawManager.initializeItemImages();
@@ -424,6 +437,15 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.barriers = new HashSet<>();
 		this.itemBoxes = new HashSet<>();
 		this.itemManager = new ItemManager(this.ship, this.enemyShipFormation, this.barriers, this.height, this.width, this.balance);
+		this.itemBoxes = new HashSet<>();
+		if (bonusBossLevels.contains(level)) { // 보너스 레벨을 2라 하자
+//			bonusLevelCountdown = Core.getCooldown(30000);
+//			bonusLevelCountdown.reset();
+			bonusBoss = new BonusBoss(50, 50, 100, 100);
+			barWidth = barInitialWidth;
+			barDisappear = Core.getCooldown(1000);
+			barDisappear.reset();
+		}
 
 		// Special input delay / countdown.
 		this.gameStartTime = System.currentTimeMillis();
@@ -493,17 +515,19 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			// check web collision and activate puzzle
 			if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
 				boolean webCollision = false;
-				for (int i = 0; i < web.size(); i++) {
-					// 거미줄 충돌 시 webCollision 값 true
-					if(checkCollision(ship,web.get(i))){
-						webCollision = true;
-						logger.info("Web collision detected at position" + ship.getPositionX());
-						break;
+				if (!bonusBossLevels.contains(level)) {
+					for (int i = 0; i < web.size(); i++) {
+						// 거미줄 충돌 시 webCollision 값 true
+						if(checkCollision(ship,web.get(i))){
+							webCollision = true;
+							logger.info("Web collision detected at position" + ship.getPositionX());
+							break;
+						}
 					}
-				}
-				if (webCollision && this.puzzleScreen == null) {
-					logger.info("Initializing puzzle...");
-					initializePuzzle();
+					if (webCollision && this.puzzleScreen == null) {
+						logger.info("Initializing puzzle...");
+						initializePuzzle();
+					}
 				}
 			}
 
@@ -715,21 +739,23 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				}
 				if(checkCollision(this.ship,this.enemyShipFormation.getListEnemies(), "left")
 						|| checkCollision(this.ship,this.barriers, "left")) ship.moveRight(5);
-				for(int i = 0; i < web.size(); i++) {
-					//escape Spider Web
-					if (ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
-							|| web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6
-							|| ship.getPositionY() + 4 <= web.get(i).getPositionY() - 4
-							|| web.get(i).getPositionY() + 4 <= ship.getPositionY() - 4){
-						this.ship.setThreadWeb(false);
-					}
-					//get caught in a spider's web
-					else {
-						this.ship.setThreadWeb(true);
-						break;
-					}
-				}
-				// 플레이어 함선이 움직이던 중 배리어와 겹쳐졌을 버그 발생 시 플레이어 함선을 아래로 강제 이동시킴
+                if (!bonusBossLevels.contains(level)) {
+                    for(int i = 0; i < web.size(); i++) {
+                        //escape Spider Web
+                        if (ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
+                                || web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6
+                                || ship.getPositionY() + 4 <= web.get(i).getPositionY() - 4
+                                || web.get(i).getPositionY() + 4 <= ship.getPositionY() - 4){
+                            this.ship.setThreadWeb(false);
+                        }
+                        //get caught in a spider's web
+                        else {
+                            this.ship.setThreadWeb(true);
+                            break;
+                        }
+                    }
+                }
+                // 플레이어 함선이 움직이던 중 배리어와 겹쳐졌을 버그 발생 시 플레이어 함선을 아래로 강제 이동시킴
 				if(!barriers.isEmpty()){
 					for(Barrier check : barriers){
 						if(checkCollision(ship,check)){
@@ -765,6 +791,16 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
 					handleBlockerAppearance();
 				}
+				if (bonusBossLevels.contains(level) && bonusLevelCountdown == null) {
+					bonusLevelCountdown = Core.getCooldown(20000);
+					bonusLevelCountdown.reset();
+				}
+				if (bonusBossLevels.contains(level)) {
+					if (barDisappear.checkFinished()) {
+						barWidth-= barInitialWidth/20; // 20초 후에 사라짐
+						barDisappear.reset();
+					}
+				}
 			}
 		}
 
@@ -775,7 +811,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		else
 			draw();
 
-		if ((this.enemyShipFormation.isEmpty() || this.lives <= 0)
+		if ((this.enemyShipFormation.isEmpty() && !bonusBossLevels.contains(level) || this.lives <= 0)
 				&& !this.levelFinished) {
 			this.levelFinished = true;
 
@@ -785,6 +821,14 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			this.screenFinishedCooldown.reset();
 		}
 
+		if (bonusBossLevels.contains(level)) {
+			if ((bonusBoss != null && bonusBoss.isDestroyed() || bonusLevelCountdown != null && bonusLevelCountdown.checkFinished()) && !this.levelFinished) {
+				this.levelFinished = true;
+				soundManager.stopSound(soundManager.getCurrentBGM());
+				this.screenFinishedCooldown.reset();
+			}
+		}
+
 		if (this.levelFinished && this.screenFinishedCooldown.checkFinished()) {
 			//Reset alert message when level is finished
 			this.alertMessage = "";
@@ -792,30 +836,32 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 	}
 	private boolean checkCollision(final Ship ship, List< ? extends Entity> wanted ,final String direction) {
-		for (Entity entity : wanted) {
-			if (direction.equals("down")) {
-				if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() + ship.getSpeed(),
-						ship.getWidth(), ship.getHeight(), entity)) {
-					return true; // 아래쪽 충돌
-				}
-			} else if (direction.equals("up")) {
-				if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() - ship.getSpeed(),
-						ship.getWidth(), ship.getHeight(), entity)) {
-					return true; // 위쪽 충돌
-				}
-			} else if (direction.equals("right")) {
-				if (checkCollision((int) ship.getPositionX() + ship.getSpeed(), (int) ship.getPositionY(),
-						ship.getWidth(), ship.getHeight(), entity)) {
-					return true; // 오른쪽 충돌
-				}
-			} else if (direction.equals("left")) {
-				if (checkCollision((int) ship.getPositionX() - ship.getSpeed(), (int) ship.getPositionY(),
-						ship.getWidth(), ship.getHeight(), entity)) {
-					return true; // 왼쪽 충돌
-				}
-			}
-		}
-		return false; // 충돌 없음
+        if (!bonusBossLevels.contains(level)) {
+            for (Entity entity : wanted) {
+                if (direction.equals("down")) {
+                    if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() + ship.getSpeed(),
+                            ship.getWidth(), ship.getHeight(), entity)) {
+                        return true; // 아래쪽 충돌
+                    }
+                } else if (direction.equals("up")) {
+                    if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() - ship.getSpeed(),
+                            ship.getWidth(), ship.getHeight(), entity)) {
+                        return true; // 위쪽 충돌
+                    }
+                } else if (direction.equals("right")) {
+                    if (checkCollision((int) ship.getPositionX() + ship.getSpeed(), (int) ship.getPositionY(),
+                            ship.getWidth(), ship.getHeight(), entity)) {
+                        return true; // 오른쪽 충돌
+                    }
+                } else if (direction.equals("left")) {
+                    if (checkCollision((int) ship.getPositionX() - ship.getSpeed(), (int) ship.getPositionY(),
+                            ship.getWidth(), ship.getHeight(), entity)) {
+                        return true; // 왼쪽 충돌
+                    }
+                }
+            }
+        }
+        return false; // 충돌 없음
 	}
 	private boolean checkCollision(final Ship ship, Set< ? extends Entity> wanted ,final String direction) {
 		for (Entity entity : wanted) {
@@ -924,17 +970,19 @@ public class GameScreen extends Screen implements Callable<GameState> {
 //					(int) this.physicsEnemyShips.get(i).getPositionY());
 //		}
 		//draw Spider Web
-		for (int i = 0; i < web.size(); i++) {
-			drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
-                    (int) this.web.get(i).getPositionY());
-		}
-		//draw Blocks
-		for (Block block : block)
-			drawManager.drawEntity(block, (int) block.getPositionX(),
-                    (int) block.getPositionY());
+        if (!bonusBossLevels.contains(level)) {
+            for (int i = 0; i < web.size(); i++) {
+                drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
+(int) this.web.get(i).getPositionY());
+            }
+            //draw Blocks
+            for (Block block : block)
+                drawManager.drawEntity(block, (int) block.getPositionX(),
+(int) block.getPositionY());
+        }
 
 
-		if (this.enemyShipSpecial != null)
+        if (this.enemyShipSpecial != null)
 			drawManager.drawEntity(this.enemyShipSpecial,
                     (int) this.enemyShipSpecial.getPositionX(),
                     (int) this.enemyShipSpecial.getPositionY());
@@ -962,6 +1010,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawReloadTimer(this,this.ship,ship.getRemainingReloadTime());
 		drawManager.drawCombo(this,this.combo);
 
+		if(bonusBossLevels.contains(level)) drawManager.drawBonusBoss(this, level, bonusBoss, 50, 50);
+		if (bonusBossLevels.contains(level)) {
+			drawManager.drawTimerBar(this, barX, barY, barWidth, barHeight);
+		}
 
 		// Countdown to game start.
 		if (!this.inputDelay.checkFinished()) {
@@ -1096,15 +1148,17 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		enemyShipFormation.draw(playerNumber);
 
-		for (ItemBox itemBox : this.itemBoxes)
-			drawManager.drawEntity(itemBox, (int) itemBox.getPositionX(), (int) itemBox.getPositionY(), playerNumber);
+		if (!bonusBossLevels.contains(level)) {
+			for (ItemBox itemBox : this.itemBoxes)
+				drawManager.drawEntity(itemBox, (int) itemBox.getPositionX(), (int) itemBox.getPositionY(), playerNumber);
 
-		for (Barrier barrier : this.barriers)
-			drawManager.drawEntity(barrier, (int) barrier.getPositionX(), (int) barrier.getPositionY(), playerNumber);
+			for (Barrier barrier : this.barriers)
+				drawManager.drawEntity(barrier, (int) barrier.getPositionX(), (int) barrier.getPositionY(), playerNumber);
 
-		for (Bullet bullet : this.bullets)
-			drawManager.drawEntity(bullet, (int) bullet.getPositionX(),
-                    (int) bullet.getPositionY(), playerNumber);
+			for (Bullet bullet : this.bullets)
+				drawManager.drawEntity(bullet, (int) bullet.getPositionX(),
+                        (int) bullet.getPositionY(), playerNumber);
+		}
 
 		// Interface.
 		drawManager.drawScore(this, this.score, playerNumber);
@@ -1312,12 +1366,22 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				}
 
 				//check the collision between the obstacle and the bullet
-				for (Block block : this.block) {
-					if (checkCollision(bullet, block)) {
-						recyclable.add(bullet);
-						soundManager.playSound(Sound.BULLET_BLOCKING, balance);
-						break;
+				if (!bonusBossLevels.contains(level)) {
+					for (Block block : this.block) {
+						if (checkCollision(bullet, block)) {
+							recyclable.add(bullet);
+							soundManager.playSound(Sound.BULLET_BLOCKING, balance);
+							break;
+						}
 					}
+				}
+
+				if (bonusBoss != null && !bonusBoss.isDestroyed() && checkBonusBossCollusion(bonusBoss, bullet)) {
+					bonusBoss.HealthManageDestroy();
+					timer.cancel();
+					isExecuted = false;
+					recyclable.add(bullet);
+					this.score++;
 				}
 			}
 		}
@@ -1335,7 +1399,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 
 		// remove crashed obstacle
-		block.removeAll(removableBlocks);
+		if (!bonusBossLevels.contains(level)) block.removeAll(removableBlocks);
 		this.bullets.removeAll(recyclable);
 		BulletPool.recycle(recyclable);
 	}
@@ -1367,6 +1431,23 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		int distanceY = Math.abs(centerAY - centerBY);
 
 		return distanceX <= maxDistanceX && distanceY <= maxDistanceY;
+	}
+
+	private boolean checkBonusBossCollusion(final BonusBoss entity, final Entity bullet) {
+		int centerX = this.getWidth() / 2;
+		int centerY = this.getHeight() / 2 - 46;
+
+		int radius = entity.getRadius();
+
+		int bulletCenterX = (int) (bullet.getPositionX() + bullet.getWidth() / 2);
+		int bulletCenterY = (int) (bullet.getPositionY() + bullet.getHeight() / 2);
+
+		int deltaX = bulletCenterX - centerX;
+		int deltaY = bulletCenterY - centerY;
+
+		int distanceSquared = deltaX * deltaX + deltaY * deltaY;
+
+		return distanceSquared <= radius * radius;
 	}
 
 	/**

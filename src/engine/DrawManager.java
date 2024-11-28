@@ -69,6 +69,9 @@ public final class DrawManager {
 	private static BufferedImage img_coin;
 	private static BufferedImage img_coingain;
 	private static BufferedImage img_shotinterval;
+	private static BufferedImage img_saturn;
+	private static BufferedImage img_saturn_destroyed;
+	private static BufferedImage img_timelimit;
 	/** For item image */
 	private static final Map<ItemManager.ItemType, BufferedImage> itemImages = new HashMap<>();
 
@@ -259,6 +262,15 @@ public final class DrawManager {
 			img_shotinterval = ImageIO.read(new File("res/image/shot interval.jpg"));
 		} catch (IOException e) {
 			logger.info("Shop image loading failed");
+		}
+
+		/* Bonus Stage image load*/
+		try {
+			img_saturn = ImageIO.read(new File("res/image/saturn.png"));
+			img_saturn_destroyed = ImageIO.read(new File("res/image/saturn_destroyed.png"));
+			img_timelimit = ImageIO.read(new File("res/image/timelimit.png"));
+		} catch (IOException e) {
+			logger.info("Bonus Boss image loading failed.");
 		}
 
 	}
@@ -2089,6 +2101,33 @@ public final class DrawManager {
 
 		}
 	}
+
+	public void drawBonusBoss(final Screen screen, int level, BonusBoss bonusBoss, final int positionX, final int positionY) {
+		switch (level) {
+			case 2:
+				if (!bonusBoss.isDestroyed()) {
+					backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+					;
+				} else {
+					backBufferGraphics.drawImage(img_saturn_destroyed, (screen.getWidth() - img_saturn_destroyed.getWidth()) / 2, 50, img_saturn_destroyed.getWidth(), img_saturn_destroyed.getHeight(), null);
+				}
+				break;
+			case 4:
+				backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+				break;
+			// 위에꺼 다른 보너스 보스로 바꾸기 나중에 그리고 나면
+			default:
+				backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+				break;
+		}
+	}
+
+	public void drawTimerBar(final Screen screen, int x, int y, int width, int height) {
+		backBufferGraphics.setColor(Color.ORANGE);
+		backBufferGraphics.fillRect(x, y, width, height);
+		backBufferGraphics.drawImage(img_timelimit, (screen.getWidth() - img_timelimit.getWidth() * 2) / 2, 60, img_timelimit.getWidth() * 2, img_timelimit.getHeight() * 2, null);
+	}
+
 
 	/**
 	 * Draw puzzle overlay
