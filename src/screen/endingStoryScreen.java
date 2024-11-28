@@ -15,7 +15,7 @@ import engine.DrawManager;
 import javax.imageio.ImageIO;
 
 
-public class StoryScreen extends Screen{
+public class endingStoryScreen extends Screen{
     private static final int SKIP_TIME = 1000;
     private static final int FONT_TIME = 100;
 
@@ -32,7 +32,7 @@ public class StoryScreen extends Screen{
 
 
 
-    public StoryScreen(final GameState gameState, int width, int height, int fps) {
+    public endingStoryScreen(final GameState gameState, int width, int height, int fps) {
         super(width, height, fps);
 
         this.level = gameState.getLevel();
@@ -76,7 +76,7 @@ public class StoryScreen extends Screen{
             //이미지 띄우기
             DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
 
-            String[] s = {"story 1cccccccccccccccccccccccccccccc", "hellocccccccccccccccccccccccccccccccccccc", "this is story 1 simulation"};
+            String[] s = {"dopamindoctor", "qqwqeewwwwwwwwwesd", "this is story 1 ending simulation"};
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){
@@ -91,10 +91,10 @@ public class StoryScreen extends Screen{
                 }
             }
 
-            if(speech < s.length){  //대사들을 다 안쳤을 때
+            if(speech < s.length){  //대사를 다 안쳤을 때
                 if(count < s[speech].length()){   // 대사가 다 출력되지 않았을 때
                     DrawManager.getBackBufferGraphics().drawString(s[speech].substring(0, count), 60, 440);
-                    if(this.fontCooldown.checkFinished()) { // 대사 출력속도 조절
+                    if(this.fontCooldown.checkFinished()) {
                         count++;
                         this.fontCooldown.reset();
                     }
@@ -108,7 +108,7 @@ public class StoryScreen extends Screen{
             //이미지 띄우기
             DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
 
-            String[] t = {"suuuuuuuuuuuuuuuui", "show me the money", "sogesil---------------------------"};
+            String[] t = {"endingendingendingending", "show me", "dopamin"};
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){

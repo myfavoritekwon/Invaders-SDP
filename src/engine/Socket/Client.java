@@ -6,6 +6,7 @@ import screen.GameScreen;
 import screen.MultiRoomScreen;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.List;
 import java.util.logging.Logger;
@@ -28,7 +29,7 @@ public class Client {
         this.hostIp = hostIp;// 서버 컴퓨터의 실제 IP 주소 입력
         this.port = 9000;
         System.out.println("Connecting to server at " + hostIp + ":" + port);
-        String serverIp = "127.0.0.1"; // 서버 정보 전송용 서버 IP
+        String serverIp = "172.17.72.170"; // 서버 정보 전송용 서버 IP
         int infoPort = 9000; // 서버 정보 전송용 서버 포트
         GameScreen.setSORC(false);
         try (

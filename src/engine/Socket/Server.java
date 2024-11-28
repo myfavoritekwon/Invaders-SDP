@@ -37,7 +37,7 @@ public class Server {
     public static void startInfoServer() {
         new Thread(() -> {
             try{
-                infoServerSocket = new ServerSocket(INFO_PORT);
+                infoServerSocket = new ServerSocket(INFO_PORT, 50, InetAddress.getByName("172.17.72.170"));
                 System.out.println("Info server running on port " + INFO_PORT);
                 GameScreen.setSORC(true);
                 while (true) {
@@ -62,7 +62,7 @@ public class Server {
     // 클라이언트와의 통신용 서버
     public static void startMainServer() {
         new Thread(() -> {
-            try (ServerSocket mainServerSocket = new ServerSocket(MAIN_PORT)) {
+            try (ServerSocket mainServerSocket = new ServerSocket(MAIN_PORT, 50, InetAddress.getByName("172.17.72.170"))) {
                 System.out.println("Main server running on port " + MAIN_PORT);
                 while (true) {
                     try {

@@ -156,6 +156,13 @@ public final class Core {
 					LOGGER.info("Closing game screen.");
 					gameState = ((GameScreen) currentScreen).getGameState();
 
+					if ((gameState.getLevel() == 1 || gameState.getLevel() == 3) && gameState.getLivesRemaining() > 0 ) {
+						LOGGER.info("Starting ending story screen for level " + gameState.getLevel());
+						currentScreen = new endingStoryScreen(gameState, width, height, FPS);
+						frame.setScreen(currentScreen); // StoryScreen 실행
+						LOGGER.info("Closing ending story screen for level " + gameState.getLevel());
+					}
+
 					gameState = new GameState(gameState, gameState.getLevel() + 1);
 					endTime = System.currentTimeMillis();
 					achievementManager.updatePlaying(gameState.getMaxCombo(),(int) (endTime - startTime) / 1000, MAX_LIVES, gameState.getLivesRemaining(), gameState.getLevel()-1);
