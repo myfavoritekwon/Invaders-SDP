@@ -27,6 +27,7 @@ public class StoryScreen extends Screen{
     private int speech;
 
     private int count;
+    private int seccount;
     private static BufferedImage img_story1;
     private static BufferedImage img_story2;
 
@@ -41,6 +42,7 @@ public class StoryScreen extends Screen{
         this.skipCooldown.reset();
         speech =0;
         count = 0;
+        seccount = 0;
         // story image
         try{
             img_story1 = ImageIO.read(new File("res/image/story1.png"));
@@ -76,14 +78,17 @@ public class StoryScreen extends Screen{
             //이미지 띄우기
             DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
 
-            String[] s = {"story 1cccccccccccccccccccccccccccccc", "hellocccccccccccccccccccccccccccccccccccc", "this is story 1 simulation"};
+            String[] s = {"story 1cccccccccccccccccccccccccccccc", "hellocccfffffffffffffffffccc", "this is story 1 simulation"};
+            String[] m = {"second lineddwkhjhks","","ddddddddddddd" };
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){
-                    if(count < s[speech].length()){
+                    if(count < s[speech].length() || seccount < m[speech].length()){
                         count = s[speech].length();
+                        seccount = m[speech].length();
                     }else{
                         count = 0;
+                        seccount =0;
                         speech++;
                     }
                     this.skipCooldown.reset();
@@ -99,6 +104,15 @@ public class StoryScreen extends Screen{
                         this.fontCooldown.reset();
                     }
                 }else{  // 대사가 다 출력되면 그상태 유지
+                    if(seccount < m[speech].length()){   // 대사가 다 출력되지 않았을 때
+                        DrawManager.getBackBufferGraphics().drawString(m[speech].substring(0, seccount), 60, 500);
+                        if(this.fontCooldown.checkFinished()) { // 대사 출력속도 조절
+                            seccount++;
+                            this.fontCooldown.reset();
+                        }
+                    }else{
+                        DrawManager.getBackBufferGraphics().drawString(m[speech].substring(0, seccount), 60, 500);
+                    }
                     DrawManager.getBackBufferGraphics().drawString(s[speech].substring(0,count),60, 440);
                 }
             }else{   //대사가 다 나온 후 스페이스 바 누르면 스토리 화면 종료
@@ -109,27 +123,40 @@ public class StoryScreen extends Screen{
             DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
 
             String[] t = {"suuuuuuuuuuuuuuuui", "show me the money", "sogesil---------------------------"};
+            String[] r = {"ddddddddddddaaaaaaaa","","drrrrrrrrddddaaaaaaaawwww"};
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){
-                    if(count < t[speech].length()){
+                    if(count < t[speech].length() || seccount < r[speech].length()){
                         count = t[speech].length();
+                        seccount = r[speech].length();
                     }else{
                         count = 0;
+                        seccount =0;
                         speech++;
                     }
                     this.skipCooldown.reset();
 
                 }
             }
-            if(speech < t.length){
+
+            if(speech < t.length){  //대사들을 다 안쳤을 때
                 if(count < t[speech].length()){   // 대사가 다 출력되지 않았을 때
                     DrawManager.getBackBufferGraphics().drawString(t[speech].substring(0, count), 60, 440);
-                    if(this.fontCooldown.checkFinished()) {
+                    if(this.fontCooldown.checkFinished()) { // 대사 출력속도 조절
                         count++;
                         this.fontCooldown.reset();
                     }
                 }else{  // 대사가 다 출력되면 그상태 유지
+                    if(seccount < r[speech].length()){   // 대사가 다 출력되지 않았을 때
+                        DrawManager.getBackBufferGraphics().drawString(r[speech].substring(0, seccount), 60, 500);
+                        if(this.fontCooldown.checkFinished()) { // 대사 출력속도 조절
+                            seccount++;
+                            this.fontCooldown.reset();
+                        }
+                    }else{
+                        DrawManager.getBackBufferGraphics().drawString(r[speech].substring(0, seccount), 60, 500);
+                    }
                     DrawManager.getBackBufferGraphics().drawString(t[speech].substring(0,count),60, 440);
                 }
             }else{
