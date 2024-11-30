@@ -158,7 +158,7 @@ public final class Core {
 
 					if ((gameState.getLevel() == 1 || gameState.getLevel() == 3) && gameState.getLivesRemaining() > 0 ) {
 						LOGGER.info("Starting ending story screen for level " + gameState.getLevel());
-						currentScreen = new endingStoryScreen(gameState, width, height, FPS);
+						currentScreen = new EndingStoryScreen(gameState, width, height, FPS);
 						frame.setScreen(currentScreen); // StoryScreen 실행
 						LOGGER.info("Closing ending story screen for level " + gameState.getLevel());
 					}

@@ -78,7 +78,7 @@ public class SoundManager {
             loadSound(Sound.ITEM_TIMESTOP_OFF, "res/sound/SFX/item_timestopOff.wav");
             loadSound(Sound.ITEM_shooting_laser, "res/sound/SFX/shooting_Laser.wav");
             loadSound(Sound.ITEM_SPAWN, "res/sound/SFX/item_spawn.wav");
-            loadSound(Sound.BGM_MAIN, "res/sound/BGM/MainTheme.wav");
+            loadSound(Sound.BGM_MAIN, "res/sound/BGM/mainBGM.wav");
             loadSound(Sound.BGM_GAMEOVER, "res/sound/BGM/GameOver.wav");
             loadSound(Sound.BGM_SHOP, "res/sound/BGM/Shop.wav");
             loadSound(Sound.BGM_LV1, "res/sound/BGM/Lv1.wav");
@@ -88,6 +88,8 @@ public class SoundManager {
             loadSound(Sound.BGM_LV5, "res/sound/BGM/Lv5.wav");
             loadSound(Sound.BGM_LV6, "res/sound/BGM/Lv6.wav");
             loadSound(Sound.BGM_LV7, "res/sound/BGM/Lv7.wav");
+            loadSound(Sound.BGM_STORY, "res/sound/BGM/BossTheme.wav");
+            loadSound(Sound.BGM_STORY2, "res/sound/BGM/Boss2Theme.wav");
 
             setVolume(currentVolume);
             logger.info("Finished loading all sounds.");
