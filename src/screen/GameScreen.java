@@ -1420,13 +1420,15 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				Iterator<ItemBox> itemBoxIterator = this.itemBoxes.iterator();
 				while (itemBoxIterator.hasNext()) {
 					ItemBox itemBox = itemBoxIterator.next();
-					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow() && Server.checkConnect()) {
+					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow()) {
 						this.hitBullets++;
 						itemBoxIterator.remove();
 						recyclable.add(bullet);
 						ItemManager.ItemType itemType = itemManager.selectItemType();
-						serverManager.setItemType(itemType);
-						serverManager.resetItemType(true);
+						if(Server.checkConnect()) {
+							serverManager.setItemType(itemType);
+							serverManager.itemCheck(true);
+						}
 						boolean added = itemManager.addItem(itemType);
 						if (added) {
 							logger.info("shooting item to client");
@@ -1437,14 +1439,18 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					}
 				}
 
-				ItemManager.ItemType itemType = serverManager.getItemType();
-				if(itemType != null && !Server.checkConnect() && P2PCheck) {
-					boolean addClient = itemManager.addItem(itemType);
-					if (addClient) {
-						serverManager.resetItemType(false);
-						logger.info(itemType + " added to storage.");
-					} else
-						logger.info("Storage is full. Item not added.");
+
+				if(!Server.checkConnect() && P2PCheck) {
+					ItemManager.ItemType itemType = serverManager.getItemType();
+					if(itemType != null) {
+						boolean addClient = itemManager.addItem(itemType);
+						System.out.println(itemType);
+						serverManager.itemCheck(false);
+						if (addClient) {
+							logger.info(itemType + " added to storage.");
+						} else
+							logger.info("Storage is full. Item not added.");
+					}
 				}
 
 				//check the collision between the obstacle and the bullet

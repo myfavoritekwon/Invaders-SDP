@@ -145,7 +145,7 @@ public class Server {
                 while (true) {//(message = String.valueOf(Button)) != null
                     DataPacket data;
                     try {
-                        data = new DataPacket(Button, serverManager.getGiveShooter(), serverManager.getCooldown(), serverManager.getItemType());
+                        data = new DataPacket(Button, serverManager.getGiveShooter(), serverManager.getCooldown(), serverManager.getItemType(), serverManager.getCheck());
                         objectOutputStream.writeObject(data);
                     } catch (IOException e) {
                         throw new RuntimeException(e);

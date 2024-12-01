@@ -68,6 +68,7 @@ public class Client {
                         serverManager.setClientButton(dataPacket.getCommand());
                         serverManager.setGiveShooter(dataPacket.getData());
                         serverManager.setItemType(dataPacket.getItemType());
+                        serverManager.itemCheck(dataPacket.getItemCheck());
                         System.out.println("Server: " + dataPacket.getCommand());
                         try {
                             Thread.sleep(sleepTime);

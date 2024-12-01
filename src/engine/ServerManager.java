@@ -96,7 +96,11 @@ public class ServerManager {
         else {return null;}
     }
 
-    public void resetItemType(boolean check) {
+    public void itemCheck(boolean check) {
         this.check = check;
+    }
+
+    public boolean getCheck(){
+        return check;
     }
 }
