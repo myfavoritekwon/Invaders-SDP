@@ -158,15 +158,15 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 					else
 						spriteType = SpriteType.EnemyShipA1;
 
-					EnemyShip insert = new EnemyShip((SEPARATION_DISTANCE
-							* this.enemyShips.indexOf(column))
-							+ positionX, (SEPARATION_DISTANCE * i)
-							+ positionY, spriteType, gameState);
-					column.add(insert);
-					listEnemies.add(insert);
-					this.shipCount++;
-				}
+				EnemyShip insert = new EnemyShip((SEPARATION_DISTANCE
+						* this.enemyShips.indexOf(column))
+						+ positionX, (SEPARATION_DISTANCE * i)
+						+ positionY, spriteType, gameState);
+				column.add(insert);
+				listEnemies.add(insert);
+				this.shipCount++;
 			}
+		}
 
 			this.shipWidth = this.enemyShips.get(0).get(0).getWidth();
 			this.shipHeight = this.enemyShips.get(0).get(0).getHeight();
@@ -420,7 +420,12 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		for (String s : shooters) {
 			System.out.println(s);
 			selectedShooters.add(this.shooters.get(Integer.parseInt(s)));
-		}
+            try {
+                selectedShooters.add(this.shooters.get(Integer.parseInt(s)));
+            }catch (NumberFormatException e) {
+                continue;
+            }
+        }
 
 		// Fire when the cool down is over
 		if (this.shootingCooldown.checkFinished()) {
