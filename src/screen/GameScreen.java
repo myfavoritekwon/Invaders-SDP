@@ -1420,7 +1420,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				Iterator<ItemBox> itemBoxIterator = this.itemBoxes.iterator();
 				while (itemBoxIterator.hasNext()) {
 					ItemBox itemBox = itemBoxIterator.next();
-					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow()) {
+					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow() && Server.checkConnect()) {
 						this.hitBullets++;
 						itemBoxIterator.remove();
 						recyclable.add(bullet);
@@ -1438,7 +1438,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						}
 					}
 				}
-
 
 				if(!Server.checkConnect() && P2PCheck) {
 					ItemManager.ItemType itemType = serverManager.getItemType();

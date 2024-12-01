@@ -110,7 +110,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		LEFT,
 		/** Movement to the bottom of the screen. */
 		DOWN
-	};
+	}
 
 	/**
 	 * Constructor, sets the initial conditions.
@@ -419,12 +419,11 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		List<EnemyShip> selectedShooters = new ArrayList<>();
 		for (String s : shooters) {
 			System.out.println(s);
-			selectedShooters.add(this.shooters.get(Integer.parseInt(s)));
-            try {
-                selectedShooters.add(this.shooters.get(Integer.parseInt(s)));
-            }catch (NumberFormatException e) {
-                continue;
-            }
+			try {
+				selectedShooters.add(this.shooters.get(Integer.parseInt(s)));
+			}catch (NumberFormatException e) {
+				continue;
+			}
         }
 
 		// Fire when the cool down is over
