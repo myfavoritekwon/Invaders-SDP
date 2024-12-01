@@ -366,7 +366,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		enemyShipFormation.attach(this);
         // Appears each 10-30 seconds.
 		if(P2PCheck) {
-			this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
+			this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
 			p2pShip.setColor(Color.BLUE);
 		}
         this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
