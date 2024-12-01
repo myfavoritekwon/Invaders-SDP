@@ -305,6 +305,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				return "S"; // 스페이스바 'S'로 매핑
 			case KeyEvent.VK_ESCAPE:
 				return "E"; // ESC 키를 'E'로 매핑
+			case KeyEvent.VK_N:
+				return "N"; // N키 매핑
+			case KeyEvent.VK_M:
+				return "M"; // M키 매핑
 			default:
 				return String.valueOf(e.getKeyChar()); // 다른 키는 원래 문자 그대로 반환
 		}
@@ -471,13 +475,13 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 */
 	protected final void update() {
 		super.update();
-		//swap item M
+		//swap item N
 		if (inputManager.isKeyDown(KeyEvent.VK_N)) {
 			itemManager.swapItems();
 		}
 
 
-		// use itme N
+		// use item M
 		if (inputManager.isKeyDown(KeyEvent.VK_M)) {
 			ItemManager.ItemType usedItem = itemManager.useStoredItem();
 			if (usedItem != null) {
@@ -605,28 +609,84 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						break;
 				}
 				if(P2PCheck){
-
 					if(Server.checkConnect()){
 						String button = serverManager.getClientButton();
 						switch (button){
-							case "L": this.p2pShip.moveLeft(); break;
-							case "R": this.p2pShip.moveRight(); break;
+							case "L":
+								if(this.p2pShip.getPositionX()
+										- this.p2pShip.getSpeed() >= 1)
+									this.p2pShip.moveLeft();
+								break;
+							case "R":
+								if(this.p2pShip.getPositionX()
+										+ this.p2pShip.getWidth() + this.p2pShip.getSpeed() <= this.width - 1)
+									this.p2pShip.moveRight();
+								break;
 							case "S": this.p2pShip.shoot(this.bullets, this.itemManager.getShotNum()); break;
+							case "U":
+								if(this.p2pShip.getPositionY()
+										- this.p2pShip.getSpeed() >= 1)
+									this.p2pShip.moveUp();
+								break;
+							case "D":
+								if(this.p2pShip.getPositionY()
+										+ this.p2pShip.getHeight() + this.p2pShip.getSpeed() <= this.height - 1)
+									this.p2pShip.moveDown();
+								break;
+							case "M":
+								ItemManager.ItemType usedItem = itemManager.useStoredItem();
+								if (usedItem != null) {
+									Entry<Integer, Integer> result = itemManager.useItem(usedItem);
+									if (result != null) {
+										this.score += result.getKey();
+										this.shipsDestroyed += result.getValue();
+									}
+								} break;
+							case "N": this.itemManager.swapItems(); break;
 							case null: break;
 							default: break;
 						}
 					}else{
 						String button = serverManager.getServerButton();
 						switch (button){
-							case "L": this.p2pShip.moveLeft(); break;
-							case "R": this.p2pShip.moveRight(); break;
+							case "L":
+								if(this.p2pShip.getPositionX()
+										- this.p2pShip.getSpeed() >= 1)
+									this.p2pShip.moveLeft();
+								break;
+							case "R":
+								if(this.p2pShip.getPositionX()
+										+ this.p2pShip.getWidth() + this.p2pShip.getSpeed() <= this.width - 1)
+									this.p2pShip.moveRight();
+								break;
 							case "S": this.p2pShip.shoot(this.bullets, this.itemManager.getShotNum()); break;
+							case "U":
+								if(this.p2pShip.getPositionY()
+										- this.p2pShip.getSpeed() >= 1)
+									this.p2pShip.moveUp();
+								break;
+							case "D":
+								if(this.p2pShip.getPositionY()
+										+ this.p2pShip.getHeight() + this.p2pShip.getSpeed() <= this.height - 1)
+									this.p2pShip.moveDown();
+								break;
+							case "M":
+								ItemManager.ItemType usedItem = itemManager.useStoredItem();
+								if (usedItem != null) {
+									Entry<Integer, Integer> result = itemManager.useItem(usedItem);
+									if (result != null) {
+										this.score += result.getKey();
+										this.shipsDestroyed += result.getValue();
+									}
+								} break;
+							case "N": this.itemManager.swapItems(); break;
 							case null: break;
 							default: break;
 						}
 					}
 				}
 			}
+
 			/*Elapsed Time Update*/
 			long currentTime = System.currentTimeMillis();
 
@@ -713,8 +773,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					if (playerNumber == -1) this.ship.moveLeft();
 					else this.ship.moveLeft(balance);
 				}
-				if(checkCollision(this.ship,this.enemyShipFormation.getListEnemies(), "left")
-						|| checkCollision(this.ship,this.barriers, "left")) ship.moveRight(5);
 				for(int i = 0; i < web.size(); i++) {
 					//escape Spider Web
 					if (ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
@@ -747,13 +805,21 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
 			if (!itemManager.isTimeStopActive()) {
 				if(Server.checkConnect()) {
-					giveShooter = this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
-					String Cooldown = giveShooter.getLast();
-					giveShooter.removeLast();
-					serverManager.setGiveShooter(giveShooter);
-					serverManager.setCooldown(Cooldown);
+					try{
+						this.enemyShipFormation.update();
+						giveShooter = this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
+						String Cooldown = giveShooter.getLast();
+						giveShooter.removeLast();
+						serverManager.setGiveShooter(giveShooter);
+						serverManager.setCooldown(Cooldown);
+					}catch(Exception e){
+						logger.info("비정상적인 접근입니다 : " + e.getMessage());
+						this.returnCode = 1;
+						this.isRunning = false;
+					}
 				}else{
 					if(P2PCheck) {
+						this.enemyShipFormation.update();
 						this.enemyShipFormation.P2PShoot(this.bullets, this.level, this.balance, serverManager.getGiveShooter(), serverManager.getCooldown());
 					}else{
 						this.enemyShipFormation.update();
@@ -912,7 +978,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawGameTitle(this);
 		// 1인 모드 총알 경로
 		drawManager.drawLaunchTrajectory( this, (int) this.ship.getPositionX(), (int) this.ship.getPositionY(), this.ship.getAngle());
-    drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
+		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
 		if(P2PCheck)
 			drawManager.drawEntity(this.p2pShip, (int) this.p2pShip.getPositionX(), (int) this.p2pShip.getPositionY());
 		drawManager.drawItemHud(this, this.height, itemManager.getStoredItems());
@@ -1297,18 +1363,31 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				Iterator<ItemBox> itemBoxIterator = this.itemBoxes.iterator();
 				while (itemBoxIterator.hasNext()) {
 					ItemBox itemBox = itemBoxIterator.next();
-					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow()) {
+					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow() && Server.checkConnect()) {
 						this.hitBullets++;
 						itemBoxIterator.remove();
 						recyclable.add(bullet);
 						ItemManager.ItemType itemType = itemManager.selectItemType();
+						serverManager.setItemType(itemType);
+						serverManager.resetItemType(true);
 						boolean added = itemManager.addItem(itemType);
 						if (added) {
+							logger.info("shooting item to client");
 							logger.info(itemType + " added to storage.");
 						} else {
 							logger.info("Storage is full. Item not added.");
 						}
 					}
+				}
+
+				ItemManager.ItemType itemType = serverManager.getItemType();
+				if(itemType != null && !Server.checkConnect() && P2PCheck) {
+					boolean addClient = itemManager.addItem(itemType);
+					if (addClient) {
+						serverManager.resetItemType(false);
+						logger.info(itemType + " added to storage.");
+					} else
+						logger.info("Storage is full. Item not added.");
 				}
 
 				//check the collision between the obstacle and the bullet

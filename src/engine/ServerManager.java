@@ -52,6 +52,8 @@ public class ServerManager {
     private String ClientMessage;
     private List<String> giveShooter;
     private String Cooldown;
+    private ItemManager.ItemType itemType;
+    private boolean check;
 
     public void setServerButton(String takeButton){
         this.ServerMessage = takeButton;
@@ -83,5 +85,18 @@ public class ServerManager {
 
     public String getCooldown() {
         return Cooldown;
+    }
+
+    public void setItemType(ItemManager.ItemType itemType) {
+        this.itemType = itemType;
+    }
+
+    public ItemManager.ItemType getItemType() {
+        if(this.check) {return itemType;}
+        else {return null;}
+    }
+
+    public void resetItemType(boolean check) {
+        this.check = check;
     }
 }

@@ -354,7 +354,7 @@ public class ItemManager {
         this.soundManager.playSound(Sound.ITEM_TIMESTOP_ON, balance);
 
         this.timeStop_cooldown = Core.getCooldown(TIMESTOP_COOLDOWN);
-        this.timeStop_cooldown.reset();
+        //this.timeStop_cooldown.reset();
 
         return null;
     }
