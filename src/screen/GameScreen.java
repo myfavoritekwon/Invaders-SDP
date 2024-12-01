@@ -1041,13 +1041,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		//draw Spider Web
         if (!bonusBossLevels.contains(level)) {
             for (int i = 0; i < web.size(); i++) {
-                drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
-(int) this.web.get(i).getPositionY());
+                drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(), (int) this.web.get(i).getPositionY());
             }
             //draw Blocks
             for (Block block : block)
-                drawManager.drawEntity(block, (int) block.getPositionX(),
-(int) block.getPositionY());
+                drawManager.drawEntity(block, (int) block.getPositionX(), (int) block.getPositionY());
         }
 
 
