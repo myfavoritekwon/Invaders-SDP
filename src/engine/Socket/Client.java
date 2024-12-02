@@ -28,11 +28,10 @@ public class Client {
         this.hostIp = hostIp;// 서버 컴퓨터의 실제 IP 주소 입력
         this.port = 9000;
         System.out.println("Connecting to server at " + hostIp + ":" + port);
-        String serverIp = "192.168.219.242"; // 서버 정보 전송용 서버 IP
         int infoPort = 9000; // 서버 정보 전송용 서버 포트
         GameScreen.setSORC(false);
         try (
-                Socket infoSocket = new Socket(serverIp, infoPort);
+                Socket infoSocket = new Socket(hostIp, infoPort);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(infoSocket.getInputStream()))
         ) {
             // 서버 정보 수신
