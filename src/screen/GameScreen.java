@@ -3,7 +3,6 @@ package screen;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
-import java.security.Key;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.*;
@@ -14,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import engine.DrawManager.SpriteType;
 import engine.*;
 import entity.*;
 
