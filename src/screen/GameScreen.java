@@ -140,7 +140,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private Cooldown puzzleRetryCooldown;
 	private Cooldown webCooldown;
 
-
 	private BonusBoss bonusBoss;
 	private Set<Integer> bonusBossLevels = Set.of(2,4);
 	private Cooldown bonusLevelCountdown;
