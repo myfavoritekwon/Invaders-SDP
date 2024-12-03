@@ -15,10 +15,12 @@ import javax.imageio.ImageIO;
 public class EndingStoryScreen extends Screen{
     private static final int SKIP_TIME = 1000;
     private static final int FONT_TIME = 100;
+    private static final int IMAGE_TIME = 100;
     private final SoundManager soundManager = SoundManager.getInstance();
 
     private Cooldown skipCooldown;
     private Cooldown fontCooldown;
+    private Cooldown imageCooldown;
 
     private int level;
 
@@ -26,6 +28,7 @@ public class EndingStoryScreen extends Screen{
 
     private int count;
     private int seccount;
+    private int num;
     private static BufferedImage img_story1;
     private static BufferedImage img_story2;
 
@@ -37,10 +40,12 @@ public class EndingStoryScreen extends Screen{
         this.level = gameState.getLevel();
         this.skipCooldown = Core.getCooldown(SKIP_TIME);
         this.fontCooldown = Core.getCooldown(FONT_TIME);
+        this.imageCooldown = Core.getCooldown(IMAGE_TIME);
         this.skipCooldown.reset();
         speech =0;
         count = 0;
         seccount=0;
+        num = 1;
         // story image
         try{
             img_story1 = ImageIO.read(new File("res/image/story1.png"));
@@ -51,7 +56,12 @@ public class EndingStoryScreen extends Screen{
     }
 
     public void initialize() {
-        soundManager.loopSound(Sound.BGM_STORY2);
+        if(level == 3){
+            soundManager.loopSound(Sound.BGM_STORY2);
+        }else if(level == 6){
+            soundManager.loopSound(Sound.BGM_ENDSTORY2);
+        }
+
     }
 
     public final int run() {
@@ -75,9 +85,28 @@ public class EndingStoryScreen extends Screen{
         Font font = new Font("Arial", Font.PLAIN, 20);
         DrawManager.getBackBufferGraphics().setFont(font);
 
-        if(level == 1){
+        if(level == 3){
             //이미지 띄우기
-            DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            if(num == 1){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 2){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }else if(num == 3){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 4){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }else if(num == 5){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 6){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }
+            if(this.imageCooldown.checkFinished()) { // 이미지 출력속도 조절
+                if (num == 6) {
+                    num = 0;
+                }
+                num++;
+                this.imageCooldown.reset();
+            }
 
             String[] s = {"Nice to meet you, dear brother. You've managed ", "But this is the end of the line for you!", "this is story 1 ending simulation"};
             String[] m = {"to climb all the way to the fourth floor of this tower.","desanghyuksungbehabnida", "dopamindoctor"};
@@ -120,9 +149,28 @@ public class EndingStoryScreen extends Screen{
                 soundManager.stopSound(Sound.BGM_STORY2);
                 this.isRunning = false;
             }
-        }else if(level == 3){
+        }else if(level == 6){
             //이미지 띄우기
-            DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            if(num == 1){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 2){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }else if(num == 3){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 4){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }else if(num == 5){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 6){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }
+            if(this.imageCooldown.checkFinished()) { // 이미지 출력속도 조절
+                if (num == 6) {
+                    num = 0;
+                }
+                num++;
+                this.imageCooldown.reset();
+            }
 
             String[] t = {"endingendingendingending", "show me", "dopamin"};
             String[] r = {"ddd", "", ""};
@@ -162,7 +210,7 @@ public class EndingStoryScreen extends Screen{
                     DrawManager.getBackBufferGraphics().drawString(t[speech].substring(0,count),60, 440);
                 }
             }else{
-                soundManager.stopSound(Sound.BGM_STORY2);
+                soundManager.stopSound(Sound.BGM_ENDSTORY2);
                 this.isRunning = false;
             }
         }

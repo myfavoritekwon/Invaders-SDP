@@ -459,10 +459,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			case 1: soundManager.loopSound(Sound.BGM_LV1); break;
 			case 2: soundManager.loopSound(Sound.BGM_LV2); break;
 			case 3: soundManager.loopSound(Sound.BGM_LV3); break;
-			case 4: soundManager.loopSound(Sound.BGM_LV4); break;
+			case 4: soundManager.loopSound(Sound.BGM_BONUS); break;
 			case 5: soundManager.loopSound(Sound.BGM_LV5); break;
 			case 6: soundManager.loopSound(Sound.BGM_LV6); break;
-			case 7:
+			case 7: soundManager.loopSound(Sound.BGM_BONUS); break;
 				// From level 7 and above, it continues to play at BGM_LV7.
 			default: soundManager.loopSound(Sound.BGM_LV7); break;
 		}

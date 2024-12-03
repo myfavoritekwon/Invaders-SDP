@@ -138,7 +138,7 @@ public final class Core {
 							gameState.getLevel(), DifficultySetting);
 
 
-					if (gameState.getLevel() == 1 || gameState.getLevel() == 3) {
+					if (gameState.getLevel() == 3 || gameState.getLevel() == 6) {
 						LOGGER.info("Starting story screen for level " + gameState.getLevel());
 						currentScreen = new StoryScreen(gameState, width, height, FPS);
 						frame.setScreen(currentScreen); // StoryScreen 실행
@@ -156,7 +156,7 @@ public final class Core {
 					LOGGER.info("Closing game screen.");
 					gameState = ((GameScreen) currentScreen).getGameState();
 
-					if ((gameState.getLevel() == 1 || gameState.getLevel() == 3) && gameState.getLivesRemaining() > 0 ) {
+					if ((gameState.getLevel() == 3 || gameState.getLevel() == 6) && gameState.getLivesRemaining() > 0 ) {
 						LOGGER.info("Starting ending story screen for level " + gameState.getLevel());
 						currentScreen = new EndingStoryScreen(gameState, width, height, FPS);
 						frame.setScreen(currentScreen); // StoryScreen 실행
