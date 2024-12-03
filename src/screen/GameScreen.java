@@ -51,8 +51,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private int level;
 	/** Formation of enemy ships. */
 	private EnemyShipFormation enemyShipFormation;
-//	/** 중력 함선 */
-//	private ArrayList<PhysicsEnemyShip> physicsEnemyShips;
+	/** 중력 함선 */
+	private ArrayList<PhysicsEnemyShip> physicsEnemyShips;
 	/** Player's ship. */
 	private Ship ship;
 	private Ship p2pShip;
@@ -373,24 +373,33 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
         ship.applyItem(wallet);
 
-//		//Create Gravity Enemy
-//		int bonus = gameState.getLevel() % 1;
-//
-//		if(bonus == 0){
-//			physicsEnemyShips = new ArrayList<>();
-//			int mob_num = level * 4;
-//			Random random = new Random();
-//			for(int i = 0; i < mob_num; i++){
-//				int init_x = getWidth() - 12 * 2;
+		//Create Gravity Enemy
+		if (!bonusBossLevels.contains(level)) {
+			int bonus = gameState.getLevel() % 1;
+
+			if (bonus == 0) {
+				physicsEnemyShips = new ArrayList<>();
+				int mob_num = level * 4;
+				Random random = new Random();
+				for (int i = 0; i < mob_num; i++) {
+
+					int init_x = getWidth() - 12 * 2;
 //				int x_result = random.nextBoolean() ? 0 : init_x;
-//				int y_result = random.nextInt(getHeight() - 100 + 1);
-//				SpriteType[] spriteTypes = {SpriteType.EnemyShipA1, SpriteType.EnemyShipB1, SpriteType.EnemyShipC1, SpriteType.EnemyShipD1, SpriteType.EnemyShipE1};
-//				SpriteType sprite_result = spriteTypes[random.nextInt(spriteTypes.length)];
-//				PhysicsEnemyShip physicsEnemyShip = new PhysicsEnemyShip(x_result, y_result, sprite_result, gameState, this);
-//
-//				physicsEnemyShips.add(physicsEnemyShip);
-//			}
-//		}
+					int x_result = random.nextInt(init_x + 1);
+
+					int minY = 300; // 최소값
+					int maxY = getHeight() - 100; // 최대값
+					// 최소값 minY부터 최대값 maxY 사이의 랜덤 값 생성
+					int y_result = minY + random.nextInt(maxY - minY + 1);
+
+					SpriteType[] spriteTypes = {SpriteType.EnemyShipA1, SpriteType.EnemyShipB1, SpriteType.EnemyShipC1, SpriteType.EnemyShipD1, SpriteType.EnemyShipE1};
+					SpriteType sprite_result = spriteTypes[random.nextInt(spriteTypes.length)];
+					PhysicsEnemyShip physicsEnemyShip = new PhysicsEnemyShip(x_result, y_result, sprite_result, gameState, this);
+
+					physicsEnemyShips.add(physicsEnemyShip);
+				}
+			}
+		}
 
 		ship.applyItem(wallet);
 		//Create random Spider Web.
@@ -398,9 +407,25 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			int web_count = 1 + level / 3;
 			web = new ArrayList<>();
 			for(int i = 0; i < web_count; i++) {
-				double randomValue = Math.random();
-				this.web.add(new Web((int) Math.max(0, randomValue * width - 12 * 2), this.height - 30));
-				this.logger.info("Spider web creation location : " + web.get(i).getPositionX());
+                double randomValue = Math.random();
+                int randomValueX;
+
+                if (random.nextBoolean()) {
+                    // 좌측 범위에서 랜덤 값 선택
+                    randomValueX = random.nextInt(Math.max(1, (int) (this.ship.getPositionX() - 12 * 2)));
+                } else {
+                    // 우측 범위에서 랜덤 값 선택
+                    randomValueX = (int) this.ship.getPositionX() + 12  * 2+ random.nextInt((int) (width - this.ship.getPositionX() - 12 * 2));
+                }
+
+                int randomValueY;
+                int minY = 300; // 최소값
+                int maxY = this.height - 30; // 최대값
+                // 최소값 minY부터 최대값 maxY 사이의 랜덤 값 생성
+                randomValueY = minY + random.nextInt(maxY - minY + 1);
+
+                this.web.add(new Web(randomValueX, randomValueY));
+                this.logger.info("Spider web creation location X: " + web.get(i).getPositionX() + ", Y:" + web.get(i).getPositionY());
 			}
 			//Create random Block.
 			int blockCount = level / 2;
@@ -463,10 +488,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			case 1: soundManager.loopSound(Sound.BGM_LV1); break;
 			case 2: soundManager.loopSound(Sound.BGM_LV2); break;
 			case 3: soundManager.loopSound(Sound.BGM_LV3); break;
-			case 4: soundManager.loopSound(Sound.BGM_LV4); break;
+			case 4: soundManager.loopSound(Sound.BGM_BONUS); break;
 			case 5: soundManager.loopSound(Sound.BGM_LV5); break;
 			case 6: soundManager.loopSound(Sound.BGM_LV6); break;
-			case 7:
+			case 7: soundManager.loopSound(Sound.BGM_BONUS); break;
 				// From level 7 and above, it continues to play at BGM_LV7.
 			default: soundManager.loopSound(Sound.BGM_LV7); break;
 		}
@@ -539,6 +564,17 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						this.enemyShipFormation.update();
 						this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
 					}
+				}
+			}
+
+			if (ship.isPuzzleActive() && this.puzzleScreen != null) {
+				updatePuzzleState();
+			}
+
+			//update physicsEnemy
+			if(physicsEnemyShips != null) {
+				for (int i = 0; i < physicsEnemyShips.size(); i++) {
+					physicsEnemyShips.get(i).update();
 				}
 			}
 
@@ -1032,11 +1068,13 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawItemHud(this, this.height, itemManager.getStoredItems());
 
 
-//		//draw Gravity Enemy
-//		for(int i = 0; i < physicsEnemyShips.size(); i++){
-//			drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
-//					(int) this.physicsEnemyShips.get(i).getPositionY());
-//		}
+		//draw Gravity Enemy
+        if (!bonusBossLevels.contains(level)) {
+            for (int i = 0; i < physicsEnemyShips.size(); i++) {
+                drawManager.drawEntity(this.physicsEnemyShips.get(i), (int) this.physicsEnemyShips.get(i).getPositionX(),
+                        (int) this.physicsEnemyShips.get(i).getPositionY());
+		    }
+        }
 		//draw Spider Web
         if (!bonusBossLevels.contains(level)) {
             for (int i = 0; i < web.size(); i++) {
@@ -1194,6 +1232,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(),
                 (int) this.ship.getPositionY(), playerNumber);
+
+		//draw Gravity Enemy
+		for(int i = 0; i < physicsEnemyShips.size(); i++){
+			drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
+					(int) this.physicsEnemyShips.get(i).getPositionY(), playerNumber);
+		}
 
 		//draw Spider Web
 		for (int i = 0; i < web.size(); i++) {
@@ -1390,6 +1434,30 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						}
 					}
 
+				//중력 적들과 충돌했을 때 로직
+				if(this.physicsEnemyShips != null) {
+					Iterator<PhysicsEnemyShip> iterator = this.physicsEnemyShips.iterator();
+					while (iterator.hasNext()) {
+						PhysicsEnemyShip physicsEnemyShip = iterator.next();
+						if (physicsEnemyShip != null && !physicsEnemyShip.isDestroyed() && checkCollision(bullet, physicsEnemyShip)) {
+							System.out.println(this.physicsEnemyShips.size());
+							iterator.remove(); // 안전하게 요소 삭제
+							System.out.println(this.physicsEnemyShips.size());
+							this.score += Score.comboScore(physicsEnemyShip.getPointValue(), this.combo);
+							this.shipsDestroyed++;
+							this.combo++;
+							this.hitBullets++;
+							if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+							physicsEnemyShip.destroy(balance);
+							timer.cancel();
+							isExecuted = false;
+							itemManager.dropItem();
+							this.itemBoxes.add(new ItemBox((int) (physicsEnemyShip.getPositionX() + 6), (int) (physicsEnemyShip.getPositionY() + 1), balance));
+							logger.info("Item box dropped");
+						}
+					}
+				}
+
 				if (this.enemyShipSpecial != null
 						&& !this.enemyShipSpecial.isDestroyed()
 						&& checkCollision(bullet, this.enemyShipSpecial)) {
@@ -1415,7 +1483,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				Iterator<ItemBox> itemBoxIterator = this.itemBoxes.iterator();
 				while (itemBoxIterator.hasNext()) {
 					ItemBox itemBox = itemBoxIterator.next();
-					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow() && Server.checkConnect()) {
+					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow()) {
 						this.hitBullets++;
 						itemBoxIterator.remove();
 						recyclable.add(bullet);

@@ -9,8 +9,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import entity.EnemyShip;
-import entity.PhysicsEnemyShip;
 import engine.Socket.Client;
 import engine.Socket.Server;
 import entity.Room;
@@ -138,7 +136,7 @@ public final class Core {
 							gameState.getLevel(), DifficultySetting);
 
 
-					if (gameState.getLevel() == 1 || gameState.getLevel() == 3) {
+					if (gameState.getLevel() == 3 || gameState.getLevel() == 6) {
 						LOGGER.info("Starting story screen for level " + gameState.getLevel());
 						currentScreen = new StoryScreen(gameState, width, height, FPS);
 						frame.setScreen(currentScreen); // StoryScreen 실행
@@ -155,6 +153,13 @@ public final class Core {
 					frame.setScreen(currentScreen);
 					LOGGER.info("Closing game screen.");
 					gameState = ((GameScreen) currentScreen).getGameState();
+
+					if ((gameState.getLevel() == 3 || gameState.getLevel() == 6) && gameState.getLivesRemaining() > 0 ) {
+						LOGGER.info("Starting ending story screen for level " + gameState.getLevel());
+						currentScreen = new EndingStoryScreen(gameState, width, height, FPS);
+						frame.setScreen(currentScreen); // StoryScreen 실행
+						LOGGER.info("Closing ending story screen for level " + gameState.getLevel());
+					}
 
 					gameState = new GameState(gameState, gameState.getLevel() + 1);
 					endTime = System.currentTimeMillis();

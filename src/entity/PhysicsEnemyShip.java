@@ -73,8 +73,6 @@ public class PhysicsEnemyShip extends EnemyShip {
         this.positionX += velocityX;
         this.positionY += velocityY;
 
-        System.out.println("PositionX: " + this.positionX + ", PositionY: " + this.positionY);
-
         // 화면 경계와의 충돌 처리
         if (this.positionX <= 0 || this.positionX + this.getWidth() >= gameScreen.getWidth()) {
             this.velocityX *= -COEFFICIENT_OF_RESTITUTION; // X축 속도 반전
