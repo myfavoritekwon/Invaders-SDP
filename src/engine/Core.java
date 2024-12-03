@@ -149,20 +149,27 @@ public final class Core {
 						LOGGER.info("Closing game screen.");
 						gameState = ((GameScreen) currentScreen).getGameState();
 
-						gameState = new GameState(gameState, gameState.getLevel() + 1);
-						endTime = System.currentTimeMillis();
-						achievementManager.updatePlaying(gameState.getMaxCombo(), (int) (endTime - startTime) / 1000, MAX_LIVES, gameState.getLivesRemaining(), gameState.getLevel() - 1);
-					} while (gameState.getLivesRemaining() > 0);
-					achievementManager.updatePlayed(gameState.getAccuracy(), gameState.getScore());
-					achievementManager.updateAllAchievements();
-					LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
-							+ " score screen at " + FPS + " fps, with a score of "
-							+ gameState.getScore() + ", "
-							+ gameState.getShipType().toString() + " ship, "
-							+ gameState.getLivesRemaining() + " lives remaining, "
-							+ gameState.getBulletsShot() + " bullets shot and  "
-							+ gameState.getShipsDestroyed() + " ships destroyed.");
-					currentScreen = new ScoreScreen(GameSettingScreen.getName(0), width, height, FPS, gameState, wallet, achievementManager, false);
+					if ((gameState.getLevel() == 3 || gameState.getLevel() == 6) && gameState.getLivesRemaining() > 0 ) {
+						LOGGER.info("Starting ending story screen for level " + gameState.getLevel());
+						currentScreen = new EndingStoryScreen(gameState, width, height, FPS);
+						frame.setScreen(currentScreen); // StoryScreen 실행
+						LOGGER.info("Closing ending story screen for level " + gameState.getLevel());
+					}
+
+					gameState = new GameState(gameState, gameState.getLevel() + 1);
+					endTime = System.currentTimeMillis();
+					achievementManager.updatePlaying(gameState.getMaxCombo(),(int) (endTime - startTime) / 1000, MAX_LIVES, gameState.getLivesRemaining(), gameState.getLevel()-1);
+				} while (gameState.getLivesRemaining() > 0);
+				achievementManager.updatePlayed(gameState.getAccuracy(), gameState.getScore());
+                achievementManager.updateAllAchievements();
+				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
+						+ " score screen at " + FPS + " fps, with a score of "
+						+ gameState.getScore() + ", "
+						+ gameState.getShipType().toString() + " ship, "
+						+ gameState.getLivesRemaining() + " lives remaining, "
+						+ gameState.getBulletsShot() + " bullets shot and  "
+						+ gameState.getShipsDestroyed() + " ships destroyed.");
+				currentScreen = new ScoreScreen(GameSettingScreen.getName(0), width, height, FPS, gameState, wallet, achievementManager, false);
 
 					returnCode = frame.setScreen(currentScreen);
 					LOGGER.info("Closing score screen.");

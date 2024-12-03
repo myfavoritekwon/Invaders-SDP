@@ -290,14 +290,39 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			}
 		}
 
+					SpriteType[] spriteTypes = {SpriteType.EnemyShipA1, SpriteType.EnemyShipB1, SpriteType.EnemyShipC1, SpriteType.EnemyShipD1, SpriteType.EnemyShipE1};
+					SpriteType sprite_result = spriteTypes[random.nextInt(spriteTypes.length)];
+					PhysicsEnemyShip physicsEnemyShip = new PhysicsEnemyShip(x_result, y_result, sprite_result, gameState, this);
+
+					physicsEnemyShips.add(physicsEnemyShip);
+				}
+			}
+
+
 		//Create random Spider Web.
 		if (!bonusBossLevels.contains(level)) {
 			int web_count = 1 + level / 3;
 			web = new ArrayList<>();
 			for(int i = 0; i < web_count; i++) {
-				double randomValue = Math.random();
-				this.web.add(new Web((int) Math.max(0, randomValue * width - 12 * 2), this.height - 30));
-				this.logger.info("Spider web creation location : " + web.get(i).getPositionX());
+                double randomValue = Math.random();
+                int randomValueX;
+
+                if (random.nextBoolean()) {
+                    // 좌측 범위에서 랜덤 값 선택
+                    randomValueX = random.nextInt(Math.max(1, (int) (this.ship.getPositionX() - 12 * 2)));
+                } else {
+                    // 우측 범위에서 랜덤 값 선택
+                    randomValueX = (int) this.ship.getPositionX() + 12  * 2+ random.nextInt((int) (width - this.ship.getPositionX() - 12 * 2));
+                }
+
+                int randomValueY;
+                int minY = 300; // 최소값
+                int maxY = this.height - 30; // 최대값
+                // 최소값 minY부터 최대값 maxY 사이의 랜덤 값 생성
+                randomValueY = minY + random.nextInt(maxY - minY + 1);
+
+                this.web.add(new Web(randomValueX, randomValueY));
+                this.logger.info("Spider web creation location X: " + web.get(i).getPositionX() + ", Y:" + web.get(i).getPositionY());
 			}
 			//Create random Block.
 			int blockCount = level / 2;
