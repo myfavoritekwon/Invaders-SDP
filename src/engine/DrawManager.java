@@ -72,6 +72,9 @@ public final class DrawManager {
 	private static BufferedImage img_saturn;
 	private static BufferedImage img_saturn_destroyed;
 	private static BufferedImage img_timelimit;
+
+	private final Object bufferLock = new Object();
+	private BufferedImage[] tempBuffers = new BufferedImage[2];
 	/** For item image */
 	private static final Map<ItemManager.ItemType, BufferedImage> itemImages = new HashMap<>();
 
@@ -304,19 +307,21 @@ public final class DrawManager {
 	 *            Screen to draw in.
 	 */
 	public void initDrawing(final Screen screen) {
-		backBuffer = new BufferedImage(screen.getWidth(), screen.getHeight(),
-				BufferedImage.TYPE_INT_RGB);
+		synchronized(bufferLock) {
+			backBuffer = new BufferedImage(screen.getWidth(), screen.getHeight(),
+					BufferedImage.TYPE_INT_RGB);
+			graphics = frame.getGraphics();
+			backBufferGraphics = backBuffer.getGraphics();
 
-		graphics = frame.getGraphics();
-		backBufferGraphics = backBuffer.getGraphics();
+			// Initialize background black
+			backBufferGraphics.setColor(Color.BLACK);
+			backBufferGraphics.fillRect(0, 0, screen.getWidth(), screen.getHeight());
 
-		backBufferGraphics.setColor(Color.BLACK);
-		backBufferGraphics
-				.fillRect(0, 0, screen.getWidth(), screen.getHeight());
-
-		fontSmallMetrics = backBufferGraphics.getFontMetrics(fontSmall);
-		fontRegularMetrics = backBufferGraphics.getFontMetrics(fontRegular);
-		fontBigMetrics = backBufferGraphics.getFontMetrics(fontBig);
+			// Initialize font metrics
+			fontSmallMetrics = backBufferGraphics.getFontMetrics(fontSmall);
+			fontRegularMetrics = backBufferGraphics.getFontMetrics(fontRegular);
+			fontBigMetrics = backBufferGraphics.getFontMetrics(fontBig);
+		}
 
 		//drawBorders(screen);
 		//drawGrid(screen);
@@ -332,11 +337,25 @@ public final class DrawManager {
 	 */
 
 	public void initThreadDrawing(final Screen screen, final int threadNumber) {
-		BufferedImage threadBuffer = new BufferedImage(screen.getWidth(),screen.getHeight(), BufferedImage.TYPE_INT_RGB);
-		Graphics threadGraphic = threadBuffer.getGraphics();
+		synchronized(bufferLock) {
+			// Create a new buffer per thread
+			BufferedImage threadBuffer = new BufferedImage(screen.getWidth(),
+					screen.getHeight(), BufferedImage.TYPE_INT_RGB);
+			Graphics threadGraphic = threadBuffer.getGraphics();
 
-		threadBuffers[threadNumber] = threadBuffer;
-		threadBufferGraphics[threadNumber] = threadGraphic;
+			// Initialize Buffer
+			threadGraphic.setColor(Color.BLACK);
+			threadGraphic.fillRect(0, 0, screen.getWidth() / 2, screen.getHeight());
+
+			threadBuffers[threadNumber] = threadBuffer;
+			threadBufferGraphics[threadNumber] = threadGraphic;
+
+			// Create temporary buffer
+			if (tempBuffers[threadNumber] == null) {
+				tempBuffers[threadNumber] = new BufferedImage(screen.getWidth(),
+						screen.getHeight(), BufferedImage.TYPE_INT_RGB);
+			}
+		}
 	}
 
 	/**
@@ -346,8 +365,10 @@ public final class DrawManager {
 	 *            Screen to draw on.
 	 */
 	public void completeDrawing(final Screen screen) {
-		graphics.drawImage(backBuffer, frame.getInsets().left,
-				frame.getInsets().top, frame);
+		synchronized(bufferLock) {
+			graphics.drawImage(backBuffer, frame.getInsets().left,
+					frame.getInsets().top, frame);
+		}
 	}
 
 	/**
@@ -357,8 +378,37 @@ public final class DrawManager {
 	 *            Screen to draw on.
 	 */
 	public void mergeDrawing(final Screen screen) {
-		backBufferGraphics.drawImage(threadBuffers[2], 0, 0, frame);
-		backBufferGraphics.drawImage(threadBuffers[3], screen.getWidth() / 2 + LINE_WIDTH, 0, frame);
+		synchronized(bufferLock) {
+			// Initialize main buffer
+			backBufferGraphics.setColor(Color.BLACK);
+			backBufferGraphics.fillRect(0, 0, screen.getWidth(), screen.getHeight());
+
+			// Copy thread buffer to temporary buffer
+			for (int i = 0; i < 2; i++) {
+				if (threadBuffers[i] != null) {
+					Graphics tempGraphics = tempBuffers[i].getGraphics();
+					tempGraphics.drawImage(threadBuffers[i], 0, 0, null);
+				}
+			}
+
+			// Merge temporary buffer to main buffer
+			if (tempBuffers[0] != null) {
+				backBufferGraphics.drawImage(tempBuffers[0],
+						0, 0,
+						screen.getWidth() / 2, screen.getHeight(),
+						0, 0,
+						screen.getWidth() / 2, screen.getHeight(),
+						null);
+			}
+			if (tempBuffers[1] != null) {
+				backBufferGraphics.drawImage(tempBuffers[1],
+						screen.getWidth() / 2 + LINE_WIDTH, 0,
+						screen.getWidth(), screen.getHeight(),
+						0, 0,
+						screen.getWidth() / 2, screen.getHeight(),
+						null);
+			}
+		}
 	}
 
 	/**
@@ -2143,19 +2193,15 @@ public final class DrawManager {
 		Graphics2D g2d = (Graphics2D) backBufferGraphics;
 		g2d.setFont(fontRegular);
 
-		int sequenceY = (int) (ship.getPositionY() - 30);
+		int sequenceY = (int) Math.min(Math.max(40, ship.getPositionY() - 30), screen.getHeight() - 40);
 
 		String fullSequence = sequence.stream()
 				.map(i -> getDirectionSymbol(i, playerNumber))
 				.reduce("", (a, b) -> a + " " + b).trim();
 		int textWidth = fontRegularMetrics.stringWidth(fullSequence);
-		int textX = (int) (ship.getPositionX() + (ship.getWidth() - textWidth) / 2);
-
-		if (textX < 10) textX = 10;
-		if (textX + textWidth > screen.getWidth() - 10) {
-			textX = screen.getWidth() - textWidth - 10;
-		}
-		if (sequenceY < 40) sequenceY = 40;
+		int textX = (int) Math.min(Math.max(10,
+				ship.getPositionX() + (ship.getWidth() - textWidth) / 2),
+				screen.getWidth() - textWidth - 10);
 
 		int xOffset = textX;
 
@@ -2184,13 +2230,14 @@ public final class DrawManager {
 		g2d.setFont(fontRegular);
 
 		FontMetrics fm = g2d.getFontMetrics();
-		int textY = screen.getHeight() - 80;
+		int textY = Math.min(screen.getHeight() - 40, Math.max(40, screen.getHeight() - 80));
 
 		String fullSequence = sequence.stream()
 				.map(i -> getDirectionSymbol(i, playerNumber))
 				.reduce("", (a, b) -> a + " " + b).trim();
 		int fullTextWidth = fm.stringWidth(fullSequence);
-		int textX = collisionX - (fullTextWidth / 2);
+		int textX = Math.min(Math.max(10, collisionX - (fullTextWidth / 2)),
+				screen.getWidth() - fullTextWidth - 10);
 
 		int xOffset = textX;
 

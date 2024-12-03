@@ -516,33 +516,31 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 
 		if (this.inputDelay.checkFinished() && !this.levelFinished) {
-			// check web collision and activate puzzle
-			if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
-				boolean webCollision = false;
-				if (!bonusBossLevels.contains(level)) {
-					for (int i = 0; i < web.size(); i++) {
-						// 거미줄 충돌 시 webCollision 값 true
-						if(checkCollision(ship,web.get(i))){
-							webCollision = true;
-							logger.info("Web collision detected at position" + ship.getPositionX());
-							break;
-						}
+			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
+			if (!itemManager.isTimeStopActive()) {
+				if(Server.checkConnect()) {
+					try{
+						this.enemyShipFormation.update();
+						giveShooter = this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
+						String Cooldown = giveShooter.getLast();
+						giveShooter.removeLast();
+						serverManager.setGiveShooter(giveShooter);
+						serverManager.setCooldown(Cooldown);
+					}catch(Exception e){
+						logger.info("비정상적인 접근입니다 : " + e.getMessage());
+						this.returnCode = 1;
+						this.isRunning = false;
 					}
-					if (webCollision && this.puzzleScreen == null) {
-						logger.info("Initializing puzzle...");
-						initializePuzzle();
+				}else{
+					if(P2PCheck) {
+						this.enemyShipFormation.update();
+						this.enemyShipFormation.P2PShoot(this.bullets, this.level, this.balance, serverManager.getGiveShooter(), serverManager.getCooldown());
+					}else{
+						this.enemyShipFormation.update();
+						this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
 					}
 				}
 			}
-
-			if (ship.isPuzzleActive() && this.puzzleScreen != null) {
-				updatePuzzleState();
-			}
-
-//			//update physicsEnemy
-//			for(int i = 0; i < physicsEnemyShips.size(); i++) {
-//				physicsEnemyShips.get(i).update();
-//			}
 
 			if (this.enemyShipSpecial != null) {
 				// special 함선돠 만나면 아래로 강제 이동
@@ -586,6 +584,33 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				this.enemyShipSpecial = null;
 				this.logger.info("The special ship has escaped");
 			}
+			// check web collision and activate puzzle
+			if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
+				boolean webCollision = false;
+				if (!bonusBossLevels.contains(level)) {
+					for (int i = 0; i < web.size(); i++) {
+						// 거미줄 충돌 시 webCollision 값 true
+						if(checkCollision(ship,web.get(i))){
+							webCollision = true;
+							logger.info("Web collision detected at position" + ship.getPositionX());
+							break;
+						}
+					}
+					if (webCollision && this.puzzleScreen == null) {
+						logger.info("Initializing puzzle...");
+						initializePuzzle();
+					}
+				}
+			}
+
+			if (ship.isPuzzleActive() && this.puzzleScreen != null) {
+				updatePuzzleState();
+			}
+
+//			//update physicsEnemy
+//			for(int i = 0; i < physicsEnemyShips.size(); i++) {
+//				physicsEnemyShips.get(i).update();
+//			}
 
 			if (!ship.isPuzzleActive()) {
 				boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
@@ -830,32 +855,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			this.ship.update();
 			if(P2PCheck)
 				this.p2pShip.update();
-
-			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
-			if (!itemManager.isTimeStopActive()) {
-				if(Server.checkConnect()) {
-					try{
-						this.enemyShipFormation.update();
-						giveShooter = this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
-						String Cooldown = giveShooter.getLast();
-						giveShooter.removeLast();
-						serverManager.setGiveShooter(giveShooter);
-						serverManager.setCooldown(Cooldown);
-					}catch(Exception e){
-						logger.info("비정상적인 접근입니다 : " + e.getMessage());
-						this.returnCode = 1;
-						this.isRunning = false;
-					}
-				}else{
-					if(P2PCheck) {
-						this.enemyShipFormation.update();
-						this.enemyShipFormation.P2PShoot(this.bullets, this.level, this.balance, serverManager.getGiveShooter(), serverManager.getCooldown());
-					}else{
-						this.enemyShipFormation.update();
-						this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
-					}
-				}
-			}
 
 				if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
 					handleBlockerAppearance();
@@ -1112,8 +1111,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				drawManager.drawRotatedEntity(blocker, (int) blocker.getPositionX(), (int) blocker.getPositionY(), blocker.getAngle());
 			}
 		}
-
-		drawManager.completeDrawing(this);
 
 		// draw puzzle screen
 		if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
