@@ -7,23 +7,27 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-import engine.Cooldown;
-import engine.Core;
-import engine.GameState;
-import engine.DrawManager;
+import engine.*;
 
 import javax.imageio.ImageIO;
 
 
 public class StoryScreen extends Screen{
     private static final int SKIP_TIME = 1000;
+    private static final int FONT_TIME = 100;
+    private static final int IMAGE_TIME = 100;
+
+    private final SoundManager soundManager = SoundManager.getInstance();
 
     private Cooldown skipCooldown;
+    private Cooldown fontCooldown;
+    private Cooldown imageCooldown;
 
     private int level;
-
     private int speech;
-
+    private int count;
+    private int seccount;
+    private int num;
     private static BufferedImage img_story1;
     private static BufferedImage img_story2;
 
@@ -34,9 +38,13 @@ public class StoryScreen extends Screen{
 
         this.level = gameState.getLevel();
         this.skipCooldown = Core.getCooldown(SKIP_TIME);
+        this.fontCooldown = Core.getCooldown(FONT_TIME);
+        this.imageCooldown = Core.getCooldown(IMAGE_TIME);
         this.skipCooldown.reset();
         speech =0;
-
+        count = 0;
+        seccount = 0;
+        num = 1;
         // story image
         try{
             img_story1 = ImageIO.read(new File("res/image/story1.png"));
@@ -46,6 +54,11 @@ public class StoryScreen extends Screen{
         }
     }
 
+    public void initialize() {
+        if (soundManager.isSoundPlaying(Sound.BGM_MAIN))
+            soundManager.stopSound(Sound.BGM_MAIN);
+        soundManager.loopSound(Sound.BGM_STORY);
+    }
 
     public final int run() {
         super.run();
@@ -65,51 +78,138 @@ public class StoryScreen extends Screen{
         drawManager.initDrawing(this);
         drawManager.drawStory(this);
 
-
-        //이미지 띄우기
-        if(level == 1){
-            DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
-        }else if(level == 3){
-            DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
-        }
-
-        Font font = new Font("Arial", Font.PLAIN, 24);
+        Font font = new Font("Arial", Font.PLAIN, 20);
         DrawManager.getBackBufferGraphics().setFont(font);
 
-        if(level == 1){
-            String[] s = {"story 1", "hello", "this is story 1 simulation"};
+        if(level == 3){
+            //이미지 띄우기
+            if(num == 1){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 2){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }else if(num == 3){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 4){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }else if(num == 5){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 6){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }
+            if(this.imageCooldown.checkFinished()) { // 이미지 출력속도 조절
+                if (num == 6) {
+                    num = 0;
+                }
+                num++;
+                this.imageCooldown.reset();
+            }
+
+            String[] s = {"You dare step into my domain? Foolish  ", "So, you think you’re worthy of challenging", "Bravery, or foolishness? You "};
+            String[] m = {"mortals, prepare to face annihilation!"," me? Very well, I shall oblige!","shall soon see the cost of your arrogance." };
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){
-
-                    speech++;
+                    if(count < s[speech].length() || seccount < m[speech].length()){
+                        count = s[speech].length();
+                        seccount = m[speech].length();
+                    }else{
+                        count = 0;
+                        seccount =0;
+                        speech++;
+                    }
                     this.skipCooldown.reset();
 
                 }
             }
-            if(speech < 3){
-                DrawManager.getBackBufferGraphics().drawString(s[speech],60, 440);
-            }else{
+
+            if(speech < s.length){  //대사들을 다 안쳤을 때
+                if(count < s[speech].length()){   // 대사가 다 출력되지 않았을 때
+                    DrawManager.getBackBufferGraphics().drawString(s[speech].substring(0, count), 60, 440);
+                    if(this.fontCooldown.checkFinished()) { // 대사 출력속도 조절
+                        count++;
+                        this.fontCooldown.reset();
+                    }
+                }else{  // 첫 줄 대사가 다 출력되면 그상태 유지
+                    if(seccount < m[speech].length()){   // 대사가 다 출력되지 않았을 때
+                        DrawManager.getBackBufferGraphics().drawString(m[speech].substring(0, seccount), 60, 480);
+                        if(this.fontCooldown.checkFinished()) { // 대사 출력속도 조절
+                            seccount++;
+                            this.fontCooldown.reset();
+                        }
+                    }else{
+                        DrawManager.getBackBufferGraphics().drawString(m[speech].substring(0, seccount), 60, 480);
+                    }
+                    DrawManager.getBackBufferGraphics().drawString(s[speech].substring(0,count),60, 440);
+                }
+            }else{   //대사가 다 나온 후 스페이스 바 누르면 스토리 화면 종료
+                soundManager.stopSound(Sound.BGM_STORY);
                 this.isRunning = false;
             }
-        }else if(level == 3){
-            String[] s = {"suuuuuuuuuuuuuuuui", "show me the money", "sogesil---------------------------"};
+        }else if(level == 6){
+            //이미지 띄우기
+            if(num == 1){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 2){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }else if(num == 3){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 4){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }else if(num == 5){
+                DrawManager.getBackBufferGraphics().drawImage(img_story1,42, 100 , 500, 300,null);
+            }else if(num == 6){
+                DrawManager.getBackBufferGraphics().drawImage(img_story2,42, 100 , 500, 300,null);
+            }
+            if(this.imageCooldown.checkFinished()) { // 이미지 출력속도 조절
+                if (num == 6) {
+                    num = 0;
+                }
+                num++;
+                this.imageCooldown.reset();
+            }
+
+            String[] t = {"Is this all you’ve got? Pathetic!", "You cannot stop me! ", "I’ve grown tired of this game. Time to end this, once and for all!"};
+            String[] r = {"","You’re only delaying the inevitable."," Time to end this, once and for all!"};
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){
-
-                    speech++;
+                    if(count < t[speech].length() || seccount < r[speech].length()){
+                        count = t[speech].length();
+                        seccount = r[speech].length();
+                    }else{
+                        count = 0;
+                        seccount =0;
+                        speech++;
+                    }
                     this.skipCooldown.reset();
 
                 }
             }
-            if(speech < 3){
-                DrawManager.getBackBufferGraphics().drawString(s[speech],60, 440);
+
+            if(speech < t.length){  //대사들을 다 안쳤을 때
+                if(count < t[speech].length()){   // 대사가 다 출력되지 않았을 때
+                    DrawManager.getBackBufferGraphics().drawString(t[speech].substring(0, count), 60, 440);
+                    if(this.fontCooldown.checkFinished()) { // 대사 출력속도 조절
+                        count++;
+                        this.fontCooldown.reset();
+                    }
+                }else{  // 대사가 다 출력되면 그상태 유지
+                    if(seccount < r[speech].length()){   // 대사가 다 출력되지 않았을 때
+                        DrawManager.getBackBufferGraphics().drawString(r[speech].substring(0, seccount), 60, 480);
+                        if(this.fontCooldown.checkFinished()) { // 대사 출력속도 조절
+                            seccount++;
+                            this.fontCooldown.reset();
+                        }
+                    }else{
+                        DrawManager.getBackBufferGraphics().drawString(r[speech].substring(0, seccount), 60, 480);
+                    }
+                    DrawManager.getBackBufferGraphics().drawString(t[speech].substring(0,count),60, 440);
+                }
             }else{
+                soundManager.stopSound(Sound.BGM_STORY);
                 this.isRunning = false;
             }
         }
-
 
         drawManager.completeDrawing(this);
     }
