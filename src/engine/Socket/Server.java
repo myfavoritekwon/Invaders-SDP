@@ -37,7 +37,7 @@ public class Server {
     public static void startInfoServer() {
         new Thread(() -> {
             try{
-                infoServerSocket = new ServerSocket(INFO_PORT, 50, InetAddress.getByName("172.17.72.170"));
+                infoServerSocket = new ServerSocket(INFO_PORT, 50, InetAddress.getByName(hostIp));
                 System.out.println("Info server running on port " + INFO_PORT);
                 GameScreen.setSORC(true);
                 while (true) {
@@ -62,7 +62,7 @@ public class Server {
     // 클라이언트와의 통신용 서버
     public static void startMainServer() {
         new Thread(() -> {
-            try (ServerSocket mainServerSocket = new ServerSocket(MAIN_PORT, 50, InetAddress.getByName("172.17.72.170"))) {
+            try (ServerSocket mainServerSocket = new ServerSocket(MAIN_PORT, 50, InetAddress.getByName(hostIp))) {
                 System.out.println("Main server running on port " + MAIN_PORT);
                 while (true) {
                     try {
@@ -84,9 +84,13 @@ public class Server {
                 MultiRoomScreen.getErrorCheck(1);
             } catch (IOException e) {
                 e.printStackTrace();
-                System.out.println("go to client");
-                MultiRoomScreen.getErrorCheck(2);
-                client.connectServer(hostIp);
+                if(e.getMessage().equals("Address already in use")) {
+                    System.out.println("go to client");
+                    MultiRoomScreen.getErrorCheck(2);
+                    client.connectServer(hostIp);
+                }else{
+                    e.printStackTrace();
+                }
             }
         }).start();
     }
@@ -141,7 +145,7 @@ public class Server {
                 while (true) {//(message = String.valueOf(Button)) != null
                     DataPacket data;
                     try {
-                        data = new DataPacket(Button, serverManager.getGiveShooter(), serverManager.getCooldown());
+                        data = new DataPacket(Button, serverManager.getGiveShooter(), serverManager.getCooldown(), serverManager.getItemType(), serverManager.getCheck());
                         objectOutputStream.writeObject(data);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
