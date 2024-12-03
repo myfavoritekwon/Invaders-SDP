@@ -390,7 +390,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			itemManager.swapItems();
 		}
 
-
 		// use item M
 		if (inputManager.isKeyDown(KeyEvent.VK_M)) {
 			ItemManager.ItemType usedItem = itemManager.useStoredItem();
@@ -439,7 +438,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					this.enemyShipSpecial.move(2, 0);
 				else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
 					this.enemyShipSpecial = null;
-
 			}
 			if (this.enemyShipSpecial == null
 					&& this.enemyShipSpecialCooldown.checkFinished()) {
@@ -467,7 +465,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						this.alertMessage = "";
 						break;
 				}
-
 			}
 			if (this.enemyShipSpecial != null
 					&& this.enemyShipSpecial.getPositionX() > this.width) {
@@ -517,7 +514,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 							if (this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
 							if (this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
 						}
-
 						break;
 				}
 			}

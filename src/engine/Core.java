@@ -56,9 +56,6 @@ public final class Core {
 	private static int DifficultySetting;// <- setting EASY(0), NORMAL(1), HARD(2);
 
 	private static final List<Room> rooms = new ArrayList<Room>();
-	private static Room room;
-
-	private static ServerManager serverManager;
 
 	public static final class PuzzleSettings {
 		public static final int SEQUENCE_LENGTH = 4;
