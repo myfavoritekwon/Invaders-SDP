@@ -384,8 +384,9 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 
 		ship.applyItem(wallet);
+
 		//Create random Spider Web avoid initiation ship
-		int web_count = 100;
+		int web_count = 1 + level / 3;
 		web = new ArrayList<>();
 		for(int i = 0; i < web_count; i++) {
 			double randomValue = Math.random();
@@ -399,8 +400,14 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				randomValueX = (int) this.ship.getPositionX() + 12  * 2+ random.nextInt((int) (width - this.ship.getPositionX() - 12 * 2));
 			}
 
-			this.web.add(new Web(randomValueX, this.height - 30));
-			this.logger.info("Spider web creation location : " + web.get(i).getPositionX());
+			int randomValueY;
+			int minY = 300; // 최소값
+			int maxY = this.height - 30; // 최대값
+			// 최소값 minY부터 최대값 maxY 사이의 랜덤 값 생성
+			randomValueY = minY + random.nextInt(maxY - minY + 1);
+
+			this.web.add(new Web(randomValueX, randomValueY));
+			this.logger.info("Spider web creation location X: " + web.get(i).getPositionX() + ", Y:" + web.get(i).getPositionY());
 		}
 		//Create random Block.
 		int blockCount = level / 2;
