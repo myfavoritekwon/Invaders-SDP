@@ -2231,12 +2231,4 @@ public final class DrawManager {
 			};
 		}
 	}
-
-	public void drawMatching(final Screen screen){
-		//새로 방 만드는 칸
-		String makeNewRoom = "Matching...";
-		backBufferGraphics.setColor(Color.GREEN);
-		drawCenteredBigString(screen, makeNewRoom, screen.getHeight()/2);
-
-	}
 }
