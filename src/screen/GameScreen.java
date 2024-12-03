@@ -289,16 +289,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				}
 			}
 		}
-
-					SpriteType[] spriteTypes = {SpriteType.EnemyShipA1, SpriteType.EnemyShipB1, SpriteType.EnemyShipC1, SpriteType.EnemyShipD1, SpriteType.EnemyShipE1};
-					SpriteType sprite_result = spriteTypes[random.nextInt(spriteTypes.length)];
-					PhysicsEnemyShip physicsEnemyShip = new PhysicsEnemyShip(x_result, y_result, sprite_result, gameState, this);
-
-					physicsEnemyShips.add(physicsEnemyShip);
-				}
-			}
-
-
 		//Create random Spider Web.
 		if (!bonusBossLevels.contains(level)) {
 			int web_count = 1 + level / 3;
