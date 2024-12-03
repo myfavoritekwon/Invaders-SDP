@@ -84,12 +84,13 @@ public class SoundManager {
             loadSound(Sound.BGM_LV1, "res/sound/BGM/Lv1.wav");
             loadSound(Sound.BGM_LV2, "res/sound/BGM/Lv2.wav");
             loadSound(Sound.BGM_LV3, "res/sound/BGM/Lv3.wav");
-            loadSound(Sound.BGM_LV4, "res/sound/BGM/Lv4.wav");
+            loadSound(Sound.BGM_BONUS, "res/sound/BGM/BonusLevelTheme.wav");
             loadSound(Sound.BGM_LV5, "res/sound/BGM/Lv5.wav");
             loadSound(Sound.BGM_LV6, "res/sound/BGM/Lv6.wav");
             loadSound(Sound.BGM_LV7, "res/sound/BGM/Lv7.wav");
             loadSound(Sound.BGM_STORY, "res/sound/BGM/BossTheme.wav");
             loadSound(Sound.BGM_STORY2, "res/sound/BGM/Boss2Theme.wav");
+            loadSound(Sound.BGM_ENDSTORY2, "res/sound/BGM/EndStoryTheme.wav");
 
             setVolume(currentVolume);
             logger.info("Finished loading all sounds.");
