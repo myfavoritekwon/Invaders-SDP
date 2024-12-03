@@ -75,6 +75,7 @@ public abstract class Ship extends Entity {
 	private long lastShootTime;
 	private boolean threadWeb = false;
 	private int collisionX = 0;
+	private int collisionY = 0;
 	private boolean isPuzzleActive = false;
 	private long webCollisionTime = 0;
 	private static final long WEB_COOLDOWN = Core.PuzzleSettings.WEB_COOLDOWN;
@@ -83,6 +84,7 @@ public abstract class Ship extends Entity {
 		if (threadWeb && !this.threadWeb) {
 			webCollisionTime = System.currentTimeMillis();
 			collisionX = (int) this.positionX;
+			collisionY = (int) this.positionY;
 		}
 		this.threadWeb = threadWeb;
 	}
@@ -92,6 +94,8 @@ public abstract class Ship extends Entity {
 	public int getCollisionX() {
 		return collisionX;
 	}
+
+	public int getCollisionY() { return collisionY; }
 
 	/**
 	 * Constructor, establishes the ship's properties.

@@ -2193,15 +2193,19 @@ public final class DrawManager {
 		Graphics2D g2d = (Graphics2D) backBufferGraphics;
 		g2d.setFont(fontRegular);
 
-		int sequenceY = (int) Math.min(Math.max(40, ship.getPositionY() - 30), screen.getHeight() - 40);
-
 		String fullSequence = sequence.stream()
 				.map(i -> getDirectionSymbol(i, playerNumber))
 				.reduce("", (a, b) -> a + " " + b).trim();
+
 		int textWidth = fontRegularMetrics.stringWidth(fullSequence);
-		int textX = (int) Math.min(Math.max(10,
-				ship.getPositionX() + (ship.getWidth() - textWidth) / 2),
-				screen.getWidth() - textWidth - 10);
+		int sequenceY = (int) (ship.getCollisionY() - 30);
+		int textX = (int) (ship.getPositionX() + (ship.getWidth() - textWidth) / 2);
+
+		if (textX < 10) textX = 10;
+		if (textX + textWidth > screen.getWidth() - 10) {
+			textX = screen.getWidth() - textWidth - 10;
+		}
+		if (sequenceY < 40) sequenceY = 40;
 
 		int xOffset = textX;
 
@@ -2225,19 +2229,24 @@ public final class DrawManager {
 	 */
 	public void drawPuzzle(final Screen screen, final List<Integer> sequence,
 						   final List<Integer> playerInput, final int playerNumber,
-						   final int threadNumber, final int collisionX) {
+						   final int threadNumber, final int collisionX, final int collisionY) {
 		Graphics2D g2d = (Graphics2D) threadBufferGraphics[threadNumber];
 		g2d.setFont(fontRegular);
 
 		FontMetrics fm = g2d.getFontMetrics();
-		int textY = Math.min(screen.getHeight() - 40, Math.max(40, screen.getHeight() - 80));
 
 		String fullSequence = sequence.stream()
 				.map(i -> getDirectionSymbol(i, playerNumber))
 				.reduce("", (a, b) -> a + " " + b).trim();
 		int fullTextWidth = fm.stringWidth(fullSequence);
-		int textX = Math.min(Math.max(10, collisionX - (fullTextWidth / 2)),
-				screen.getWidth() - fullTextWidth - 10);
+
+		int textY = collisionY - 30;
+		int textX = collisionX - (fullTextWidth / 2);
+
+		if (textX < 10) textX = 10;
+		if (textX + fullTextWidth > screen.getWidth() - 10)
+			textX = screen.getWidth() - fullTextWidth - 10;
+		if (textY < 40) textY = 40;
 
 		int xOffset = textX;
 

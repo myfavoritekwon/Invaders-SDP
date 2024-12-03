@@ -109,7 +109,8 @@ public class TwoPlayerScreen extends Screen {
                         puzzleScreens[i].getDirectionSequence(),
                         puzzleScreens[i].getPlayerInput(),
                         i, i,
-                        this.ship != null ? this.ship.getCollisionX() : this.width / 4);
+                        this.ship != null ? this.ship.getCollisionX() : this.width / 4,
+                        this.ship != null ? this.ship.getCollisionY() : this.height / 2);
             }
         }
 
