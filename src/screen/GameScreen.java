@@ -261,28 +261,30 @@ public class GameScreen extends Screen implements Callable<GameState> {
         ship.applyItem(wallet);
 
 		//Create Gravity Enemy
-		int bonus = gameState.getLevel() % 1;
+		if (!bonusBossLevels.contains(level)) {
+			int bonus = gameState.getLevel() % 1;
 
-		if(bonus == 0){
-			physicsEnemyShips = new ArrayList<>();
-			int mob_num = level * 4;
-			Random random = new Random();
-			for(int i = 0; i < mob_num; i++){
+			if (bonus == 0) {
+				physicsEnemyShips = new ArrayList<>();
+				int mob_num = level * 4;
+				Random random = new Random();
+				for (int i = 0; i < mob_num; i++) {
 
-				int init_x = getWidth() - 12 * 2;
+					int init_x = getWidth() - 12 * 2;
 //				int x_result = random.nextBoolean() ? 0 : init_x;
-				int x_result = random.nextInt(init_x + 1);
+					int x_result = random.nextInt(init_x + 1);
 
-				int minY = 300; // 최소값
-				int maxY = getHeight() - 100; // 최대값
-				// 최소값 minY부터 최대값 maxY 사이의 랜덤 값 생성
-				int y_result = minY + random.nextInt(maxY - minY + 1);
+					int minY = 300; // 최소값
+					int maxY = getHeight() - 100; // 최대값
+					// 최소값 minY부터 최대값 maxY 사이의 랜덤 값 생성
+					int y_result = minY + random.nextInt(maxY - minY + 1);
 
-				SpriteType[] spriteTypes = {SpriteType.EnemyShipA1, SpriteType.EnemyShipB1, SpriteType.EnemyShipC1, SpriteType.EnemyShipD1, SpriteType.EnemyShipE1};
-				SpriteType sprite_result = spriteTypes[random.nextInt(spriteTypes.length)];
-				PhysicsEnemyShip physicsEnemyShip = new PhysicsEnemyShip(x_result, y_result, sprite_result, gameState, this);
+					SpriteType[] spriteTypes = {SpriteType.EnemyShipA1, SpriteType.EnemyShipB1, SpriteType.EnemyShipC1, SpriteType.EnemyShipD1, SpriteType.EnemyShipE1};
+					SpriteType sprite_result = spriteTypes[random.nextInt(spriteTypes.length)];
+					PhysicsEnemyShip physicsEnemyShip = new PhysicsEnemyShip(x_result, y_result, sprite_result, gameState, this);
 
-				physicsEnemyShips.add(physicsEnemyShip);
+					physicsEnemyShips.add(physicsEnemyShip);
+				}
 			}
 		}
 
@@ -432,10 +434,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				updatePuzzleState();
 			}
 
-//			//update physicsEnemy
-//			for(int i = 0; i < physicsEnemyShips.size(); i++) {
-//				physicsEnemyShips.get(i).update();
-//			}
+			//update physicsEnemy
+			if(physicsEnemyShips != null) {
+				for (int i = 0; i < physicsEnemyShips.size(); i++) {
+					physicsEnemyShips.get(i).update();
+				}
+			}
 
 			if (this.enemyShipSpecial != null) {
 				// special 함선돠 만나면 아래로 강제 이동
@@ -822,10 +826,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 
 		//draw Gravity Enemy
-		for(int i = 0; i < physicsEnemyShips.size(); i++){
-			drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
-					(int) this.physicsEnemyShips.get(i).getPositionY());
-		}
+        if (!bonusBossLevels.contains(level)) {
+            for(int i = 0; i < physicsEnemyShips.size(); i++){
+                drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
+                        (int) this.physicsEnemyShips.get(i).getPositionY());
+		    }
+        }
 		//draw Spider Web
         if (!bonusBossLevels.contains(level)) {
             for (int i = 0; i < web.size(); i++) {
@@ -1178,24 +1184,26 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					}
 
 				//중력 적들과 충돌했을 때 로직
-				Iterator<PhysicsEnemyShip> iterator = this.physicsEnemyShips.iterator();
-				while (iterator.hasNext()) {
-					PhysicsEnemyShip physicsEnemyShip = iterator.next();
-					if (physicsEnemyShip != null && !physicsEnemyShip.isDestroyed() && checkCollision(bullet, physicsEnemyShip)) {
-						System.out.println(this.physicsEnemyShips.size());
-						iterator.remove(); // 안전하게 요소 삭제
-						System.out.println(this.physicsEnemyShips.size());
-						this.score += Score.comboScore(physicsEnemyShip.getPointValue(), this.combo);
-						this.shipsDestroyed++;
-						this.combo++;
-						this.hitBullets++;
-						if (this.combo > this.maxCombo) this.maxCombo = this.combo;
-						physicsEnemyShip.destroy(balance);
-						timer.cancel();
-						isExecuted = false;
-						itemManager.dropItem();
-						this.itemBoxes.add(new ItemBox((int) (physicsEnemyShip.getPositionX() + 6), (int) (physicsEnemyShip.getPositionY() + 1), balance));
-						logger.info("Item box dropped");
+				if(this.physicsEnemyShips != null) {
+					Iterator<PhysicsEnemyShip> iterator = this.physicsEnemyShips.iterator();
+					while (iterator.hasNext()) {
+						PhysicsEnemyShip physicsEnemyShip = iterator.next();
+						if (physicsEnemyShip != null && !physicsEnemyShip.isDestroyed() && checkCollision(bullet, physicsEnemyShip)) {
+							System.out.println(this.physicsEnemyShips.size());
+							iterator.remove(); // 안전하게 요소 삭제
+							System.out.println(this.physicsEnemyShips.size());
+							this.score += Score.comboScore(physicsEnemyShip.getPointValue(), this.combo);
+							this.shipsDestroyed++;
+							this.combo++;
+							this.hitBullets++;
+							if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+							physicsEnemyShip.destroy(balance);
+							timer.cancel();
+							isExecuted = false;
+							itemManager.dropItem();
+							this.itemBoxes.add(new ItemBox((int) (physicsEnemyShip.getPositionX() + 6), (int) (physicsEnemyShip.getPositionY() + 1), balance));
+							logger.info("Item box dropped");
+						}
 					}
 				}
 
