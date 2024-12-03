@@ -2224,4 +2224,10 @@ public final class DrawManager {
 			};
 		}
 	}
+
+	public void drawPause(){
+
+		String shopString = "PAUSE";
+
+	}
 }
