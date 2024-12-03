@@ -10,13 +10,13 @@ import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.URL;
+import java.util.*;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 import entity.*;
+import screen.GameScreen;
 import screen.GameSettingScreen;
 import screen.Screen;
 
@@ -69,6 +69,79 @@ public final class DrawManager {
 	private static BufferedImage img_coin;
 	private static BufferedImage img_coingain;
 	private static BufferedImage img_shotinterval;
+	private static BufferedImage img_saturn;
+	private static BufferedImage img_saturn_destroyed;
+	private static BufferedImage img_timelimit;
+	/** For item image */
+	private static final Map<ItemManager.ItemType, BufferedImage> itemImages = new HashMap<>();
+
+
+	/** For initialize item images */
+	public static void initializeItemImages() {
+		try {
+			itemImages.put(ItemManager.ItemType.Bomb, loadImage("res/image/bomb.png"));
+			itemImages.put(ItemManager.ItemType.LineBomb, loadImage("res/image/bomb.png"));
+			itemImages.put(ItemManager.ItemType.Barrier, loadImage("res/image/barrier.png"));
+			itemImages.put(ItemManager.ItemType.Ghost, loadImage("res/image/ghost.png"));
+			itemImages.put(ItemManager.ItemType.TimeStop, loadImage("res/image/timestop.png"));
+			itemImages.put(ItemManager.ItemType.MultiShot, loadImage("res/image/multishot.png"));
+			itemImages.put(ItemManager.ItemType.Laser, loadImage("res/image/laser.png"));
+		} catch (Exception e) {
+			System.err.println("아이템 이미지를 로드할 수 없습니다: " + e.getMessage());
+		}
+	}
+
+	/** For loading item images */
+	private static BufferedImage loadImage(String filePath) {
+		try {
+			File file = new File(filePath); // referencing file path
+			if (!file.exists()) {
+				throw new IllegalArgumentException("리소스 파일을 찾을 수 없습니다: " + filePath);
+			}
+			return ImageIO.read(file);
+		} catch (IOException e) {
+			System.err.println("이미지 로드 실패: " + filePath + " (" + e.getMessage() + ")");
+			return null;
+		}
+	}
+
+	/** Drawing item Hud */
+	public void drawItemHud(Screen screen, int screenHeight, List<ItemManager.ItemType> storedItems) {
+		int rectWidth = 50;
+		int rectHeight = 50;
+		int startX = 10;
+		int startY = screenHeight - 70;
+		int padding = 10;
+
+		for (int i = 0; i < 2; i++) {
+			int x = startX + i * (rectWidth + padding);
+			int y = startY;
+
+			if (i < storedItems.size()) {
+				// bringing storedItem
+				ItemManager.ItemType itemType = storedItems.get(i);
+				BufferedImage itemImage = itemImages.get(itemType);
+				if (itemImage != null) {
+					// if item have image, print itemimage
+					backBufferGraphics.drawImage(itemImage, x, y, rectWidth, rectHeight, null);
+				} else {
+					// if item don't have image, print red
+					backBufferGraphics.setColor(Color.RED);
+					backBufferGraphics.fillRect(x, y, rectWidth, rectHeight);
+				}
+			} else {
+				// if no storeditem, print lightGRAY
+				backBufferGraphics.setColor(Color.LIGHT_GRAY);
+				backBufferGraphics.fillRect(x, y, rectWidth, rectHeight);
+			}
+
+			// drawing rectangle
+			backBufferGraphics.setColor(Color.BLACK);
+			backBufferGraphics.drawRect(x, y, rectWidth, rectHeight);
+		}
+
+	}
+
 
 
 	/** Sprite types. */
@@ -189,6 +262,15 @@ public final class DrawManager {
 			img_shotinterval = ImageIO.read(new File("res/image/shot interval.jpg"));
 		} catch (IOException e) {
 			logger.info("Shop image loading failed");
+		}
+
+		/* Bonus Stage image load*/
+		try {
+			img_saturn = ImageIO.read(new File("res/image/saturn.png"));
+			img_saturn_destroyed = ImageIO.read(new File("res/image/saturn_destroyed.png"));
+			img_timelimit = ImageIO.read(new File("res/image/timelimit.png"));
+		} catch (IOException e) {
+			logger.info("Bonus Boss image loading failed.");
 		}
 
 	}
@@ -1350,6 +1432,30 @@ public final class DrawManager {
 
 
 
+	public void drawStory(final Screen screen){
+		backBuffer = new BufferedImage(screen.getWidth(), screen.getHeight(),
+				BufferedImage.TYPE_INT_RGB);
+
+		graphics = frame.getGraphics();
+		backBufferGraphics = backBuffer.getGraphics();
+
+		backBufferGraphics.setColor(Color.BLACK);
+		backBufferGraphics
+				.fillRect(0, 0, screen.getWidth(), screen.getHeight());
+
+
+		// 텍스트 박스 채우기
+		backBufferGraphics.setColor(Color.BLACK);
+		backBufferGraphics.fillRect(42, 400, 500, 160); // (x, y, width, height)
+
+		// 직사각형 테두리를 흰색으로 그리기
+		backBufferGraphics.setColor(Color.WHITE);
+		backBufferGraphics.drawRect(42, 400, 500, 160); // (x, y, width, height)
+
+	}
+
+	public static Graphics getBackBufferGraphics() {return backBufferGraphics; }
+
 
 	/**
 	 * Draws a centered string on big font.
@@ -1995,6 +2101,33 @@ public final class DrawManager {
 
 		}
 	}
+
+	public void drawBonusBoss(final Screen screen, int level, BonusBoss bonusBoss, final int positionX, final int positionY) {
+		switch (level) {
+			case 2:
+				if (!bonusBoss.isDestroyed()) {
+					backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+					;
+				} else {
+					backBufferGraphics.drawImage(img_saturn_destroyed, (screen.getWidth() - img_saturn_destroyed.getWidth()) / 2, 50, img_saturn_destroyed.getWidth(), img_saturn_destroyed.getHeight(), null);
+				}
+				break;
+			case 4:
+				backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+				break;
+			// 위에꺼 다른 보너스 보스로 바꾸기 나중에 그리고 나면
+			default:
+				backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+				break;
+		}
+	}
+
+	public void drawTimerBar(final Screen screen, int x, int y, int width, int height) {
+		backBufferGraphics.setColor(Color.ORANGE);
+		backBufferGraphics.fillRect(x, y, width, height);
+		backBufferGraphics.drawImage(img_timelimit, (screen.getWidth() - img_timelimit.getWidth() * 2) / 2, 60, img_timelimit.getWidth() * 2, img_timelimit.getHeight() * 2, null);
+	}
+
 
 	/**
 	 * Draw puzzle overlay

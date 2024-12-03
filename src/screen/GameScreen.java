@@ -6,8 +6,7 @@ import java.io.IOException;
 import java.security.Key;
 import java.util.HashSet;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
@@ -153,6 +152,17 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private PuzzleScreen puzzleScreen;
 	private Cooldown puzzleRetryCooldown;
 	private Cooldown webCooldown;
+
+
+	private BonusBoss bonusBoss;
+	private Set<Integer> bonusBossLevels = Set.of(2,4);
+	private Cooldown bonusLevelCountdown;
+	private int barWidth;
+	private int barInitialWidth = 330;
+	private int barHeight = 12;
+	private int barX = 133;
+	private int barY = 78;
+	private Cooldown barDisappear;
 
 	/**
 	 * Constructor, establishes the properties of the screen.
@@ -306,6 +316,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				return "S"; // 스페이스바 'S'로 매핑
 			case KeyEvent.VK_ESCAPE:
 				return "E"; // ESC 키를 'E'로 매핑
+			case KeyEvent.VK_N:
+				return "N"; // N키 매핑
+			case KeyEvent.VK_M:
+				return "M"; // M키 매핑
 			default:
 				return String.valueOf(e.getKeyChar()); // 다른 키는 원래 문자 그대로 반환
 		}
@@ -351,8 +365,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
 		enemyShipFormation.attach(this);
         // Appears each 10-30 seconds.
-		this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 70);
-		p2pShip.setColor(Color.BLUE);
+		if(P2PCheck) {
+			this.p2pShip = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
+			p2pShip.setColor(Color.BLUE);
+		}
         this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
         ship.applyItem(wallet);
@@ -384,54 +400,58 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 
 		ship.applyItem(wallet);
+		//Create random Spider Web.
+		if (!bonusBossLevels.contains(level)) {
+			int web_count = 1 + level / 3;
+			web = new ArrayList<>();
+			for(int i = 0; i < web_count; i++) {
+                double randomValue = Math.random();
+                int randomValueX;
 
-		//Create random Spider Web avoid initiation ship
-		int web_count = 1 + level / 3;
-		web = new ArrayList<>();
-		for(int i = 0; i < web_count; i++) {
-			double randomValue = Math.random();
-			int randomValueX;
+                if (random.nextBoolean()) {
+                    // 좌측 범위에서 랜덤 값 선택
+                    randomValueX = random.nextInt(Math.max(1, (int) (this.ship.getPositionX() - 12 * 2)));
+                } else {
+                    // 우측 범위에서 랜덤 값 선택
+                    randomValueX = (int) this.ship.getPositionX() + 12  * 2+ random.nextInt((int) (width - this.ship.getPositionX() - 12 * 2));
+                }
 
-			if (random.nextBoolean()) {
-				// 좌측 범위에서 랜덤 값 선택
-				randomValueX = random.nextInt(Math.max(1, (int) (this.ship.getPositionX() - 12 * 2)));
-			} else {
-				// 우측 범위에서 랜덤 값 선택
-				randomValueX = (int) this.ship.getPositionX() + 12  * 2+ random.nextInt((int) (width - this.ship.getPositionX() - 12 * 2));
+                int randomValueY;
+                int minY = 300; // 최소값
+                int maxY = this.height - 30; // 최대값
+                // 최소값 minY부터 최대값 maxY 사이의 랜덤 값 생성
+                randomValueY = minY + random.nextInt(maxY - minY + 1);
+
+                this.web.add(new Web(randomValueX, randomValueY));
+                this.logger.info("Spider web creation location X: " + web.get(i).getPositionX() + ", Y:" + web.get(i).getPositionY());
 			}
-
-			int randomValueY;
-			int minY = 300; // 최소값
-			int maxY = this.height - 30; // 최대값
-			// 최소값 minY부터 최대값 maxY 사이의 랜덤 값 생성
-			randomValueY = minY + random.nextInt(maxY - minY + 1);
-
-			this.web.add(new Web(randomValueX, randomValueY));
-			this.logger.info("Spider web creation location X: " + web.get(i).getPositionX() + ", Y:" + web.get(i).getPositionY());
-		}
-		//Create random Block.
-		int blockCount = level / 2;
-		int playerTopY_contain_barrier = this.height - 40 - 150;
-		int enemyBottomY = 100 + (gameSettings.getFormationHeight() - 1) * 48;
-		this.block = new ArrayList<Block>();
-		for (int i = 0; i < blockCount; i++) {
-			Block newBlock;
-			boolean overlapping;
-			do {
-				newBlock = new Block(0,0);
-				int positionX = (int) (Math.random() * (this.width - newBlock.getWidth()));
-				int positionY = (int) (Math.random() * (playerTopY_contain_barrier - enemyBottomY - newBlock.getHeight())) + enemyBottomY;
-				newBlock = new Block(positionX, positionY);
-				overlapping = false;
-				for (Block block : block) {
-					if (checkCollision(newBlock, block)) {
-						overlapping = true;
-						break;
+			//Create random Block.
+			int blockCount = level / 2;
+			int playerTopY_contain_barrier = this.height - 40 - 150;
+			int enemyBottomY = 100 + (gameSettings.getFormationHeight() - 1) * 48;
+			this.block = new ArrayList<Block>();
+			for (int i = 0; i < blockCount; i++) {
+				Block newBlock;
+				boolean overlapping;
+				do {
+					newBlock = new Block(0,0);
+					int positionX = (int) (Math.random() * (this.width - newBlock.getWidth()));
+					int positionY = (int) (Math.random() * (playerTopY_contain_barrier - enemyBottomY - newBlock.getHeight())) + enemyBottomY;
+					newBlock = new Block(positionX, positionY);
+					overlapping = false;
+					for (Block block : block) {
+						if (checkCollision(newBlock, block)) {
+							overlapping = true;
+							break;
+						}
 					}
-				}
-			} while (overlapping);
-			block.add(newBlock);
+				} while (overlapping);
+				block.add(newBlock);
+			}
 		}
+		/** initialinze images*/
+		DrawManager.initializeItemImages();
+
 
 		// Appears each 10-30 seconds.
 		this.enemyShipSpecialCooldown = Core.getVariableCooldown(
@@ -444,6 +464,15 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.barriers = new HashSet<>();
 		this.itemBoxes = new HashSet<>();
 		this.itemManager = new ItemManager(this.ship, this.enemyShipFormation, this.barriers, this.height, this.width, this.balance);
+		this.itemBoxes = new HashSet<>();
+		if (bonusBossLevels.contains(level)) { // 보너스 레벨을 2라 하자
+//			bonusLevelCountdown = Core.getCooldown(30000);
+//			bonusLevelCountdown.reset();
+			bonusBoss = new BonusBoss(50, 50, 100, 100);
+			barWidth = barInitialWidth;
+			barDisappear = Core.getCooldown(1000);
+			barDisappear.reset();
+		}
 
 		// Special input delay / countdown.
 		this.gameStartTime = System.currentTimeMillis();
@@ -491,21 +520,41 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 */
 	protected final void update() {
 		super.update();
+		//swap item N
+		if (inputManager.isKeyDown(KeyEvent.VK_N)) {
+			itemManager.swapItems();
+		}
+
+
+		// use item M
+		if (inputManager.isKeyDown(KeyEvent.VK_M)) {
+			ItemManager.ItemType usedItem = itemManager.useStoredItem();
+			if (usedItem != null) {
+				Entry<Integer, Integer> result = itemManager.useItem(usedItem);
+				if (result != null) {
+					this.score += result.getKey();
+					this.shipsDestroyed += result.getValue();
+				}
+			}
+		}
+
 		if (this.inputDelay.checkFinished() && !this.levelFinished) {
 			// check web collision and activate puzzle
 			if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
 				boolean webCollision = false;
-				for (int i = 0; i < web.size(); i++) {
-					// 거미줄 충돌 시 webCollision 값 true
-					if(checkCollision(ship,web.get(i))){
-						webCollision = true;
-						logger.info("Web collision detected at position" + ship.getPositionX());
-						break;
+				if (!bonusBossLevels.contains(level)) {
+					for (int i = 0; i < web.size(); i++) {
+						// 거미줄 충돌 시 webCollision 값 true
+						if(checkCollision(ship,web.get(i))){
+							webCollision = true;
+							logger.info("Web collision detected at position" + ship.getPositionX());
+							break;
+						}
 					}
-				}
-				if (webCollision && this.puzzleScreen == null) {
-					logger.info("Initializing puzzle...");
-					initializePuzzle();
+					if (webCollision && this.puzzleScreen == null) {
+						logger.info("Initializing puzzle...");
+						initializePuzzle();
+					}
 				}
 			}
 
@@ -518,8 +567,48 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				physicsEnemyShips.get(i).update();
 			}
 
-			this.enemyShipFormation.update();
-			this.enemyShipFormation.shoot(this.bullets, this.level, balance);
+			if (this.enemyShipSpecial != null) {
+				// special 함선돠 만나면 아래로 강제 이동
+				if( checkCollision(ship,enemyShipSpecial)) ship.moveDown(5);
+				if (!this.enemyShipSpecial.isDestroyed())
+					this.enemyShipSpecial.move(2, 0);
+				else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
+					this.enemyShipSpecial = null;
+
+			}
+			if (this.enemyShipSpecial == null
+					&& this.enemyShipSpecialCooldown.checkFinished()) {
+				this.enemyShipSpecial = new EnemyShip();
+				this.alertMessage = "";
+				this.enemyShipSpecialCooldown.reset();
+				soundManager.playSound(Sound.UFO_APPEAR, balance);
+				this.logger.info("A special ship appears");
+			}
+			if(this.enemyShipSpecial == null
+					&& this.enemyShipSpecialCooldown.checkAlert()) {
+				switch (this.enemyShipSpecialCooldown.checkAlertAnimation()){
+					case 1: this.alertMessage = "--! ALERT !--";
+						break;
+
+					case 2:
+						this.alertMessage = "-!! ALERT !!-";
+						break;
+
+					case 3:
+						this.alertMessage = "!!! ALERT !!!";
+						break;
+
+					default:
+						this.alertMessage = "";
+						break;
+				}
+
+			}
+			if (this.enemyShipSpecial != null
+					&& this.enemyShipSpecial.getPositionX() > this.width) {
+				this.enemyShipSpecial = null;
+				this.logger.info("The special ship has escaped");
+			}
 
 			if (!ship.isPuzzleActive()) {
 				boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
@@ -571,24 +660,81 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					if(Server.checkConnect()){
 						String button = serverManager.getClientButton();
 						switch (button){
-							case "L": this.p2pShip.moveLeft(); break;
-							case "R": this.p2pShip.moveRight(); break;
+							case "L":
+								if(this.p2pShip.getPositionX()
+										- this.p2pShip.getSpeed() >= 1)
+									this.p2pShip.moveLeft();
+								break;
+							case "R":
+								if(this.p2pShip.getPositionX()
+										+ this.p2pShip.getWidth() + this.p2pShip.getSpeed() <= this.width - 1)
+									this.p2pShip.moveRight();
+								break;
 							case "S": this.p2pShip.shoot(this.bullets, this.itemManager.getShotNum()); break;
+							case "U":
+								if(this.p2pShip.getPositionY()
+										- this.p2pShip.getSpeed() >= 1)
+									this.p2pShip.moveUp();
+								break;
+							case "D":
+								if(this.p2pShip.getPositionY()
+										+ this.p2pShip.getHeight() + this.p2pShip.getSpeed() <= this.height - 1)
+									this.p2pShip.moveDown();
+								break;
+							case "M":
+								ItemManager.ItemType usedItem = itemManager.useStoredItem();
+								if (usedItem != null) {
+									Entry<Integer, Integer> result = itemManager.useItem(usedItem);
+									if (result != null) {
+										this.score += result.getKey();
+										this.shipsDestroyed += result.getValue();
+									}
+								} break;
+							case "N": this.itemManager.swapItems(); break;
 							case null: break;
 							default: break;
 						}
 					}else{
 						String button = serverManager.getServerButton();
 						switch (button){
-							case "L": this.p2pShip.moveLeft(); break;
-							case "R": this.p2pShip.moveRight(); break;
+							case "L":
+								if(this.p2pShip.getPositionX()
+										- this.p2pShip.getSpeed() >= 1)
+									this.p2pShip.moveLeft();
+								break;
+							case "R":
+								if(this.p2pShip.getPositionX()
+										+ this.p2pShip.getWidth() + this.p2pShip.getSpeed() <= this.width - 1)
+									this.p2pShip.moveRight();
+								break;
 							case "S": this.p2pShip.shoot(this.bullets, this.itemManager.getShotNum()); break;
+							case "U":
+								if(this.p2pShip.getPositionY()
+										- this.p2pShip.getSpeed() >= 1)
+									this.p2pShip.moveUp();
+								break;
+							case "D":
+								if(this.p2pShip.getPositionY()
+										+ this.p2pShip.getHeight() + this.p2pShip.getSpeed() <= this.height - 1)
+									this.p2pShip.moveDown();
+								break;
+							case "M":
+								ItemManager.ItemType usedItem = itemManager.useStoredItem();
+								if (usedItem != null) {
+									Entry<Integer, Integer> result = itemManager.useItem(usedItem);
+									if (result != null) {
+										this.score += result.getKey();
+										this.shipsDestroyed += result.getValue();
+									}
+								} break;
+							case "N": this.itemManager.swapItems(); break;
 							case null: break;
 							default: break;
 						}
 					}
 				}
 			}
+
 			/*Elapsed Time Update*/
 			long currentTime = System.currentTimeMillis();
 
@@ -677,21 +823,23 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				}
 				if(checkCollision(this.ship,this.enemyShipFormation.getListEnemies(), "left")
 						|| checkCollision(this.ship,this.barriers, "left")) ship.moveRight(5);
-				for(int i = 0; i < web.size(); i++) {
-					//escape Spider Web
-					if (ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
-							|| web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6
-							|| ship.getPositionY() + 4 <= web.get(i).getPositionY() - 4
-							|| web.get(i).getPositionY() + 4 <= ship.getPositionY() - 4){
-						this.ship.setThreadWeb(false);
-					}
-					//get caught in a spider's web
-					else {
-						this.ship.setThreadWeb(true);
-						break;
-					}
-				}
-				// 플레이어 함선이 움직이던 중 배리어와 겹쳐졌을 버그 발생 시 플레이어 함선을 아래로 강제 이동시킴
+                if (!bonusBossLevels.contains(level)) {
+                    for(int i = 0; i < web.size(); i++) {
+                        //escape Spider Web
+                        if (ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
+                                || web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6
+                                || ship.getPositionY() + 4 <= web.get(i).getPositionY() - 4
+                                || web.get(i).getPositionY() + 4 <= ship.getPositionY() - 4){
+                            this.ship.setThreadWeb(false);
+                        }
+                        //get caught in a spider's web
+                        else {
+                            this.ship.setThreadWeb(true);
+                            break;
+                        }
+                    }
+                }
+                // 플레이어 함선이 움직이던 중 배리어와 겹쳐졌을 버그 발생 시 플레이어 함선을 아래로 강제 이동시킴
 				if(!barriers.isEmpty()){
 					for(Barrier check : barriers){
 						if(checkCollision(ship,check)){
@@ -702,49 +850,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 			}
 
-			if (this.enemyShipSpecial != null) {
-				// special 함선돠 만나면 아래로 강제 이동
-				if( checkCollision(ship,enemyShipSpecial)) ship.moveDown(5);
-				if (!this.enemyShipSpecial.isDestroyed())
-					this.enemyShipSpecial.move(2, 0);
-				else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
-					this.enemyShipSpecial = null;
-
-			}
-			if (this.enemyShipSpecial == null
-					&& this.enemyShipSpecialCooldown.checkFinished()) {
-				this.enemyShipSpecial = new EnemyShip();
-				this.alertMessage = "";
-				this.enemyShipSpecialCooldown.reset();
-				soundManager.playSound(Sound.UFO_APPEAR, balance);
-				this.logger.info("A special ship appears");
-			}
-			if(this.enemyShipSpecial == null
-					&& this.enemyShipSpecialCooldown.checkAlert()) {
-				switch (this.enemyShipSpecialCooldown.checkAlertAnimation()){
-					case 1: this.alertMessage = "--! ALERT !--";
-						break;
-
-						case 2:
-							this.alertMessage = "-!! ALERT !!-";
-							break;
-
-						case 3:
-							this.alertMessage = "!!! ALERT !!!";
-							break;
-
-						default:
-							this.alertMessage = "";
-							break;
-					}
-
-			}
-			if (this.enemyShipSpecial != null
-					&& this.enemyShipSpecial.getPositionX() > this.width) {
-				this.enemyShipSpecial = null;
-				this.logger.info("The special ship has escaped");
-			}
-
 			this.ship.update();
 			if(P2PCheck)
 				this.p2pShip.update();
@@ -752,12 +857,18 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
 			if (!itemManager.isTimeStopActive()) {
 				if(Server.checkConnect()) {
-					this.enemyShipFormation.update();
-					giveShooter = this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
-					String Cooldown = giveShooter.getLast();
-					giveShooter.removeLast();
-					serverManager.setGiveShooter(giveShooter);
-					serverManager.setCooldown(Cooldown);
+					try{
+						this.enemyShipFormation.update();
+						giveShooter = this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
+						String Cooldown = giveShooter.getLast();
+						giveShooter.removeLast();
+						serverManager.setGiveShooter(giveShooter);
+						serverManager.setCooldown(Cooldown);
+					}catch(Exception e){
+						logger.info("비정상적인 접근입니다 : " + e.getMessage());
+						this.returnCode = 1;
+						this.isRunning = false;
+					}
 				}else{
 					if(P2PCheck) {
 						this.enemyShipFormation.update();
@@ -772,18 +883,18 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
 					handleBlockerAppearance();
 				}
-			}
-
-			// when puzzle activated
-			if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
-				updatePuzzleState();
+				if (bonusBossLevels.contains(level) && bonusLevelCountdown == null) {
+					bonusLevelCountdown = Core.getCooldown(20000);
+					bonusLevelCountdown.reset();
+				}
+				if (bonusBossLevels.contains(level)) {
+					if (barDisappear.checkFinished()) {
+						barWidth-= barInitialWidth/20; // 20초 후에 사라짐
+						barDisappear.reset();
+					}
+				}
 			}
 		}
-
-			// when puzzle activated
-			if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
-				updatePuzzleState();
-			}
 
 		manageCollisions();
 		cleanBullets();
@@ -792,7 +903,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		else
 			draw();
 
-		if ((this.enemyShipFormation.isEmpty() || this.lives <= 0)
+		if ((this.enemyShipFormation.isEmpty() && !bonusBossLevels.contains(level) || this.lives <= 0)
 				&& !this.levelFinished) {
 			this.levelFinished = true;
 
@@ -802,6 +913,14 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			this.screenFinishedCooldown.reset();
 		}
 
+		if (bonusBossLevels.contains(level)) {
+			if ((bonusBoss != null && bonusBoss.isDestroyed() || bonusLevelCountdown != null && bonusLevelCountdown.checkFinished()) && !this.levelFinished) {
+				this.levelFinished = true;
+				soundManager.stopSound(soundManager.getCurrentBGM());
+				this.screenFinishedCooldown.reset();
+			}
+		}
+
 		if (this.levelFinished && this.screenFinishedCooldown.checkFinished()) {
 			//Reset alert message when level is finished
 			this.alertMessage = "";
@@ -809,30 +928,32 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 	}
 	private boolean checkCollision(final Ship ship, List< ? extends Entity> wanted ,final String direction) {
-		for (Entity entity : wanted) {
-			if (direction.equals("down")) {
-				if (checkCollision((int) ship.getPositionX(), (int) (ship.getPositionY() + ship.getSpeed()),
-						ship.getWidth(), ship.getHeight(), entity)) {
-					return true; // 아래쪽 충돌
-				}
-			} else if (direction.equals("up")) {
-				if (checkCollision((int) ship.getPositionX(), (int) (ship.getPositionY() - ship.getSpeed()),
-						ship.getWidth(), ship.getHeight(), entity)) {
-					return true; // 위쪽 충돌
-				}
-			} else if (direction.equals("right")) {
-				if (checkCollision((int) (ship.getPositionX() + ship.getSpeed()), (int) ship.getPositionY(),
-						ship.getWidth(), ship.getHeight(), entity)) {
-					return true; // 오른쪽 충돌
-				}
-			} else if (direction.equals("left")) {
-				if (checkCollision((int) (ship.getPositionX() - ship.getSpeed()), (int) ship.getPositionY(),
-						ship.getWidth(), ship.getHeight(), entity)) {
-					return true; // 왼쪽 충돌
-				}
-			}
-		}
-		return false; // 충돌 없음
+        if (!bonusBossLevels.contains(level)) {
+            for (Entity entity : wanted) {
+                if (direction.equals("down")) {
+                    if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() + ship.getSpeed(),
+                            ship.getWidth(), ship.getHeight(), entity)) {
+                        return true; // 아래쪽 충돌
+                    }
+                } else if (direction.equals("up")) {
+                    if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() - ship.getSpeed(),
+                            ship.getWidth(), ship.getHeight(), entity)) {
+                        return true; // 위쪽 충돌
+                    }
+                } else if (direction.equals("right")) {
+                    if (checkCollision((int) ship.getPositionX() + ship.getSpeed(), (int) ship.getPositionY(),
+                            ship.getWidth(), ship.getHeight(), entity)) {
+                        return true; // 오른쪽 충돌
+                    }
+                } else if (direction.equals("left")) {
+                    if (checkCollision((int) ship.getPositionX() - ship.getSpeed(), (int) ship.getPositionY(),
+                            ship.getWidth(), ship.getHeight(), entity)) {
+                        return true; // 왼쪽 충돌
+                    }
+                }
+            }
+        }
+        return false; // 충돌 없음
 	}
 	private boolean checkCollision(final Ship ship, Set< ? extends Entity> wanted ,final String direction) {
 		for (Entity entity : wanted) {
@@ -929,28 +1050,31 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawGameTitle(this);
 		// 1인 모드 총알 경로
 		drawManager.drawLaunchTrajectory( this, (int) this.ship.getPositionX(), (int) this.ship.getPositionY(), this.ship.getAngle());
-
-    drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
+		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
 		if(P2PCheck)
 			drawManager.drawEntity(this.p2pShip, (int) this.p2pShip.getPositionX(), (int) this.p2pShip.getPositionY());
+		drawManager.drawItemHud(this, this.height, itemManager.getStoredItems());
+
 
 		//draw Gravity Enemy
-		for(int i = 0; i < physicsEnemyShips.size(); i++){
-			drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
-					(int) this.physicsEnemyShips.get(i).getPositionY());
-		}
+        if (!bonusBossLevels.contains(level)) {
+            for(int i = 0; i < physicsEnemyShips.size(); i++){
+                drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
+                        (int) this.physicsEnemyShips.get(i).getPositionY());
+		    }
+        }
 		//draw Spider Web
-		for (int i = 0; i < web.size(); i++) {
-			drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
-                    (int) this.web.get(i).getPositionY());
-		}
-		//draw Blocks
-		for (Block block : block)
-			drawManager.drawEntity(block, (int) block.getPositionX(),
-                    (int) block.getPositionY());
+        if (!bonusBossLevels.contains(level)) {
+            for (int i = 0; i < web.size(); i++) {
+                drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(), (int) this.web.get(i).getPositionY());
+            }
+            //draw Blocks
+            for (Block block : block)
+                drawManager.drawEntity(block, (int) block.getPositionX(), (int) block.getPositionY());
+        }
 
 
-		if (this.enemyShipSpecial != null)
+        if (this.enemyShipSpecial != null)
 			drawManager.drawEntity(this.enemyShipSpecial,
                     (int) this.enemyShipSpecial.getPositionX(),
                     (int) this.enemyShipSpecial.getPositionY());
@@ -978,6 +1102,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawReloadTimer(this,this.ship,ship.getRemainingReloadTime());
 		drawManager.drawCombo(this,this.combo);
 
+		if(bonusBossLevels.contains(level)) drawManager.drawBonusBoss(this, level, bonusBoss, 50, 50);
+		if (bonusBossLevels.contains(level)) {
+			drawManager.drawTimerBar(this, barX, barY, barWidth, barHeight);
+		}
 
 		// Countdown to game start.
 		if (!this.inputDelay.checkFinished()) {
@@ -1118,15 +1246,17 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		enemyShipFormation.draw(playerNumber);
 
-		for (ItemBox itemBox : this.itemBoxes)
-			drawManager.drawEntity(itemBox, (int) itemBox.getPositionX(), (int) itemBox.getPositionY(), playerNumber);
+		if (!bonusBossLevels.contains(level)) {
+			for (ItemBox itemBox : this.itemBoxes)
+				drawManager.drawEntity(itemBox, (int) itemBox.getPositionX(), (int) itemBox.getPositionY(), playerNumber);
 
-		for (Barrier barrier : this.barriers)
-			drawManager.drawEntity(barrier, (int) barrier.getPositionX(), (int) barrier.getPositionY(), playerNumber);
+			for (Barrier barrier : this.barriers)
+				drawManager.drawEntity(barrier, (int) barrier.getPositionX(), (int) barrier.getPositionY(), playerNumber);
 
-		for (Bullet bullet : this.bullets)
-			drawManager.drawEntity(bullet, (int) bullet.getPositionX(),
-                    (int) bullet.getPositionY(), playerNumber);
+			for (Bullet bullet : this.bullets)
+				drawManager.drawEntity(bullet, (int) bullet.getPositionX(),
+                        (int) bullet.getPositionY(), playerNumber);
+		}
 
 		// Interface.
 		drawManager.drawScore(this, this.score, playerNumber);
@@ -1246,7 +1376,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						this.logger.info("Hit on player ship, " + this.lives + " lives remaining.");
 					}
 				}
-				if (checkCollision(bullet, this.p2pShip) && !this.levelFinished && !itemManager.isGhostActive()) {
+				if (P2PCheck && checkCollision(bullet, this.p2pShip) && !this.levelFinished && !itemManager.isGhostActive()) {
 					recyclable.add(bullet);
 					if (!this.p2pShip.isDestroyed()) {
 						this.p2pShip.destroy(balance);
@@ -1337,29 +1467,59 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					isExecuted = true;
 				}
 
+				// edit itembox collpase bullet
 				Iterator<ItemBox> itemBoxIterator = this.itemBoxes.iterator();
 				while (itemBoxIterator.hasNext()) {
 					ItemBox itemBox = itemBoxIterator.next();
-					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow()) {
+					if (checkCollision(bullet, itemBox) && !itemBox.isDroppedRightNow() && Server.checkConnect()) {
 						this.hitBullets++;
 						itemBoxIterator.remove();
 						recyclable.add(bullet);
-						Entry<Integer, Integer> itemResult = this.itemManager.useItem();
-
-						if (itemResult != null) {
-							this.score += itemResult.getKey();
-							this.shipsDestroyed += itemResult.getValue();
+						ItemManager.ItemType itemType = itemManager.selectItemType();
+						if(Server.checkConnect()) {
+							serverManager.setItemType(itemType);
+							serverManager.itemCheck(true);
+						}
+						boolean added = itemManager.addItem(itemType);
+						if (added) {
+							logger.info("shooting item to client");
+							logger.info(itemType + " added to storage.");
+						} else {
+							logger.info("Storage is full. Item not added.");
 						}
 					}
 				}
 
-				//check the collision between the obstacle and the bullet
-				for (Block block : this.block) {
-					if (checkCollision(bullet, block)) {
-						recyclable.add(bullet);
-						soundManager.playSound(Sound.BULLET_BLOCKING, balance);
-						break;
+				if(!Server.checkConnect() && P2PCheck) {
+					ItemManager.ItemType itemType = serverManager.getItemType();
+					if(itemType != null) {
+						boolean addClient = itemManager.addItem(itemType);
+						System.out.println(itemType);
+						serverManager.itemCheck(false);
+						if (addClient) {
+							logger.info(itemType + " added to storage.");
+						} else
+							logger.info("Storage is full. Item not added.");
 					}
+				}
+
+				//check the collision between the obstacle and the bullet
+				if (!bonusBossLevels.contains(level)) {
+					for (Block block : this.block) {
+						if (checkCollision(bullet, block)) {
+							recyclable.add(bullet);
+							soundManager.playSound(Sound.BULLET_BLOCKING, balance);
+							break;
+						}
+					}
+				}
+
+				if (bonusBoss != null && !bonusBoss.isDestroyed() && checkBonusBossCollusion(bonusBoss, bullet)) {
+					bonusBoss.HealthManageDestroy();
+					timer.cancel();
+					isExecuted = false;
+					recyclable.add(bullet);
+					this.score++;
 				}
 			}
 		}
@@ -1377,7 +1537,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 
 		// remove crashed obstacle
-		block.removeAll(removableBlocks);
+		if (!bonusBossLevels.contains(level)) block.removeAll(removableBlocks);
 		this.bullets.removeAll(recyclable);
 		BulletPool.recycle(recyclable);
 	}
@@ -1409,6 +1569,23 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		int distanceY = Math.abs(centerAY - centerBY);
 
 		return distanceX <= maxDistanceX && distanceY <= maxDistanceY;
+	}
+
+	private boolean checkBonusBossCollusion(final BonusBoss entity, final Entity bullet) {
+		int centerX = this.getWidth() / 2;
+		int centerY = this.getHeight() / 2 - 46;
+
+		int radius = entity.getRadius();
+
+		int bulletCenterX = (int) (bullet.getPositionX() + bullet.getWidth() / 2);
+		int bulletCenterY = (int) (bullet.getPositionY() + bullet.getHeight() / 2);
+
+		int deltaX = bulletCenterX - centerX;
+		int deltaY = bulletCenterY - centerY;
+
+		int distanceSquared = deltaX * deltaX + deltaY * deltaY;
+
+		return distanceSquared <= radius * radius;
 	}
 
 	/**
