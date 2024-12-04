@@ -16,8 +16,15 @@ import entity.Wallet;
  */
 public class ScoreScreen extends Screen {
 
+	/** Milliseconds between changes in user selection. */
+	private static final int SELECTION_TIME = 200;
 	/** Maximum number of high scores. */
 	private static final int MAX_HIGH_SCORE_NUM = 3;
+	/** Code of first mayus character. */
+	private static final int FIRST_CHAR = 65;
+	/** Code of last mayus character. */
+	private static final int LAST_CHAR = 90;
+
 	/** Singleton instance of SoundManager */
 	private final SoundManager soundManager = SoundManager.getInstance();
 
@@ -34,7 +41,14 @@ public class ScoreScreen extends Screen {
 	private List<Score> highScores;
 	/** Checks if current score is a new high score. */
 	private double accuracy;
+	/** Checks if current score is a new high score. */
 	private boolean isNewRecord;
+	/** Player name for record input. */
+	private char[] name;
+	/** Character of players name selected for change. */
+	private int nameCharSelected;
+	/** Time between changes in user selection. */
+	private Cooldown selectionCooldown;
 	/** Number of coins earned in the game */
 	private int coinsEarned;
 	/** Player's name */
@@ -48,7 +62,7 @@ public class ScoreScreen extends Screen {
 
 	/**
 	 * Constructor, establishes the properties of the screen.
-	 * 
+	 *
 	 * @param width
 	 *            Screen width.
 	 * @param height
@@ -65,6 +79,13 @@ public class ScoreScreen extends Screen {
 
 		this.name1 = name1;
 		this.name2 = name2;
+
+		//record
+		this.isNewRecord = false;
+		this.name = "AAA".toCharArray();
+		this.nameCharSelected = 0;
+		this.selectionCooldown = Core.getCooldown(SELECTION_TIME);
+		this.selectionCooldown.reset();
 
 		this.score = gameState.getScore();
 		this.livesRemaining = gameState.getLivesRemaining();
@@ -91,6 +112,10 @@ public class ScoreScreen extends Screen {
 
 		try {
 			this.highScores = Core.getFileManager().loadHighScores();
+			if (highScores.size() < MAX_HIGH_SCORE_NUM
+					|| highScores.get(highScores.size() - 1).getScore()
+					< this.score)
+				this.isNewRecord = true;
 		} catch (IOException e) {
 			logger.warning("Couldn't load high scores!");
 		}
@@ -98,7 +123,7 @@ public class ScoreScreen extends Screen {
 
 	/**
 	 * Starts the action.
-	 * 
+	 *
 	 * @return Next screen code.
 	 */
 	public final int run() {
@@ -129,6 +154,33 @@ public class ScoreScreen extends Screen {
 				soundManager.stopSound(Sound.BGM_GAMEOVER);
 				soundManager.playSound(Sound.MENU_CLICK);
 				saveScore();
+			}
+
+			if (this.isNewRecord && this.selectionCooldown.checkFinished()) {
+				if (inputManager.isKeyDown(KeyEvent.VK_RIGHT)) {
+					this.nameCharSelected = this.nameCharSelected == 2 ? 0
+							: this.nameCharSelected + 1;
+					this.selectionCooldown.reset();
+				}
+				if (inputManager.isKeyDown(KeyEvent.VK_LEFT)) {
+					this.nameCharSelected = this.nameCharSelected == 0 ? 2
+							: this.nameCharSelected - 1;
+					this.selectionCooldown.reset();
+				}
+				if (inputManager.isKeyDown(KeyEvent.VK_UP)) {
+					this.name[this.nameCharSelected] =
+							(char) (this.name[this.nameCharSelected]
+									== LAST_CHAR ? FIRST_CHAR
+									: this.name[this.nameCharSelected] + 1);
+					this.selectionCooldown.reset();
+				}
+				if (inputManager.isKeyDown(KeyEvent.VK_DOWN)) {
+					this.name[this.nameCharSelected] =
+							(char) (this.name[this.nameCharSelected]
+									== FIRST_CHAR ? LAST_CHAR
+									: this.name[this.nameCharSelected] - 1);
+					this.selectionCooldown.reset();
+				}
 			}
 
 		}
@@ -189,6 +241,10 @@ public class ScoreScreen extends Screen {
 		drawManager.drawResults(this, this.score, this.livesRemaining,
 				this.shipsDestroyed, this.accuracy, this.isNewRecord, this.coinsEarned);
 
+		if (this.isNewRecord)
+			drawManager.drawNameInput(this, this.name, this.nameCharSelected);
+
 		drawManager.completeDrawing(this);
 	}
 }
+
