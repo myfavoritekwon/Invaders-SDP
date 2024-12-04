@@ -2226,7 +2226,7 @@ public final class DrawManager {
 	}
 
 	public void drawPause(Screen screen, int set){
-		backBufferGraphics.setColor(new Color(0, 0,0, 0x55));
+		backBufferGraphics.setColor(new Color(0, 0,0, 70));
 		backBufferGraphics.fillRect(0, 0, 650, 600);
 
 		backBufferGraphics.setColor(Color.GREEN);

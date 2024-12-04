@@ -145,7 +145,7 @@ public final class Core {
 						LOGGER.info("Starting " + WIDTH + "x" + HEIGHT
 
 								+ " game screen at " + FPS + " fps.");
-						frame.setScreen(currentScreen);
+						returnCode = frame.setScreen(currentScreen);
 						LOGGER.info("Closing game screen.");
 						gameState = ((GameScreen) currentScreen).getGameState();
 
@@ -159,7 +159,7 @@ public final class Core {
 					gameState = new GameState(gameState, gameState.getLevel() + 1);
 					endTime = System.currentTimeMillis();
 					achievementManager.updatePlaying(gameState.getMaxCombo(),(int) (endTime - startTime) / 1000, MAX_LIVES, gameState.getLivesRemaining(), gameState.getLevel()-1);
-				} while (gameState.getLivesRemaining() > 0);
+				} while (gameState.getLivesRemaining() > 0 &&  returnCode != 1);
 				achievementManager.updatePlayed(gameState.getAccuracy(), gameState.getScore());
                 achievementManager.updateAllAchievements();
 				LOGGER.info("Starting " + WIDTH + "x" + HEIGHT

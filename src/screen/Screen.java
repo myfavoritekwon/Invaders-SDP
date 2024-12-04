@@ -96,7 +96,7 @@ public class Screen {
 			}
 		}
 
-		return 0;
+		return returnCode;
 	}
 
 	/**
