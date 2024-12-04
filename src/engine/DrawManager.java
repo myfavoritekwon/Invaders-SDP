@@ -2225,9 +2225,28 @@ public final class DrawManager {
 		}
 	}
 
-	public void drawPause(){
+	public void drawPause(Screen screen, int set){
+		backBufferGraphics.setColor(new Color(0, 0,0, 0x55));
+		backBufferGraphics.fillRect(0, 0, 650, 600);
 
-		String shopString = "PAUSE";
+		backBufferGraphics.setColor(Color.GREEN);
+		drawCenteredBigString(screen, "PAUSE", screen.getHeight()/3);
 
+		switch(set){
+			case 0:
+				backBufferGraphics.setColor(Color.GREEN);
+				drawCenteredBigString(screen, "CONTINUE", screen.getHeight()/2);
+				backBufferGraphics.setColor(Color.WHITE);
+				drawCenteredBigString(screen, "STOP", screen.getHeight()/2+100);
+				break;
+			case 1:
+				backBufferGraphics.setColor(Color.WHITE);
+				drawCenteredBigString(screen, "CONTINUE", screen.getHeight()/2);
+				backBufferGraphics.setColor(Color.GREEN);
+				drawCenteredBigString(screen, "STOP", screen.getHeight()/2+100);
+				break;
+			default:
+				break;
+		}
 	}
 }
