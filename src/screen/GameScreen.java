@@ -267,11 +267,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		//Create Gravity Enemy
 		if (!bonusBossLevels.contains(level)) {
-			int bonus = gameState.getLevel() % 1;
+			int bonus = random.nextBoolean()? 0 : 1;
 
 			if (bonus == 0) {
 				physicsEnemyShips = new ArrayList<>();
-				int mob_num = level * 4;
+				int mob_num = level + 2;
+				logger.info("Create bonus gravity! num : " + mob_num);
 				Random random = new Random();
 				for (int i = 0; i < mob_num; i++) {
 
@@ -886,9 +887,9 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 
 		//draw Gravity Enemy
-        if (!bonusBossLevels.contains(level)) {
-            for(int i = 0; i < physicsEnemyShips.size(); i++){
-                drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
+        if (physicsEnemyShips != null) {
+            for (int i = 0; i < physicsEnemyShips.size(); i++) {
+                drawManager.drawEntity(this.physicsEnemyShips.get(i), (int) this.physicsEnemyShips.get(i).getPositionX(),
                         (int) this.physicsEnemyShips.get(i).getPositionY());
 		    }
         }
@@ -1051,20 +1052,26 @@ public class GameScreen extends Screen implements Callable<GameState> {
                 (int) this.ship.getPositionY(), playerNumber);
 
 		//draw Gravity Enemy
-		for(int i = 0; i < physicsEnemyShips.size(); i++){
-			drawManager.drawEntity(this.physicsEnemyShips.get(i), (int)this.physicsEnemyShips.get(i).getPositionX(),
-					(int) this.physicsEnemyShips.get(i).getPositionY(), playerNumber);
+		if (physicsEnemyShips != null) {
+			for (int i = 0; i < physicsEnemyShips.size(); i++) {
+				drawManager.drawEntity(this.physicsEnemyShips.get(i), (int) this.physicsEnemyShips.get(i).getPositionX(),
+						(int) this.physicsEnemyShips.get(i).getPositionY(), playerNumber);
+			}
 		}
 
 		//draw Spider Web
-		for (int i = 0; i < web.size(); i++) {
-			drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
-                    (int) this.web.get(i).getPositionY(), playerNumber);
+		if (!bonusBossLevels.contains(level)) {
+			for (int i = 0; i < web.size(); i++) {
+				drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
+						(int) this.web.get(i).getPositionY(), playerNumber);
+			}
 		}
 		//draw Blocks
-		for (Block block : block)
-			drawManager.drawEntity(block, (int) block.getPositionX(),
-                    (int) block.getPositionY(), playerNumber);
+		if (!bonusBossLevels.contains(level)) {
+			for (Block block : block)
+				drawManager.drawEntity(block, (int) block.getPositionX(),
+						(int) block.getPositionY(), playerNumber);
+		}
 
 		if (this.enemyShipSpecial != null)
 			drawManager.drawEntity(this.enemyShipSpecial,
@@ -1332,6 +1339,19 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				for (Block block : block) {
 					if (checkCollision(enemyShip, block)) {
 						removableBlocks.add(block);
+					}
+				}
+			}
+		}
+
+		//check the collision between the obstacle and the physics enemy
+		if (physicsEnemyShips != null) {
+			for (PhysicsEnemyShip physicsEnemyShip : this.physicsEnemyShips) {
+				if (physicsEnemyShip != null && !physicsEnemyShip.isDestroyed()) {
+					for (Block block : block) {
+						if (checkCollision(physicsEnemyShip, block)) {
+							removableBlocks.add(block);
+						}
 					}
 				}
 			}
