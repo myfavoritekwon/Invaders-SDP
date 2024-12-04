@@ -109,12 +109,11 @@ public class TwoPlayerScreen extends Screen {
                         puzzleScreens[i].getDirectionSequence(),
                         puzzleScreens[i].getPlayerInput(),
                         i, i,
-                        this.ship.getCollisionX());
+                        this.ship != null ? this.ship.getCollisionX() : this.width / 4,
+                        this.ship != null ? this.ship.getCollisionY() : this.height / 2);
             }
         }
 
-        drawManager.flushBuffer(this, 0);
-        drawManager.flushBuffer(this, 1);
         drawManager.mergeDrawing(this);
         drawManager.drawVerticalLine(this);
         drawManager.completeDrawing(this);
@@ -208,7 +207,7 @@ public class TwoPlayerScreen extends Screen {
      * Progression logic each games.
      */
     private void runGameScreen(int playerNumber){
-        GameState gameState = gameStates[playerNumber];
+        GameState gameState = playerNumber == 0 ? gameStates[PLAYER1_NUMBER] : gameStates[PLAYER2_NUMBER];
 
         if (gameState.getLivesRemaining() > 0) {
             boolean bonusLife = gameState.getLevel()
