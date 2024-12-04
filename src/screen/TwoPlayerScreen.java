@@ -207,7 +207,7 @@ public class TwoPlayerScreen extends Screen {
      * Progression logic each games.
      */
     private void runGameScreen(int playerNumber){
-        GameState gameState = gameStates[playerNumber];
+        GameState gameState = playerNumber == 0 ? gameStates[PLAYER1_NUMBER] : gameStates[PLAYER2_NUMBER];
 
         if (gameState.getLivesRemaining() > 0) {
             boolean bonusLife = gameState.getLevel()
