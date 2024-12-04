@@ -974,7 +974,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					puzzleScreen.getPlayerInput(),
 					playerNumber);
 		}
-
 		drawManager.completeDrawing(this);
 	}
 
@@ -1146,7 +1145,8 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					this.puzzleScreen.getPlayerInput(),
 					playerNumber,
 					playerNumber,
-					this.ship.getCollisionX());
+					this.ship.getCollisionX(),
+					this.ship.getCollisionY());
 		}
 	}
 
