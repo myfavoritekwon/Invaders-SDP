@@ -605,10 +605,16 @@ public class GameScreen extends Screen implements Callable<GameState> {
 								+ this.ship.getWidth() + this.ship.getSpeed() > this.width - 1;
 						boolean isLeftBorder = this.ship.getPositionX()
 								- this.ship.getSpeed() < 1;
+						// 적군 아래에서만 이동 가능하도록 변경
 						boolean isUpBorder = this.ship.getPositionY()
-								- this.ship.getSpeed() < 1;
+								- this.ship.getSpeed() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight() + 2;
 						boolean isDownBorder = this.ship.getPositionY()
 								+ this.ship.getHeight() + this.ship.getSpeed() > this.height - 1;
+
+						// 가장 아래 적군보다 위로 올라갈 경우 강제로 아래로 이동
+						if(this.ship.getPositionY() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight()){
+							this.ship.moveDown(this.enemyShipFormation.getHeight());
+						}
 
 						if (moveDown && !isDownBorder
 								&& !checkCollision(this.ship, this.block, "down")) {
