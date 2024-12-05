@@ -1012,7 +1012,7 @@ public final class DrawManager {
 	public void drawGameOver(final Screen screen, final boolean acceptsInput,
 							 final boolean isNewRecord, final int menuOptionSelected) {
 		String gameOverString = "Game Over";
-		String continueString = "Continue";
+		String continueString = "RETRY";
 		String exitString = "Exit";
 
 		int height = isNewRecord ? 4 : 2;
