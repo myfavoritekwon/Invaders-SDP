@@ -9,8 +9,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import entity.EnemyShip;
-import entity.PhysicsEnemyShip;
 import entity.Room;
 import entity.Ship;
 import entity.Wallet;
