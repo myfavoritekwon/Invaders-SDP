@@ -13,15 +13,13 @@ public class BonusBoss extends Entity {
     public BonusBoss(int positionX, int positionY, int width, int height) {
         super(positionX, positionY, width, height, Color.WHITE);
         isDestroyed = false;
-        health = 2;
+        health = 20;
         radius = 127;
     }
 
     public void HealthManageDestroy() {
-        System.out.println(health);
         if(this.health <= 0) {
             this.isDestroyed = true;
-            System.out.println("destroyed");
         } else {
             health--;
         }

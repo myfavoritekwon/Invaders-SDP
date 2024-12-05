@@ -155,7 +155,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 
 	private BonusBoss bonusBoss;
-	private Set<Integer> bonusBossLevels = Set.of(2,4);
+	private Set<Integer> bonusBossLevels = Set.of(7,4);
 	private Cooldown bonusLevelCountdown;
 	private int barWidth;
 	private int barInitialWidth = 330;
@@ -166,7 +166,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 
 	private Boss boss;
-	private Set<Integer> bossLevels = Set.of(3,5);
+	private Set<Integer> bossLevels = Set.of(3,6);
 	private boolean firstBossAppeared = false;
 	private Cooldown bossPattern;
 	private boolean enemyByPattern = false;
@@ -484,7 +484,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					hpBarWidth = hpBarInitialWidth;
 					widthMinus = 523 / (boss.getHealth());
 					break;
-				case 5:
+				case 6:
 					bossShotCool = Core.getCooldown(2000);
 					boss = new Boss((this.getWidth()-228)/2, -200, 228, 297, 2);
 					hpBarInitialWidth = 523;
@@ -1027,7 +1027,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					bossBullets.add(new BossBullet(centerX + 138, centerY + 155, 34, 34, 0));
 					bossShotCool.reset();
 				}
-			} else if (level == 5) { // 두 번째 보스
+			} else if (level == 6) { // 두 번째 보스
 				if (!firstBossAppeared) {
 					boss.move(0,0.9);
 					if (boss.getPositionY() >= 30) firstBossAppeared = true;
@@ -1729,6 +1729,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				if (boss != null && !boss.isDestroyed() && checkFirstBossCollusion(boss,bullet)) {
 					boss.HealthManageDestroy();
 					hpBarWidth -= widthMinus;
+					if (boss.getHealth() <= 0) hpBarWidth = 0;
 					timer.cancel();
 					isExecuted = false;
 					recyclable.add(bullet);

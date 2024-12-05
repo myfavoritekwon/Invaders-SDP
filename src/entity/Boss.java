@@ -54,10 +54,8 @@ public class Boss extends Entity {
     }
 
     public void HealthManageDestroy() {
-        System.out.println(health);
         if(this.health <= 0) {
             this.isDestroyed = true;
-            System.out.println("destroyed");
         } else {
             health--;
         }

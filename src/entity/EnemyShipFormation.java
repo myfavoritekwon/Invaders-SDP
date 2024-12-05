@@ -145,7 +145,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		for (int i = 0; i < this.nShipsWide; i++)
 			this.enemyShips.add(new ArrayList<EnemyShip>());
 
-		if (gameState.getLevel() != 2 && gameState.getLevel() != 4 ) { // 2,4는 보너스 임시, 3은 보스 임시
+		if (gameState.getLevel() != 7 && gameState.getLevel() != 4 ) { // 2,4는 보너스 임시, 3은 보스 임시
 			for (List<EnemyShip> column : this.enemyShips) {
 				for (int i = 0; i < this.nShipsHigh; i++) {
 					if (i / (float) this.nShipsHigh < PROPORTION_E)

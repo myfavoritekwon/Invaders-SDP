@@ -1520,14 +1520,36 @@ public final class DrawManager {
 		backBufferGraphics.setColor(Color.GREEN);
 		if (number >= 4)
 			if (!bonusLife) {
-				drawCenteredBigString(screen, "Level " + level,
-						screen.getHeight() / 2
-								+ fontBigMetrics.getHeight() / 3);
+				if (level == 3 || level == 6) {
+					drawCenteredBigString(screen, "Level " + level + " - Boss Round",
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3);
+				} else if (level == 4 || level == 7){
+					drawCenteredBigString(screen, "Level " + level + " - Bonus Round",
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3);
+				} else {
+					drawCenteredBigString(screen, "Level " + level,
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3);
+				}
 			} else {
-				drawCenteredBigString(screen, "Level " + level
-								+ " - Bonus life!",
-						screen.getHeight() / 2
-								+ fontBigMetrics.getHeight() / 3);
+				if (level == 3 || level == 6) {
+					drawCenteredBigString(screen, "Level " + level + " - Boss Round"
+									+ " (Bonus life!)",
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3);
+				} else if (level == 4 || level == 7) {
+					drawCenteredBigString(screen, "Level " + level + " - Bonus Round"
+									+ " (Bonus life!)",
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3);
+				} else {
+					drawCenteredBigString(screen, "Level " + level
+									+ " (Bonus life!)",
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3);
+				}
 			}
 		else if (number != 0)
 			drawCenteredBigString(screen, Integer.toString(number),
@@ -1739,16 +1761,40 @@ public final class DrawManager {
 		threadBufferGraphics[threadNumber].fillRect(0, screen.getHeight() / 2 - rectHeight / 2,
 				rectWidth, rectHeight);
 		threadBufferGraphics[threadNumber].setColor(Color.GREEN);
+		System.out.println(number);
+		System.out.println(level);
 		if (number >= 4)
 			if (!bonusLife) {
-				drawCenteredBigString(screen, "Level " + level,
-						screen.getHeight() / 2
-								+ fontBigMetrics.getHeight() / 3, threadNumber);
+				if (level == 3 || level == 6) {
+					drawCenteredBigString(screen, "Boss Level " + level,
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3, threadNumber);
+				} else if (level == 4 || level == 7){
+					drawCenteredBigString(screen, "Bonuss Level " + level,
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3, threadNumber);
+				} else {
+					drawCenteredBigString(screen, "Level " + level,
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3, threadNumber);
+				}
 			} else {
-				drawCenteredBigString(screen, "Level " + level
-								+ " - Bonus life!",
-						screen.getHeight() / 2
-								+ fontBigMetrics.getHeight() / 3, threadNumber);
+				if (level == 3 || level == 6) {
+					drawCenteredBigString(screen, "Boss Level " + level
+									+ " - Bonus life!",
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3, threadNumber);
+				} else if (level == 4 || level == 7) {
+					drawCenteredBigString(screen, "Bonus Level " + level
+									+ " - Bonus life!",
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3, threadNumber);
+				} else {
+					drawCenteredBigString(screen, "Level " + level
+									+ " - Bonus life!",
+							screen.getHeight() / 2
+									+ fontBigMetrics.getHeight() / 3, threadNumber);
+				}
 			}
 		else if (number != 0)
 			drawCenteredBigString(screen, Integer.toString(number),
@@ -2125,7 +2171,7 @@ public final class DrawManager {
 
 	public void drawBonusBoss(final Screen screen, int level, BonusBoss bonusBoss, final int positionX, final int positionY) {
 		switch (level) {
-			case 2:
+			case 4:
 				if (!bonusBoss.isDestroyed()) {
 					backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
 					;
@@ -2133,7 +2179,7 @@ public final class DrawManager {
 					backBufferGraphics.drawImage(img_saturn_destroyed, (screen.getWidth() - img_saturn_destroyed.getWidth()) / 2, 50, img_saturn_destroyed.getWidth(), img_saturn_destroyed.getHeight(), null);
 				}
 				break;
-			case 4:
+			case 7:
 				if (!bonusBoss.isDestroyed()) {
 					backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
 				} else {
