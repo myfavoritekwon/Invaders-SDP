@@ -64,6 +64,7 @@ class ItemManagerTest{
 
         assertEquals(item1[0], itemManager.useStoredItem());
     }
+
     //스왑하고 사용하기
     @org.junit.jupiter.api.Test
     void swapAndUseItem(){

@@ -232,7 +232,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.blockerCooldown = Core.getVariableCooldown(10000, 14000);
 		this.blockerCooldown.reset();
 		this.blockerVisibleCooldown = Core.getCooldown(20000);
-		this.pauseESCCooldown = Core.getCooldown(10000);
+		this.pauseESCCooldown = Core.getCooldown(500);
 
 		try {
 			this.highScores = Core.getFileManager().loadHighScores();
@@ -603,11 +603,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		}
 		if(!checkPause && this.inputDelay.checkFinished()) {
-			pauseESCCooldown.reset();
-            //swap item N
-            if (inputManager.isKeyDown(KeyEvent.VK_N)) {
-                itemManager.swapItems();
-            }
+			//swap item N
+			if (inputManager.isKeyDown(KeyEvent.VK_N)) {
+				itemManager.swapItems();
+			}
 
             // use item M
             if (inputManager.isKeyDown(KeyEvent.VK_M)) {
@@ -651,10 +650,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
                         physicsEnemyShips.get(i).update();
                     }
                 }
-//			//update physicsEnemy
-//			for(int i = 0; i < physicsEnemyShips.size(); i++) {
-//				physicsEnemyShips.get(i).update();
-//			}
 
                 if (bossLevels.contains(level) && bossBullets != null) {
                     for (int i = 0; i < bossBullets.size(); i++) {
@@ -1003,44 +998,46 @@ public class GameScreen extends Screen implements Callable<GameState> {
                 }
             }
 
-
-
-
             if (this.levelFinished && this.screenFinishedCooldown.checkFinished()) {
                 //Reset alert message when level is finished
                 this.alertMessage = "";
                 this.isRunning = false;
             }
 
-            if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
-                checkPause = !checkPause;
-                this.pauseESCCooldown.reset();
-            }
-        } else {
-            if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
-                checkPause = !checkPause;
-                this.pauseESCCooldown.reset();
-            }
-            if (inputManager.isKeyDown(KeyEvent.VK_DOWN)) {
-                if (checkPauseClick == 1) checkPauseClick = 0;
-                else checkPauseClick++;
-                this.pauseESCCooldown.reset();
-            }
-            if (inputManager.isKeyDown(KeyEvent.VK_UP)) {
-                if (checkPauseClick == 0) checkPauseClick = 1;
-                else checkPauseClick--;
-                this.pauseESCCooldown.reset();
+			if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE) && pauseESCCooldown.checkFinished()) {
+				checkPause = !checkPause;
+				this.pauseESCCooldown.reset();
 			}
-			if (playerNumber >= 0)
-				drawThread();
-			else
-				draw();
-			if(inputManager.isKeyDown((KeyEvent.VK_ENTER))){
-				if(checkPauseClick == 1){
-					returnCode = 1;
-					this.isRunning = false;
-				}else{
+		}else{
+			if(pauseESCCooldown.checkFinished()){
+				if(inputManager.isKeyDown(KeyEvent.VK_ESCAPE) && inputDelay.checkFinished()){
 					checkPause = !checkPause;
+					this.pauseESCCooldown.reset();
+				}
+				if(inputManager.isKeyDown(KeyEvent.VK_DOWN)){
+					if(checkPauseClick == 1) checkPauseClick = 0;
+					else checkPauseClick++;
+					soundManager.playSound(Sound.MENU_MOVE);
+					this.pauseESCCooldown.reset();
+				}
+				if(inputManager.isKeyDown(KeyEvent.VK_UP)){
+					if(checkPauseClick == 0) checkPauseClick = 1;
+					else checkPauseClick--;
+					soundManager.playSound(Sound.MENU_MOVE);
+					this.pauseESCCooldown.reset();
+				}
+				if (playerNumber >= 0)
+					drawThread();
+				else
+					draw();
+				if(inputManager.isKeyDown((KeyEvent.VK_SPACE))){
+					if(checkPauseClick == 1){
+						returnCode = 1;
+						soundManager.playSound(Sound.MENU_MOVE);
+						this.isRunning = false;
+					}else{
+						checkPause = !checkPause;
+					}
 				}
 			}
 		}
