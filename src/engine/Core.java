@@ -147,6 +147,11 @@ public final class Core {
 						LOGGER.info("Closing game screen.");
 						gameState = ((GameScreen) currentScreen).getGameState();
 
+						if(gameState.getLevel() == 3){
+							soundManager.stopSound(Sound.BGM_STORY);
+						}else if(gameState.getLevel() == 6){
+							soundManager.stopSound(Sound.BGM_STORY2);
+						}
 					if ((gameState.getLevel() == 3 || gameState.getLevel() == 6) && gameState.getLivesRemaining() > 0 ) {
 						LOGGER.info("Starting ending story screen for level " + gameState.getLevel());
 						currentScreen = new EndingStoryScreen(gameState, width, height, FPS);
