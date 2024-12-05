@@ -71,6 +71,8 @@ public final class DrawManager {
 	private static BufferedImage img_shotinterval;
 	private static BufferedImage img_saturn;
 	private static BufferedImage img_saturn_destroyed;
+	private static BufferedImage img_saturn2;
+	private static BufferedImage img_saturn3;
 	private static BufferedImage img_timelimit;
 
 	private final Object bufferLock = new Object();
@@ -277,6 +279,8 @@ public final class DrawManager {
 		/* Bonus Stage image load*/
 		try {
 			img_saturn = ImageIO.read(new File("res/image/saturn.png"));
+			img_saturn2 = ImageIO.read(new File("res/image/saturn2.png"));
+			img_saturn3= ImageIO.read(new File("res/image/saturn3.png"));
 			img_saturn_destroyed = ImageIO.read(new File("res/image/saturn_destroyed.png"));
 			img_timelimit = ImageIO.read(new File("res/image/timelimit.png"));
 		} catch (IOException e) {
@@ -2212,15 +2216,26 @@ public final class DrawManager {
 		switch (level) {
 			case 4:
 				if (!bonusBoss.isDestroyed()) {
-					backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
-					;
+					if (bonusBoss.getHealth() >= 12) {
+						backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+					} else if (bonusBoss.getHealth() >= 8 && bonusBoss.getHealth() <= 11) {
+						backBufferGraphics.drawImage(img_saturn2, (screen.getWidth() - img_saturn2.getWidth()) / 2, 50, img_saturn2.getWidth(), img_saturn2.getHeight(), null);
+					} else {
+						backBufferGraphics.drawImage(img_saturn3, (screen.getWidth() - img_saturn3.getWidth()) / 2, 50, img_saturn3.getWidth(), img_saturn3.getHeight(), null);
+					}
 				} else {
 					backBufferGraphics.drawImage(img_saturn_destroyed, (screen.getWidth() - img_saturn_destroyed.getWidth()) / 2, 50, img_saturn_destroyed.getWidth(), img_saturn_destroyed.getHeight(), null);
 				}
 				break;
 			case 7:
 				if (!bonusBoss.isDestroyed()) {
-					backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+					if (bonusBoss.getHealth() >= 12) {
+						backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+					} else if (bonusBoss.getHealth() >= 8 && bonusBoss.getHealth() <= 11) {
+						backBufferGraphics.drawImage(img_saturn2, (screen.getWidth() - img_saturn2.getWidth()) / 2, 50, img_saturn2.getWidth(), img_saturn2.getHeight(), null);
+					} else {
+						backBufferGraphics.drawImage(img_saturn3, (screen.getWidth() - img_saturn3.getWidth()) / 2, 50, img_saturn3.getWidth(), img_saturn3.getHeight(), null);
+					}
 				} else {
 					backBufferGraphics.drawImage(img_saturn_destroyed, (screen.getWidth() - img_saturn_destroyed.getWidth()) / 2, 50, img_saturn_destroyed.getWidth(), img_saturn_destroyed.getHeight(), null);
 				}

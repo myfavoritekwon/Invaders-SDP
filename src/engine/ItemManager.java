@@ -281,33 +281,35 @@ public class ItemManager {
      * @return The score to add and the number of ships destroyed.
      */
     private Entry<Integer, Integer> operateLineBomb() {
-        this.soundManager.playSound(Sound.ITEM_BOMB, balance);
+        if (this.enemyShipFormation != null) {
+            this.soundManager.playSound(Sound.ITEM_BOMB, balance);
 
-        int addScore = 0;
-        int addShipsDestroyed = 0;
+            int addScore = 0;
+            int addShipsDestroyed = 0;
 
-        List<List<EnemyShip>> enemyShips = this.enemyShipFormation.getEnemyShips();
+            List<List<EnemyShip>> enemyShips = this.enemyShipFormation.getEnemyShips();
 
-        int destroyRow = -1;
+            int destroyRow = -1;
 
-        for (List<EnemyShip> column : enemyShips) {
-            for (int i = 0; i < column.size(); i++) {
-                if (column.get(i) != null && !column.get(i).isDestroyed())
-                    destroyRow = Math.max(destroyRow, i);
-            }
-        }
-
-        if (destroyRow != -1) {
             for (List<EnemyShip> column : enemyShips) {
-                if (column.get(destroyRow) != null && !column.get(destroyRow).isDestroyed()) {
-                    addScore += column.get(destroyRow).getPointValue();
-                    addShipsDestroyed++;
-                    enemyShipFormation.destroy(column.get(destroyRow), balance);
+                for (int i = 0; i < column.size(); i++) {
+                    if (column.get(i) != null && !column.get(i).isDestroyed())
+                        destroyRow = Math.max(destroyRow, i);
                 }
             }
-        }
 
-        return new SimpleEntry<>(addScore, addShipsDestroyed);
+            if (destroyRow != -1) {
+                for (List<EnemyShip> column : enemyShips) {
+                    if (column.get(destroyRow) != null && !column.get(destroyRow).isDestroyed()) {
+                        addScore += column.get(destroyRow).getPointValue();
+                        addShipsDestroyed++;
+                        enemyShipFormation.destroy(column.get(destroyRow), balance);
+                    }
+                }
+            }
+
+            return new SimpleEntry<>(addScore, addShipsDestroyed);
+        } else return null;
     }
 
     /**

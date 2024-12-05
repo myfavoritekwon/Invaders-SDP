@@ -39,4 +39,5 @@ public class BonusBoss extends Entity {
     public int getRadius() { return radius; }
 
     public boolean isDestroyed() { return isDestroyed; };
+
 }
