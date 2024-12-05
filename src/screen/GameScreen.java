@@ -669,12 +669,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 					this.ship.update();
 
-					// If Time-stop is active, Stop updating enemy ships' move and their shoots.
-					if (!itemManager.isTimeStopActive()) {
-						this.enemyShipFormation.update();
-						this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
-					}
-
 					if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
 						handleBlockerAppearance();
 					}
@@ -689,6 +683,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						}
 					}
 				}
+			}
+
+			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
+			if (!itemManager.isTimeStopActive()) {
+				this.enemyShipFormation.update();
+				this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
 			}
 
 			manageCollisions();
