@@ -871,12 +871,18 @@ public class GameScreen extends Screen implements Callable<GameState> {
 							isUpBorder = this.ship.getPositionY()
 									- this.ship.getSpeed() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight() + 2;
 						}
+						if(boss != null){
+							isUpBorder = this.ship.getPositionY()
+									- this.ship.getSpeed() < this.boss.getPositionY() + this.boss.getHeight() ;
+						}
 						boolean isDownBorder = this.ship.getPositionY()
 								+ this.ship.getHeight() + this.ship.getSpeed() > this.height - 1;
 
 						// 가장 아래 적군보다 위로 올라갈 경우 강제로 아래로 이동
-						if(enemyShipFormation != null && this.ship.getPositionY() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight()){
-							this.ship.moveDown(this.enemyShipFormation.getHeight());
+						if((enemyShipFormation != null && this.ship.getPositionY() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight())
+							||
+							(boss != null && this.ship.getPositionY() < this.boss.getPositionY() + this.boss.getHeight())){
+							this.ship.moveDown(1);
 						}
 
 						if (moveDown && !isDownBorder
@@ -888,7 +894,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 								|| checkCollision(this.ship, this.barriers, "down")) ship.moveUp(5);
 
                         if (moveUp && !isUpBorder
-                                && !checkCollision(this.ship, this.block, "up")) {
+                                && !checkCollision(this.ship, this.block, "up") && bonusBoss == null) {
                             if (playerNumber == -1) this.ship.moveUp();
                             else this.ship.moveUp(balance);
                         }
