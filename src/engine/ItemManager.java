@@ -49,7 +49,7 @@ public class ItemManager {
     /** Player's ship. */
     private final Ship ship;
     /** Formation of enemy ships. */
-    private final EnemyShipFormation enemyShipFormation;
+    private EnemyShipFormation enemyShipFormation;
     /** Set of Barriers in game screen. */
     private final Set<Barrier> barriers;
     /** Application logger. */
@@ -213,66 +213,69 @@ public class ItemManager {
      * @return The score to add and the number of ships destroyed.
      */
     private Entry<Integer, Integer> operateBomb() {
-        this.soundManager.playSound(Sound.ITEM_BOMB, balance);
+        if(this.enemyShipFormation != null) {
+            this.soundManager.playSound(Sound.ITEM_BOMB, balance);
 
-        int addScore = 0;
-        int addShipsDestroyed = 0;
+            int addScore = 0;
+            int addShipsDestroyed = 0;
 
-        List<List<EnemyShip>> enemyships = this.enemyShipFormation.getEnemyShips();
-        int enemyShipsSize = enemyships.size();
+            List<List<EnemyShip>> enemyships = this.enemyShipFormation.getEnemyShips();
+            int enemyShipsSize = enemyships.size();
 
-        int maxCnt = -1;
-        int maxRow = 0, maxCol = 0;
+            int maxCnt = -1;
+            int maxRow = 0, maxCol = 0;
 
-        for (int i = 0; i <= enemyShipsSize - 3; i++) {
+            for (int i = 0; i <= enemyShipsSize - 3; i++) {
 
-            List<EnemyShip> rowShips = enemyships.get(i);
-            int rowSize = rowShips.size();
+                List<EnemyShip> rowShips = enemyships.get(i);
+                int rowSize = rowShips.size();
 
-            for (int j = 0; j <= rowSize - 3; j++) {
+                for (int j = 0; j <= rowSize - 3; j++) {
 
-                int currentCnt = 0;
+                    int currentCnt = 0;
 
-                for (int x = i; x < i + 3; x++) {
+                    for (int x = i; x < i + 3; x++) {
 
-                    List<EnemyShip> subRowShips = enemyships.get(x);
+                        List<EnemyShip> subRowShips = enemyships.get(x);
 
-                    for (int y = j; y < j + 3; y++) {
-                        EnemyShip ship = subRowShips.get(y);
+                        for (int y = j; y < j + 3; y++) {
+                            EnemyShip ship = subRowShips.get(y);
 
-                        if (ship != null && !ship.isDestroyed())
-                            currentCnt++;
+                            if (ship != null && !ship.isDestroyed())
+                                currentCnt++;
+                        }
+                    }
+
+                    if (currentCnt > maxCnt) {
+                        maxCnt = currentCnt;
+                        maxRow = i;
+                        maxCol = j;
                     }
                 }
+            }
 
-                if (currentCnt > maxCnt) {
-                    maxCnt = currentCnt;
-                    maxRow = i;
-                    maxCol = j;
+            List<EnemyShip> targetEnemyShips = new ArrayList<>();
+            for (int i = maxRow; i < maxRow + 3; i++) {
+                List<EnemyShip> subRowShips = enemyships.get(i);
+                for (int j = maxCol; j < maxCol + 3; j++) {
+                    EnemyShip ship = subRowShips.get(j);
+
+                    if (ship != null && !ship.isDestroyed())
+                        targetEnemyShips.add(ship);
                 }
             }
-        }
 
-        List<EnemyShip> targetEnemyShips = new ArrayList<>();
-        for (int i = maxRow; i < maxRow + 3; i++) {
-            List<EnemyShip> subRowShips = enemyships.get(i);
-            for (int j = maxCol; j < maxCol + 3; j++) {
-                EnemyShip ship = subRowShips.get(j);
-
-                if (ship != null && !ship.isDestroyed())
-                    targetEnemyShips.add(ship);
+            if (!targetEnemyShips.isEmpty()) {
+                for (EnemyShip destroyedShip : targetEnemyShips) {
+                    addScore += destroyedShip.getPointValue();
+                    addShipsDestroyed++;
+                    enemyShipFormation.destroy(destroyedShip, balance);
+                }
             }
-        }
 
-        if (!targetEnemyShips.isEmpty()) {
-            for (EnemyShip destroyedShip : targetEnemyShips) {
-                addScore += destroyedShip.getPointValue();
-                addShipsDestroyed++;
-                enemyShipFormation.destroy(destroyedShip, balance);
-            }
+            return new SimpleEntry<>(addScore, addShipsDestroyed);
         }
-
-        return new SimpleEntry<>(addScore, addShipsDestroyed);
+        else return new SimpleEntry<>(0, 0);
     }
 
     /**
@@ -281,33 +284,35 @@ public class ItemManager {
      * @return The score to add and the number of ships destroyed.
      */
     private Entry<Integer, Integer> operateLineBomb() {
-        this.soundManager.playSound(Sound.ITEM_BOMB, balance);
+        if (this.enemyShipFormation != null) {
+            this.soundManager.playSound(Sound.ITEM_BOMB, balance);
 
-        int addScore = 0;
-        int addShipsDestroyed = 0;
+            int addScore = 0;
+            int addShipsDestroyed = 0;
 
-        List<List<EnemyShip>> enemyShips = this.enemyShipFormation.getEnemyShips();
+            List<List<EnemyShip>> enemyShips = this.enemyShipFormation.getEnemyShips();
 
-        int destroyRow = -1;
+            int destroyRow = -1;
 
-        for (List<EnemyShip> column : enemyShips) {
-            for (int i = 0; i < column.size(); i++) {
-                if (column.get(i) != null && !column.get(i).isDestroyed())
-                    destroyRow = Math.max(destroyRow, i);
-            }
-        }
-
-        if (destroyRow != -1) {
             for (List<EnemyShip> column : enemyShips) {
-                if (column.get(destroyRow) != null && !column.get(destroyRow).isDestroyed()) {
-                    addScore += column.get(destroyRow).getPointValue();
-                    addShipsDestroyed++;
-                    enemyShipFormation.destroy(column.get(destroyRow), balance);
+                for (int i = 0; i < column.size(); i++) {
+                    if (column.get(i) != null && !column.get(i).isDestroyed())
+                        destroyRow = Math.max(destroyRow, i);
                 }
             }
-        }
 
-        return new SimpleEntry<>(addScore, addShipsDestroyed);
+            if (destroyRow != -1) {
+                for (List<EnemyShip> column : enemyShips) {
+                    if (column.get(destroyRow) != null && !column.get(destroyRow).isDestroyed()) {
+                        addScore += column.get(destroyRow).getPointValue();
+                        addShipsDestroyed++;
+                        enemyShipFormation.destroy(column.get(destroyRow), balance);
+                    }
+                }
+            }
+
+            return new SimpleEntry<>(addScore, addShipsDestroyed);
+        } else return null;
     }
 
     /**
@@ -430,4 +435,9 @@ public class ItemManager {
     public int getShotNum() {
         return this.shotNum;
     }
+
+    public void setEnemyShipFormation(EnemyShipFormation e) {
+        this.enemyShipFormation = e;
+    }
+
 }

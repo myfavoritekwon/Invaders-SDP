@@ -142,7 +142,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	private Cooldown webCooldown;
 
 	private BonusBoss bonusBoss;
-	private Set<Integer> bonusBossLevels = Set.of(2,4);
+	private Set<Integer> bonusBossLevels = Set.of(7,4);
 	private Cooldown bonusLevelCountdown;
 	private int barWidth;
 	private int barInitialWidth = 330;
@@ -153,6 +153,30 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	private boolean checkPause = false;
 	private int checkPauseClick = 0;
+
+
+	private Boss boss;
+	private Set<Integer> bossLevels = Set.of(3,6);
+	private boolean firstBossAppeared = false;
+	private Cooldown bossPattern;
+	private boolean enemyByPattern = false;
+	private List<BossBullet> bossBullets;
+	private Cooldown bossMovement;
+	private Cooldown bossShotCool;
+	private boolean hacked = false;
+	private Cooldown hackedTime;
+	private Cooldown hackedEffect;
+	private boolean hackedVisible = true;
+	private int laserHeight = 1;
+	private Cooldown laserMaintainCooldown;
+	private Cooldown laserCooldown;
+	private boolean laserActive = false;
+	private boolean laserDrawComplete = false;
+	private boolean left;
+	private int hpBarWidth;
+	private int hpBarInitialWidth = 523;
+	private int widthMinus;
+
 	/**
 	 * Constructor, establishes the properties of the screen.
 	 *
@@ -257,10 +281,15 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	public final void initialize() {
 		super.initialize();
 
-		enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
-		enemyShipFormation.attach(this);
         // Appears each 10-30 seconds.
         this.ship = ShipFactory.create(this.shipType, this.width / 2, this.height - 30);
+		if (bossLevels.contains(level)) {
+			bossBullets = new ArrayList<>();
+		}
+		if (!bonusBossLevels.contains(level) && !bossLevels.contains(level)) {
+			enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
+			enemyShipFormation.attach(this);
+		}
 		logger.info("Player ship created " + this.shipType + " at " + this.ship.getPositionX() + ", " + this.ship.getPositionY());
         ship.applyItem(wallet);
 
@@ -293,7 +322,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			}
 		}
 		//Create random Spider Web.
-		if (!bonusBossLevels.contains(level)) {
+		if (!bonusBossLevels.contains(level) && !bossLevels.contains(level)) {
 			int web_count = 1 + level / 3;
 			web = new ArrayList<>();
 			for(int i = 0; i < web_count; i++) {
@@ -366,6 +395,27 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			barDisappear.reset();
 		}
 
+		if (bossLevels.contains(level)) { // 보스 레벨
+			switch (level) {
+				case 3: // 첫번째 보스
+					bossShotCool = Core.getCooldown(2000);
+					boss = new Boss((this.getWidth() - 600) / 2, -300, 600, 495, 1); // 사진 크기 600x495
+					hpBarInitialWidth = 523;
+					hpBarWidth = hpBarInitialWidth;
+					widthMinus = 523 / (boss.getHealth());
+					break;
+				case 6:
+					bossShotCool = Core.getCooldown(2000);
+					boss = new Boss((this.getWidth()-228)/2, -200, 228, 297, 2);
+					hpBarInitialWidth = 523;
+					hpBarWidth = hpBarInitialWidth;
+					widthMinus = 523 / (boss.getHealth());
+					break;
+				default:
+					break;
+			}
+		}
+
 		// Special input delay / countdown.
 		this.gameStartTime = System.currentTimeMillis();
 		this.inputDelay = Core.getCooldown(INPUT_DELAY);
@@ -412,205 +462,420 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	 */
 	protected final void update() {
 		super.update();
+
+		if (bossLevels.contains(level) && !checkPause) {
+			if (level == 3) {
+				if (!firstBossAppeared) {
+					boss.move(0, 0.9);
+					if (boss.getPositionY() >= -80) firstBossAppeared = true;
+				} else { // 등장했으면
+					if (bossPattern == null) {
+						bossPattern = Core.getCooldown(3000); // 보스 패턴 처음 생성
+						bossPattern.reset();
+					} else {
+						if (bossPattern.checkFinished() && !enemyByPattern) { // 몬스터 생성 동안에는 다른 패턴 발동 x
+							// 공격 패턴 메소드 넣을 곳
+							int type = random.nextInt(3) + 1; // 1~3
+							System.out.println(type);
+							switch (type) {
+								case 1: // 패턴 1 : enemyship 군단 소환 (생각보다 많이 어려워서 이 패턴일 땐 다른 패턴 동시에 x)
+									if (!enemyByPattern && enemyShipFormation == null || enemyShipFormation != null && enemyShipFormation.isEmpty()) {
+										enemyShipFormation = new EnemyShipFormation(this.gameSettings, this.gameState);
+										itemManager.setEnemyShipFormation(enemyShipFormation);
+										enemyShipFormation.attach(this);
+										enemyByPattern = true;
+									}
+									break;
+								case 2: // 미사일 4개 발사
+									int centerX = (int) boss.getPositionX() + boss.getBossShipImage().getWidth() / 2 - 37 / 2;
+									int centerY = (int) boss.getPositionY() + boss.getBossShipImage().getHeight() / 2;
+
+									bossBullets.add(new BossBullet(centerX - 35, centerY - 20, 100, 100, 1)); // width, height 고치기
+									bossBullets.add(new BossBullet(centerX + 35, centerY - 20, 100, 100, 1));
+									bossBullets.add(new BossBullet(centerX - 100, centerY, 100, 100, 1));
+									bossBullets.add(new BossBullet(centerX + 100, centerY, 100, 100, 1));
+									bossPattern.reset(6000);
+									break;
+								case 3:
+									if (hackedTime == null) {
+										hackedTime = Core.getCooldown(9000); // 9초 동안 해킹 당함 (공격 x)
+										hackedTime.reset();
+									} else {
+										hackedTime.reset();
+									}
+									if (hackedEffect == null) {
+										hackedEffect = Core.getCooldown(400);
+									} else hackedEffect.reset();
+									hacked = true;
+									bossPattern.reset(6000);
+									break;
+								default:
+									break;
+							}
+
+						}
+					}
+					if (bossMovement == null) {
+						bossMovement = Core.getCooldown(4000); // 이때부터 움직이기 시작
+						bossMovement.reset();
+					}
+				}
+				if (boss != null && boss.isDestroyed() && !this.levelFinished) {
+					this.levelFinished = true;
+					soundManager.stopSound(soundManager.getCurrentBGM());
+					this.screenFinishedCooldown.reset();
+				}
+				if (bossShotCool.checkFinished() && this.inputDelay.checkFinished()) {
+					int centerX = (int) boss.getPositionX() + boss.getBossShipImage().getWidth() / 2 - 34 / 2;
+					int centerY = (int) boss.getPositionY() + boss.getBossShipImage().getHeight() / 2;
+					bossBullets.add(new BossBullet(centerX - 128, centerY + 155, 34, 34, 0));
+					bossBullets.add(new BossBullet(centerX + 138, centerY + 155, 34, 34, 0));
+					bossShotCool.reset();
+				}
+			} else if (level == 6) { // 두 번째 보스
+				if (!firstBossAppeared) {
+					boss.move(0, 0.9);
+					if (boss.getPositionY() >= 30) firstBossAppeared = true;
+				} else {
+					if (bossPattern == null) {
+						bossPattern = Core.getCooldown(3000); // 보스 패턴 처음 생성
+						bossPattern.reset();
+					} else {
+						if (bossPattern.checkFinished()) {
+							int type = random.nextInt(3) + 1;
+							switch (type) {
+								case 1:
+									if (!laserActive) { // 왼쪽 레이저
+										bossBullets.add(new BossBullet(boss.getPositionX() - 80, boss.getPositionY(), 153, 603, 3));
+										bossPattern.reset(4000);
+										left = true;
+									}
+									break;
+								case 2:
+									if (!laserActive) { // 오른쪽 레이저
+										bossBullets.add(new BossBullet(boss.getPositionX() + boss.getWidth() + 80, boss.getPositionY(), 153, 603, 3));
+										bossPattern.reset(4000);
+										left = false;
+									}
+									break;
+								case 3:
+									int x = Math.random() < 0.5 ? 20 : 500;
+									int y = random.nextInt(400) + 100;
+
+									int starType;
+									if (x == 20) {
+										// x값이 10일 때 3, 4, 6 중에서 랜덤 선택
+										int[] options = {6, 7, 9};
+										starType = options[random.nextInt(options.length)];
+									} else {
+										// x값이 500일 때 2, 5 중에서 랜덤 선택
+										int[] options = {4, 5, 8};
+										starType = options[random.nextInt(options.length)];
+									}
+
+									bossBullets.add(new BossBullet(x, y, 10, 10, starType));
+									bossPattern.reset(4000);
+									break;
+								default:
+									break;
+							}
+						}
+					}
+					if (bossMovement == null) {
+						bossMovement = Core.getCooldown(4000); // 이때부터 움직이기 시작
+						bossMovement.reset();
+					}
+				}
+				if (bossShotCool.checkFinished() && this.inputDelay.checkFinished()) {
+					int centerX = (int) boss.getPositionX() + boss.getBossShipImage().getWidth() / 2 - 17 / 2;
+					int centerY = (int) boss.getPositionY() + boss.getBossShipImage().getHeight() / 2;
+					bossBullets.add(new BossBullet(centerX - 50, centerY + 80, 17, 43, 2));
+					bossBullets.add(new BossBullet(centerX + 50, centerY + 80, 17, 43, 2));
+					bossShotCool.reset();
+				}
+
+				if (boss != null && boss.isDestroyed() && !this.levelFinished) {
+					this.levelFinished = true;
+					soundManager.stopSound(soundManager.getCurrentBGM());
+					this.screenFinishedCooldown.reset();
+				}
+			}
+
+		}
 		if(!checkPause && this.inputDelay.checkFinished()) {
 			//swap item N
 			if (inputManager.isKeyDown(KeyEvent.VK_N)) {
 				itemManager.swapItems();
 			}
 
-			// use item M
-			if (inputManager.isKeyDown(KeyEvent.VK_M)) {
-				ItemManager.ItemType usedItem = itemManager.useStoredItem();
-				if (usedItem != null) {
-					Entry<Integer, Integer> result = itemManager.useItem(usedItem);
-					if (result != null) {
-						this.score += result.getKey();
-						this.shipsDestroyed += result.getValue();
+            // use item M
+            if (inputManager.isKeyDown(KeyEvent.VK_M)) {
+                ItemManager.ItemType usedItem = itemManager.useStoredItem();
+                if (usedItem != null) {
+                    Entry<Integer, Integer> result = itemManager.useItem(usedItem);
+                    if (result != null) {
+                        this.score += result.getKey();
+                        this.shipsDestroyed += result.getValue();
+                    }
+                }
+            }
+
+            if (this.inputDelay.checkFinished() && !this.levelFinished) {
+                // check web collision and activate puzzle
+                if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
+                    boolean webCollision = false;
+                    if (!bonusBossLevels.contains(level) && this.web != null) {
+                        for (int i = 0; i < web.size(); i++) {
+                            // 거미줄 충돌 시 webCollision 값 true
+                            if (checkCollision(ship, web.get(i))) {
+                                webCollision = true;
+                                logger.info("Web collision detected at position" + ship.getPositionX());
+                                break;
+                            }
+                        }
+                        if (webCollision && this.puzzleScreen == null) {
+                            logger.info("Initializing puzzle...");
+                            initializePuzzle();
+                        }
+                    }
+                }
+
+                if (ship.isPuzzleActive() && this.puzzleScreen != null) {
+                    updatePuzzleState();
+                }
+
+                //update physicsEnemy
+                if (physicsEnemyShips != null) {
+                    for (int i = 0; i < physicsEnemyShips.size(); i++) {
+                        physicsEnemyShips.get(i).update();
+                    }
+                }
+
+                if (bossLevels.contains(level) && bossBullets != null) {
+                    for (int i = 0; i < bossBullets.size(); i++) {
+                        if (bossBullets.get(i).getAttackType() == 1) {
+                            // 화면 밖으로 안나갔으면
+                            if (bossBullets.get(i).getPositionY() < this.getHeight() + bossBullets.get(i).getBulletImage().getHeight()) {
+                                bossBullets.get(i).move(0, 4.2);
+                            } else { // 화면 밖으로 나가면 없애기
+                                bossBullets.remove(bossBullets.get(i));
+                            }
+                        } else if (bossBullets.get(i).getAttackType() == 0) {
+                            if (bossBullets.get(i).getPositionY() < this.getHeight() + bossBullets.get(i).getBulletImage().getHeight()) {
+                                bossBullets.get(i).move(0, 2);
+                            } else { // 화면 밖으로 나가면 없애기
+                                bossBullets.remove(bossBullets.get(i));
+                            }
+                        } else if (bossBullets.get(i).getAttackType() == 2) {
+                            if (bossBullets.get(i).getPositionY() < this.getHeight() + bossBullets.get(i).getBulletImage().getHeight()) {
+                                bossBullets.get(i).move(0, 5);
+                            } else { // 화면 밖으로 나가면 없애기
+                                bossBullets.remove(bossBullets.get(i));
+                            }
+                        } else if (bossBullets.get(i).getAttackType() >= 4 && bossBullets.get(i).getAttackType() <= 9) {
+                            if (bossBullets.get(i).getAttackType() == 6 || bossBullets.get(i).getAttackType() == 7 || bossBullets.get(i).getAttackType() == 9) {
+                                if (bossBullets.get(i).getPositionX() < this.getWidth()) {
+                                    if (bossBullets.get(i).getAttackType() == 6) {
+                                        bossBullets.get(i).move(4, 2);
+                                    } else {
+                                        bossBullets.get(i).move(4, 0);
+                                    }
+                                } else {
+                                    bossBullets.remove(bossBullets.get(i));
+                                }
+                            } else {
+                                if (bossBullets.get(i).getPositionX() > -bossBullets.get(i).getBulletImage().getWidth()) {
+                                    if (bossBullets.get(i).getAttackType() == 4 || bossBullets.get(i).getAttackType() == 5) {
+                                        bossBullets.get(i).move(-4, 2);
+                                    } else {
+                                        bossBullets.get(i).move(-4, 0);
+                                    }
+                                } else {
+                                    bossBullets.remove(bossBullets.get(i));
+                                }
+
+                            }
+                        }
+                    }
+                }
+
+                if (bossLevels.contains(level) && bossMovement != null && bossMovement.checkFinished()) {
+                    boss.randomMove();
+                }
+
+                if (bossLevels.contains(level) && hacked && level == 3) {
+                    if (hackedTime.checkFinished()) {
+                        hacked = false; // 해킹 종료
+                    } else {
+                        if (hackedEffect.checkFinished()) {
+                            hackedEffect.reset(); // 깜빡임 간격 리셋
+                            hackedVisible = !hackedVisible;
+                        }
+                    }
+                }
+
+                if (enemyShipFormation != null) {
+                    this.enemyShipFormation.update();
+                    this.enemyShipFormation.shoot(this.bullets, this.level, balance);
+                }
+
+                if (this.enemyShipSpecial != null) {
+                    // special 함선돠 만나면 아래로 강제 이동
+                    if (checkCollision(ship, enemyShipSpecial)) ship.moveDown(5);
+                    if (!this.enemyShipSpecial.isDestroyed())
+                        this.enemyShipSpecial.move(2, 0);
+                    else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
+                        this.enemyShipSpecial = null;
+                }
+                if (this.enemyShipSpecial == null
+                        && this.enemyShipSpecialCooldown.checkFinished()) {
+                    this.enemyShipSpecial = new EnemyShip();
+                    this.alertMessage = "";
+                    this.enemyShipSpecialCooldown.reset();
+                    soundManager.playSound(Sound.UFO_APPEAR, balance);
+                    this.logger.info("A special ship appears");
+                }
+                if (this.enemyShipSpecial == null && !bossLevels.contains(level) && !bonusBossLevels.contains(level)
+                        && this.enemyShipSpecialCooldown.checkAlert()) {
+                    switch (this.enemyShipSpecialCooldown.checkAlertAnimation()) {
+                        case 1:
+                            this.alertMessage = "--! ALERT !--";
+                            break;
+
+                        case 2:
+                            this.alertMessage = "-!! ALERT !!-";
+                            break;
+
+                        case 3:
+                            this.alertMessage = "!!! ALERT !!!";
+                            break;
+
+                        default:
+                            this.alertMessage = "";
+                            break;
+                    }
+                }
+                if (this.enemyShipSpecial != null
+                        && this.enemyShipSpecial.getPositionX() > this.width) {
+                    this.enemyShipSpecial = null;
+                    this.logger.info("The special ship has escaped");
+                }
+
+                if (!ship.isPuzzleActive()) {
+					boolean player1Attacking = false;
+					if (!hacked) {
+						player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
 					}
-				}
-			}
+					boolean player2Attacking = false;
+                    player2Attacking = inputManager.isKeyDown(KeyEvent.VK_SHIFT);
 
-			if (this.inputDelay.checkFinished() && !this.levelFinished) {
-				// check web collision and activate puzzle
-				if (!ship.isPuzzleActive() && webCooldown.checkFinished()) {
-					boolean webCollision = false;
-					if (!bonusBossLevels.contains(level)) {
-						for (int i = 0; i < web.size(); i++) {
-							// 거미줄 충돌 시 webCollision 값 true
-							if (checkCollision(ship, web.get(i))) {
-								webCollision = true;
-								logger.info("Web collision detected at position" + ship.getPositionX());
-								break;
-							}
-						}
-						if (webCollision && this.puzzleScreen == null) {
-							logger.info("Initializing puzzle...");
-							initializePuzzle();
-						}
-					}
-				}
-
-				if (ship.isPuzzleActive() && this.puzzleScreen != null) {
-					updatePuzzleState();
-				}
-
-				//update physicsEnemy
-				if (physicsEnemyShips != null) {
-					for (int i = 0; i < physicsEnemyShips.size(); i++) {
-						physicsEnemyShips.get(i).update();
-					}
-				}
-
-				if (this.enemyShipSpecial != null) {
-					// special 함선돠 만나면 아래로 강제 이동
-					if (checkCollision(ship, enemyShipSpecial)) ship.moveDown(5);
-					if (!this.enemyShipSpecial.isDestroyed())
-						this.enemyShipSpecial.move(2, 0);
-					else if (this.enemyShipSpecialExplosionCooldown.checkFinished())
-						this.enemyShipSpecial = null;
-				}
-				if (this.enemyShipSpecial == null
-						&& this.enemyShipSpecialCooldown.checkFinished()) {
-					this.enemyShipSpecial = new EnemyShip();
-					this.alertMessage = "";
-					this.enemyShipSpecialCooldown.reset();
-					soundManager.playSound(Sound.UFO_APPEAR, balance);
-					this.logger.info("A special ship appears");
-				}
-				if (this.enemyShipSpecial == null
-						&& this.enemyShipSpecialCooldown.checkAlert()) {
-					switch (this.enemyShipSpecialCooldown.checkAlertAnimation()) {
-						case 1:
-							this.alertMessage = "--! ALERT !--";
-							break;
-
-						case 2:
-							this.alertMessage = "-!! ALERT !!-";
-							break;
-
-						case 3:
-							this.alertMessage = "!!! ALERT !!!";
-							break;
-
-						default:
-							this.alertMessage = "";
-							break;
-					}
-				}
-				if (this.enemyShipSpecial != null
-						&& this.enemyShipSpecial.getPositionX() > this.width) {
-					this.enemyShipSpecial = null;
-					this.logger.info("The special ship has escaped");
-				}
-
-				if (!ship.isPuzzleActive()) {
-					boolean player1Attacking = inputManager.isKeyDown(KeyEvent.VK_SPACE);
-					boolean player2Attacking = inputManager.isKeyDown(KeyEvent.VK_SHIFT);
-
-					if (player1Attacking && player2Attacking) {
-						// Both players are attacking
-						if (this.ship.shoot(this.bullets, this.itemManager.getShotNum()))
-							this.bulletsShot += this.itemManager.getShotNum();
-					} else {
-						switch (playerNumber) {
-							case 1:
-								if (player2Attacking) {
-									if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 1.0f)) // Player 1 attack
-										this.bulletsShot += this.itemManager.getShotNum();
-								}
-								// 플레이어 2 ENTER 누르면 총알 각도 조정 모드 on
-								if (this.inputManager.isKeyDown(KeyEvent.VK_ENTER)) {
-									if (this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
-									if (this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
-								}
-								break;
-							case 0:
-								if (player1Attacking) {
-									if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), -1.0f)) // Player 1 attack
-										this.bulletsShot += this.itemManager.getShotNum();
-								}
-								// 플레이어 1 E키 누르면 총알 각도 조정 모드 on
-								if (this.inputManager.isKeyDown(KeyEvent.VK_E)) {
-									if (this.inputManager.isKeyDown(KeyEvent.VK_A)) this.ship.moveAngleToLeft();
-									if (this.inputManager.isKeyDown(KeyEvent.VK_D)) this.ship.moveAngleToRight();
-								}
-								break;
-							default: //playerNumber = -1
-								if (player1Attacking) {
-									if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 0.0f)) // Player 1 attack
-										this.bulletsShot += this.itemManager.getShotNum();
-								}
-								// 1인 모드에서 SHIFT 누르면 총알 각도 조정 모드 on
-								if (this.inputManager.isKeyDown(KeyEvent.VK_SHIFT)) {
-									if (this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
-									if (this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
-								}
-								break;
-						}
-					}
+                    if (player1Attacking && player2Attacking) {
+                        // Both players are attacking
+                        if (this.ship.shoot(this.bullets, this.itemManager.getShotNum()))
+                            this.bulletsShot += this.itemManager.getShotNum();
+                    } else {
+                        switch (playerNumber) {
+                            case 1:
+                                if (player2Attacking) {
+                                    if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 1.0f)) // Player 1 attack
+                                        this.bulletsShot += this.itemManager.getShotNum();
+                                }
+                                // 플레이어 2 ENTER 누르면 총알 각도 조정 모드 on
+                                if (this.inputManager.isKeyDown(KeyEvent.VK_ENTER)) {
+                                    if (this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
+                                    if (this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
+                                }
+                                break;
+                            case 0:
+                                if (player1Attacking) {
+                                    if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), -1.0f)) // Player 1 attack
+                                        this.bulletsShot += this.itemManager.getShotNum();
+                                }
+                                // 플레이어 1 E키 누르면 총알 각도 조정 모드 on
+                                if (this.inputManager.isKeyDown(KeyEvent.VK_E)) {
+                                    if (this.inputManager.isKeyDown(KeyEvent.VK_A)) this.ship.moveAngleToLeft();
+                                    if (this.inputManager.isKeyDown(KeyEvent.VK_D)) this.ship.moveAngleToRight();
+                                }
+                                break;
+                            default: //playerNumber = -1
+                                if (player1Attacking) {
+                                    if (this.ship.shoot(this.bullets, this.itemManager.getShotNum(), 0.0f)) // Player 1 attack
+                                        this.bulletsShot += this.itemManager.getShotNum();
+                                }
+                                // 1인 모드에서 SHIFT 누르면 총알 각도 조정 모드 on
+                                if (this.inputManager.isKeyDown(KeyEvent.VK_SHIFT)) {
+                                    if (this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) this.ship.moveAngleToLeft();
+                                    if (this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) this.ship.moveAngleToRight();
+                                }
+                                break;
+                        }
+                    }
 
 
 
-					/*Elapsed Time Update*/
-					long currentTime = System.currentTimeMillis();
+                    /*Elapsed Time Update*/
+                    long currentTime = System.currentTimeMillis();
 
-					if (this.prevTime != null)
-						this.elapsedTime += (int) (currentTime - this.prevTime);
+                    if (this.prevTime != null)
+                        this.elapsedTime += (int) (currentTime - this.prevTime);
 
-					this.prevTime = (int) currentTime;
+                    this.prevTime = (int) currentTime;
 
-					if (!itemManager.isGhostActive())
-						this.ship.setColor(Color.GREEN);
+                    if (!itemManager.isGhostActive())
+                        this.ship.setColor(Color.GREEN);
 
-					if (!this.ship.isDestroyed()) {
-						// boolean 초기값 설정
-						boolean moveRight = false;
-						boolean moveLeft = false;
-						boolean moveUp = false;
-						boolean moveDown = false;
-						switch (playerNumber) {
-							case 0:
-								// 플레이어 1 E를 안눌렀을 때 이동 가능
-								if (!inputManager.isKeyDown(KeyEvent.VK_E)) {
-									moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
-									moveLeft = inputManager.isKeyDown(KeyEvent.VK_A);
-									moveUp = inputManager.isKeyDown(KeyEvent.VK_W);
-									moveDown = inputManager.isKeyDown(KeyEvent.VK_S);
-								}
-								break;
-							case 1:
-								// 플레이어 2 ENTER 안눌렀을 때 이동 가능
-								if (!inputManager.isKeyDown(KeyEvent.VK_ENTER)) {
-									moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT);
-									moveLeft = inputManager.isKeyDown(KeyEvent.VK_LEFT);
-									moveUp = inputManager.isKeyDown(KeyEvent.VK_UP);
-									moveDown = inputManager.isKeyDown(KeyEvent.VK_DOWN);
-								}
-								break;
-							default:
-								// 1인모드에서 SHIFT 안눌렀을 때 이동 가능
-								moveRight = (inputManager.isKeyDown(KeyEvent.VK_RIGHT)
-										|| inputManager.isKeyDown(KeyEvent.VK_D)) && !inputManager.isKeyDown(KeyEvent.VK_SHIFT);
-								moveLeft = (inputManager.isKeyDown(KeyEvent.VK_LEFT)
-										|| inputManager.isKeyDown(KeyEvent.VK_A)) && !inputManager.isKeyDown(KeyEvent.VK_SHIFT);
-								moveUp = (inputManager.isKeyDown(KeyEvent.VK_UP)
-										|| inputManager.isKeyDown(KeyEvent.VK_W)) && !inputManager.isKeyDown(KeyEvent.VK_SHIFT);
-								moveDown = (inputManager.isKeyDown(KeyEvent.VK_DOWN)
-										|| inputManager.isKeyDown(KeyEvent.VK_S)) && !inputManager.isKeyDown(KeyEvent.VK_SHIFT);
-						}
+                    if (!this.ship.isDestroyed()) {
+                        // boolean 초기값 설정
+                        boolean moveRight = false;
+                        boolean moveLeft = false;
+                        boolean moveUp = false;
+                        boolean moveDown = false;
+                        switch (playerNumber) {
+                            case 0:
+                                // 플레이어 1 E를 안눌렀을 때 이동 가능
+                                if (!inputManager.isKeyDown(KeyEvent.VK_E)) {
+                                    moveRight = inputManager.isKeyDown(KeyEvent.VK_D);
+                                    moveLeft = inputManager.isKeyDown(KeyEvent.VK_A);
+                                    moveUp = inputManager.isKeyDown(KeyEvent.VK_W);
+                                    moveDown = inputManager.isKeyDown(KeyEvent.VK_S);
+                                }
+                                break;
+                            case 1:
+                                // 플레이어 2 ENTER 안눌렀을 때 이동 가능
+                                if (!inputManager.isKeyDown(KeyEvent.VK_ENTER)) {
+                                    moveRight = inputManager.isKeyDown(KeyEvent.VK_RIGHT);
+                                    moveLeft = inputManager.isKeyDown(KeyEvent.VK_LEFT);
+                                    moveUp = inputManager.isKeyDown(KeyEvent.VK_UP);
+                                    moveDown = inputManager.isKeyDown(KeyEvent.VK_DOWN);
+                                }
+                                break;
+                            default:
+                                // 1인모드에서 SHIFT 안눌렀을 때 이동 가능
+                                moveRight = (inputManager.isKeyDown(KeyEvent.VK_RIGHT)
+                                        || inputManager.isKeyDown(KeyEvent.VK_D)) && !inputManager.isKeyDown(KeyEvent.VK_SHIFT);
+                                moveLeft = (inputManager.isKeyDown(KeyEvent.VK_LEFT)
+                                        || inputManager.isKeyDown(KeyEvent.VK_A)) && !inputManager.isKeyDown(KeyEvent.VK_SHIFT);
+                                moveUp = (inputManager.isKeyDown(KeyEvent.VK_UP)
+                                        || inputManager.isKeyDown(KeyEvent.VK_W)) && !inputManager.isKeyDown(KeyEvent.VK_SHIFT);
+                                moveDown = (inputManager.isKeyDown(KeyEvent.VK_DOWN)
+                                        || inputManager.isKeyDown(KeyEvent.VK_S)) && !inputManager.isKeyDown(KeyEvent.VK_SHIFT);
+                        }
 
 						boolean isRightBorder = this.ship.getPositionX()
 								+ this.ship.getWidth() + this.ship.getSpeed() > this.width - 1;
 						boolean isLeftBorder = this.ship.getPositionX()
 								- this.ship.getSpeed() < 1;
 						// 적군 아래에서만 이동 가능하도록 변경
-						boolean isUpBorder = this.ship.getPositionY()
-								- this.ship.getSpeed() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight() + 2;
+						boolean isUpBorder = false;
+						if (enemyShipFormation != null) {
+							isUpBorder = this.ship.getPositionY()
+									- this.ship.getSpeed() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight() + 2;
+						}
 						boolean isDownBorder = this.ship.getPositionY()
 								+ this.ship.getHeight() + this.ship.getSpeed() > this.height - 1;
 
 						// 가장 아래 적군보다 위로 올라갈 경우 강제로 아래로 이동
-						if(this.ship.getPositionY() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight()){
+						if(enemyShipFormation != null && this.ship.getPositionY() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight()){
 							this.ship.moveDown(this.enemyShipFormation.getHeight());
 						}
 
@@ -619,112 +884,125 @@ public class GameScreen extends Screen implements Callable<GameState> {
 							if (playerNumber == -1) this.ship.moveDown();
 							else this.ship.moveDown(balance);
 						}
-						if (checkCollision(this.ship, this.enemyShipFormation.getListEnemies(), "down")
+						if (enemyShipFormation != null && checkCollision(this.ship, this.enemyShipFormation.getListEnemies(), "down")
 								|| checkCollision(this.ship, this.barriers, "down")) ship.moveUp(5);
 
-						if (moveUp && !isUpBorder
-								&& !checkCollision(this.ship, this.block, "up")) {
-							if (playerNumber == -1) this.ship.moveUp();
-							else this.ship.moveUp(balance);
-						}
-						if (checkCollision(this.ship, this.enemyShipFormation.getListEnemies(), "up")
-								|| checkCollision(this.ship, this.barriers, "up")) ship.moveDown(5);
+                        if (moveUp && !isUpBorder
+                                && !checkCollision(this.ship, this.block, "up")) {
+                            if (playerNumber == -1) this.ship.moveUp();
+                            else this.ship.moveUp(balance);
+                        }
+                        if (enemyShipFormation != null && checkCollision(this.ship, this.enemyShipFormation.getListEnemies(), "up")
+                                || checkCollision(this.ship, this.barriers, "up")) ship.moveDown(5);
 
-						if (moveRight && !isRightBorder
-								&& !checkCollision(this.ship, this.block, "right")) {
-							if (playerNumber == -1) this.ship.moveRight();
-							else this.ship.moveRight(balance);
-						}
-						if (checkCollision(this.ship, this.enemyShipFormation.getListEnemies(), "right")
-								|| checkCollision(this.ship, this.barriers, "right")) ship.moveLeft(5);
+                        if (moveRight && !isRightBorder
+                                && !checkCollision(this.ship, this.block, "right")) {
+                            if (playerNumber == -1) this.ship.moveRight();
+                            else this.ship.moveRight(balance);
+                        }
+                        if (enemyShipFormation != null && checkCollision(this.ship, this.enemyShipFormation.getListEnemies(), "right")
+                                || checkCollision(this.ship, this.barriers, "right")) ship.moveLeft(5);
 
-						if (moveLeft && !isLeftBorder
-								&& !checkCollision(this.ship, this.block, "left")) {
-							if (playerNumber == -1) this.ship.moveLeft();
-							else this.ship.moveLeft(balance);
-						}
-						if (checkCollision(this.ship, this.enemyShipFormation.getListEnemies(), "left")
-								|| checkCollision(this.ship, this.barriers, "left")) ship.moveRight(5);
-						if (!bonusBossLevels.contains(level)) {
-							for (int i = 0; i < web.size(); i++) {
-								//escape Spider Web
-								if (ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
-										|| web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6
-										|| ship.getPositionY() + 4 <= web.get(i).getPositionY() - 4
-										|| web.get(i).getPositionY() + 4 <= ship.getPositionY() - 4) {
-									this.ship.setThreadWeb(false);
-								}
-								//get caught in a spider's web
-								else {
-									this.ship.setThreadWeb(true);
-									break;
-								}
-							}
-						}
-						// 플레이어 함선이 움직이던 중 배리어와 겹쳐졌을 버그 발생 시 플레이어 함선을 아래로 강제 이동시킴
-						if (!barriers.isEmpty()) {
-							for (Barrier check : barriers) {
-								if (checkCollision(ship, check)) {
-									ship.moveDown(10);
-								}
-							}
-						}
-					}
+                        if (moveLeft && !isLeftBorder
+                                && !checkCollision(this.ship, this.block, "left")) {
+                            if (playerNumber == -1) this.ship.moveLeft();
+                            else this.ship.moveLeft(balance);
+                        }
+                        if (enemyShipFormation != null && checkCollision(this.ship, this.enemyShipFormation.getListEnemies(), "left")
+                                || checkCollision(this.ship, this.barriers, "left")) ship.moveRight(5);
+                        if (!bonusBossLevels.contains(level) && web != null) {
+                            for (int i = 0; i < web.size(); i++) {
+                                //escape Spider Web
+                                if (ship.getPositionX() + 6 <= web.get(i).getPositionX() - 6
+                                        || web.get(i).getPositionX() + 6 <= ship.getPositionX() - 6
+                                        || ship.getPositionY() + 4 <= web.get(i).getPositionY() - 4
+                                        || web.get(i).getPositionY() + 4 <= ship.getPositionY() - 4) {
+                                    this.ship.setThreadWeb(false);
+                                }
+                                //get caught in a spider's web
+                                else {
+                                    this.ship.setThreadWeb(true);
+                                    break;
+                                }
+                            }
+                        }
+                        // 플레이어 함선이 움직이던 중 배리어와 겹쳐졌을 버그 발생 시 플레이어 함선을 아래로 강제 이동시킴
+                        if (!barriers.isEmpty()) {
+                            for (Barrier check : barriers) {
+                                if (checkCollision(ship, check)) {
+                                    ship.moveDown(10);
+                                }
+                            }
+                        }
+                    }
 
-					this.ship.update();
+                    this.ship.update();
 
-					if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
-						handleBlockerAppearance();
-					}
-					if (bonusBossLevels.contains(level) && bonusLevelCountdown == null) {
-						bonusLevelCountdown = Core.getCooldown(20000);
-						bonusLevelCountdown.reset();
-					}
-					if (bonusBossLevels.contains(level)) {
-						if (barDisappear.checkFinished()) {
-							barWidth -= barInitialWidth / 20; // 20초 후에 사라짐
-							barDisappear.reset();
-						}
-					}
+                    if (level >= 3) { //Events where vision obstructions appear start from level 3 onwards.
+                        handleBlockerAppearance();
+                    }
+                    if (bonusBossLevels.contains(level) && bonusLevelCountdown == null) {
+                        bonusLevelCountdown = Core.getCooldown(20000);
+                        bonusLevelCountdown.reset();
+                    }
+                    if (bonusBossLevels.contains(level)) {
+                        if (barDisappear.checkFinished()) {
+                            barWidth -= barInitialWidth / 20; // 20초 후에 사라짐
+                            barDisappear.reset();
+                        }
+                    }
+                }
+            }
+
+            // If Time-stop is active, Stop updating enemy ships' move and their shoots.
+            if (!itemManager.isTimeStopActive()) {
+				if (enemyShipFormation != null) {
+					this.enemyShipFormation.update();
+					this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
 				}
 			}
 
-			// If Time-stop is active, Stop updating enemy ships' move and their shoots.
-			if (!itemManager.isTimeStopActive()) {
-				this.enemyShipFormation.update();
-				this.enemyShipFormation.shoot(this.bullets, this.level, this.balance);
-			}
+            manageCollisions();
+            cleanBullets();
+            if (playerNumber >= 0)
+                drawThread();
+            else
+                draw();
 
-			manageCollisions();
-			cleanBullets();
-			if (playerNumber >= 0)
-				drawThread();
-			else
-				draw();
+            if ((enemyShipFormation != null && this.enemyShipFormation.isEmpty() && !bonusBossLevels.contains(level) && !bossLevels.contains(level) || this.lives <= 0)
+                    && !this.levelFinished) {
+                this.levelFinished = true;
 
-			if ((this.enemyShipFormation.isEmpty() && !bonusBossLevels.contains(level) || this.lives <= 0)
-					&& !this.levelFinished) {
-				this.levelFinished = true;
+                soundManager.stopSound(soundManager.getCurrentBGM());
+                if (this.lives == 0)
+                    soundManager.playSound(Sound.GAME_END);
+                this.screenFinishedCooldown.reset();
+            }
 
-				soundManager.stopSound(soundManager.getCurrentBGM());
-				if (this.lives == 0)
-					soundManager.playSound(Sound.GAME_END);
-				this.screenFinishedCooldown.reset();
-			}
 
-			if (bonusBossLevels.contains(level)) {
-				if ((bonusBoss != null && bonusBoss.isDestroyed() || bonusLevelCountdown != null && bonusLevelCountdown.checkFinished()) && !this.levelFinished) {
-					this.levelFinished = true;
-					soundManager.stopSound(soundManager.getCurrentBGM());
-					this.screenFinishedCooldown.reset();
-				}
-			}
+            if (enemyShipFormation != null && enemyShipFormation.isEmpty() && bossLevels.contains(level)) {
+                if (enemyByPattern) {
+                    enemyByPattern = false;
+                    bossPattern.reset(6000);
+                }
+            }
 
-			if (this.levelFinished && this.screenFinishedCooldown.checkFinished()) {
-				//Reset alert message when level is finished
-				this.alertMessage = "";
-				this.isRunning = false;
-			}
+
+            if (bonusBossLevels.contains(level)) {
+                if ((bonusBoss != null && bonusBoss.isDestroyed() || bonusLevelCountdown != null && bonusLevelCountdown.checkFinished()) && !this.levelFinished) {
+                    this.levelFinished = true;
+                    soundManager.stopSound(soundManager.getCurrentBGM());
+                    if (this.lives == 0)
+                        soundManager.playSound(Sound.GAME_END);
+                    this.screenFinishedCooldown.reset();
+                }
+            }
+
+            if (this.levelFinished && this.screenFinishedCooldown.checkFinished()) {
+                //Reset alert message when level is finished
+                this.alertMessage = "";
+                this.isRunning = false;
+            }
 
 			if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE) && pauseESCCooldown.checkFinished()) {
 				checkPause = !checkPause;
@@ -752,7 +1030,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					drawThread();
 				else
 					draw();
-				if(inputManager.isKeyDown((KeyEvent.VK_SPACE))){
+				if(inputManager.isKeyDown((KeyEvent.VK_SPACE)) && inputDelay.checkFinished()){
 					if(checkPauseClick == 1){
 						returnCode = 1;
 						soundManager.playSound(Sound.MENU_MOVE);
@@ -765,32 +1043,32 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 	}
 	private boolean checkCollision(final Ship ship, List< ? extends Entity> wanted ,final String direction) {
-        if (!bonusBossLevels.contains(level)) {
-            for (Entity entity : wanted) {
-                if (direction.equals("down")) {
-                    if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() + ship.getSpeed(),
-                            ship.getWidth(), ship.getHeight(), entity)) {
-                        return true; // 아래쪽 충돌
-                    }
-                } else if (direction.equals("up")) {
-                    if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() - ship.getSpeed(),
-                            ship.getWidth(), ship.getHeight(), entity)) {
-                        return true; // 위쪽 충돌
-                    }
-                } else if (direction.equals("right")) {
-                    if (checkCollision((int) ship.getPositionX() + ship.getSpeed(), (int) ship.getPositionY(),
-                            ship.getWidth(), ship.getHeight(), entity)) {
-                        return true; // 오른쪽 충돌
-                    }
-                } else if (direction.equals("left")) {
-                    if (checkCollision((int) ship.getPositionX() - ship.getSpeed(), (int) ship.getPositionY(),
-                            ship.getWidth(), ship.getHeight(), entity)) {
-                        return true; // 왼쪽 충돌
-                    }
-                }
-            }
-        }
-        return false; // 충돌 없음
+		if (!bonusBossLevels.contains(level) && !bossLevels.contains(level)) {
+			for (Entity entity : wanted) {
+				if (direction.equals("down")) {
+					if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() + ship.getSpeed(),
+							ship.getWidth(), ship.getHeight(), entity)) {
+						return true; // 아래쪽 충돌
+					}
+				} else if (direction.equals("up")) {
+					if (checkCollision((int) ship.getPositionX(), (int) ship.getPositionY() - ship.getSpeed(),
+							ship.getWidth(), ship.getHeight(), entity)) {
+						return true; // 위쪽 충돌
+					}
+				} else if (direction.equals("right")) {
+					if (checkCollision((int) ship.getPositionX() + ship.getSpeed(), (int) ship.getPositionY(),
+							ship.getWidth(), ship.getHeight(), entity)) {
+						return true; // 오른쪽 충돌
+					}
+				} else if (direction.equals("left")) {
+					if (checkCollision((int) ship.getPositionX() - ship.getSpeed(), (int) ship.getPositionY(),
+							ship.getWidth(), ship.getHeight(), entity)) {
+						return true; // 왼쪽 충돌
+					}
+				}
+			}
+		}
+		return false; // 충돌 없음
 	}
 	private boolean checkCollision(final Ship ship, Set< ? extends Entity> wanted ,final String direction) {
 		for (Entity entity : wanted) {
@@ -903,7 +1181,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		    }
         }
 		//draw Spider Web
-        if (!bonusBossLevels.contains(level)) {
+        if (!bonusBossLevels.contains(level) && !bossLevels.contains(level)) {
             for (int i = 0; i < web.size(); i++) {
                 drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(), (int) this.web.get(i).getPositionY());
             }
@@ -912,13 +1190,57 @@ public class GameScreen extends Screen implements Callable<GameState> {
                 drawManager.drawEntity(block, (int) block.getPositionX(), (int) block.getPositionY());
         }
 
+		if (bossLevels.contains(level) && bossBullets != null) {
+			for (int i = 0; i < bossBullets.size(); i++) {
+				if (bossBullets.get(i).getAttackType() != 0 && bossBullets.get(i).getAttackType() != 2) { // 기본 공격은 보스 위에 그리게 하려고
+					if (bossBullets.get(i).getAttackType() != 3) {
+						drawManager.drawBossBullet(bossBullets.get(i), (int) bossBullets.get(i).getPositionX(), (int) bossBullets.get(i).getPositionY());
+					} else {
+						if (!laserActive && (laserCooldown == null || laserCooldown.checkFinished())) {
+							// 레이저 시작
+							laserHeight = 1;
+							laserActive = true;
+							laserDrawComplete = false;
+							laserMaintainCooldown = null;
+							laserCooldown = null;
+						}
 
-        if (this.enemyShipSpecial != null)
+						if (laserActive) {
+							if (!laserDrawComplete) {
+								// 레이저가 다 그려지는 중
+								if (laserHeight < bossBullets.get(i).getBulletImage().getHeight()) {
+									laserHeight += 5;
+								} else {
+									// 레이저가 완전히 그려짐
+									laserDrawComplete = true;
+									laserMaintainCooldown = Core.getCooldown(5000); // 5초 동안 유지
+									laserMaintainCooldown.reset();
+								}
+							} else if (laserMaintainCooldown != null && laserMaintainCooldown.checkFinished()) {
+								// 유지 시간 종료
+								laserActive = false;
+								laserHeight = 1;
+								laserCooldown = Core.getCooldown(6000); // 6초 쿨다운 설정
+								laserCooldown.reset();
+							}
+
+							// 레이저 그리기
+							drawManager.drawBossLaser(bossBullets.get(i), (int) boss.getPositionX(), (int) boss.getPositionY(), laserHeight, left);
+						}
+					}
+				}
+			}
+		}
+
+
+		if (this.enemyShipSpecial != null)
 			drawManager.drawEntity(this.enemyShipSpecial,
-                    (int) this.enemyShipSpecial.getPositionX(),
-                    (int) this.enemyShipSpecial.getPositionY());
+					(int) this.enemyShipSpecial.getPositionX(),
+					(int) this.enemyShipSpecial.getPositionY());
 
-		enemyShipFormation.draw();
+		if (enemyShipFormation != null) {
+			enemyShipFormation.draw();
+		}
 
 		for (ItemBox itemBox : this.itemBoxes)
 			drawManager.drawEntity(itemBox, (int) itemBox.getPositionX(), (int) itemBox.getPositionY());
@@ -931,7 +1253,28 @@ public class GameScreen extends Screen implements Callable<GameState> {
                     (int) bullet.getPositionY());
 
 
+		if (bossLevels.contains(level)) {
+			drawManager.drawBoss(this, boss);
+		}
+
+		if (bossLevels.contains(level) && bossBullets != null) {
+			for (int i = 0; i < bossBullets.size(); i++) {
+				if (bossBullets.get(i).getAttackType() == 0 || bossBullets.get(i).getAttackType() == 2) { // 기본 공격은 보스 위에 그리게 하려고
+					if (bossBullets.get(i).getAttackType() != 3) { // 레이저는 따로 그려야됨
+						drawManager.drawBossBullet(bossBullets.get(i), (int) bossBullets.get(i).getPositionX(), (int) bossBullets.get(i).getPositionY());
+					}
+				}
+			}
+		}
+
+		if (bossLevels.contains(level) && hacked) {
+			if (hackedVisible) {
+				drawManager.drawHackedState(this); // HackedState를 그리기
+			}
+		}
+
 		// Interface.
+		drawManager.drawTopInterfaceBox(this);
 		drawManager.drawScore(this, this.score);
 		drawManager.drawElapsedTime(this, this.elapsedTime);
 		drawManager.drawAlertMessage(this, this.alertMessage);
@@ -945,6 +1288,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		if (bonusBossLevels.contains(level)) {
 			drawManager.drawTimerBar(this, barX, barY, barWidth, barHeight);
 		}
+
+		if (bossLevels.contains(level)) {
+			drawManager.drawBossHPBar(this, 32, 72, hpBarWidth, 20);
+		}
+
 
 		// Countdown to game start.
 		if (!this.inputDelay.checkFinished()) {
@@ -971,7 +1319,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawRecord(highScores,this);
 
 		// Blocker drawing part
-		if (!blockers.isEmpty()) {
+		if (!blockers.isEmpty() && !bossLevels.contains(level) && !bonusBossLevels.contains(level)) {
 			for (Blocker blocker : blockers) {
 				drawManager.drawRotatedEntity(blocker, (int) blocker.getPositionX(), (int) blocker.getPositionY(), blocker.getAngle());
 			}
@@ -1089,7 +1437,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		enemyShipFormation.draw(playerNumber);
 
-		if (!bonusBossLevels.contains(level)) {
+		if (!bonusBossLevels.contains(level) && !bossLevels.contains(level)) {
 			for (ItemBox itemBox : this.itemBoxes)
 				drawManager.drawEntity(itemBox, (int) itemBox.getPositionX(), (int) itemBox.getPositionY(), playerNumber);
 
@@ -1199,9 +1547,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		}
 
 		int topEnemyY = Integer.MAX_VALUE;
-		for (EnemyShip enemyShip : this.enemyShipFormation) {
-			if (enemyShip != null && !enemyShip.isDestroyed() && enemyShip.getPositionY() < topEnemyY) {
-				topEnemyY = (int) enemyShip.getPositionY();
+		if (enemyShipFormation != null) {
+			for (EnemyShip enemyShip : this.enemyShipFormation) {
+				if (enemyShip != null && !enemyShip.isDestroyed() && enemyShip.getPositionY() < topEnemyY) {
+					topEnemyY = (int) enemyShip.getPositionY();
+				}
 			}
 		}
 		if (this.enemyShipSpecial != null && !this.enemyShipSpecial.isDestroyed() && this.enemyShipSpecial.getPositionY() < topEnemyY) {
@@ -1236,27 +1586,29 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				}
 
 			} else {	// Player ship's bullets
-				for (EnemyShip enemyShip : this.enemyShipFormation)
-					if (enemyShip != null && !enemyShip.isDestroyed()
-							&& checkCollision(bullet, enemyShip)) {
-						// Decide whether to destroy according to physical strength
-						this.enemyShipFormation.HealthManageDestroy(enemyShip, balance);
-						// If the enemy doesn't die, the combo increases;
-						// if the enemy dies, both the combo and score increase.
-						this.score += Score.comboScore(this.enemyShipFormation.getPoint(), this.combo);
-						this.shipsDestroyed += this.enemyShipFormation.getDistroyedship();
-						this.combo++;
-						this.hitBullets++;
-						if (this.combo > this.maxCombo) this.maxCombo = this.combo;
-						timer.cancel();
-						isExecuted = false;
-						recyclable.add(bullet);
+				if (enemyShipFormation != null) {
+					for (EnemyShip enemyShip : this.enemyShipFormation)
+						if (enemyShip != null && !enemyShip.isDestroyed()
+								&& checkCollision(bullet, enemyShip)) {
+							// Decide whether to destroy according to physical strength
+							this.enemyShipFormation.HealthManageDestroy(enemyShip, balance);
+							// If the enemy doesn't die, the combo increases;
+							// if the enemy dies, both the combo and score increase.
+							this.score += Score.comboScore(this.enemyShipFormation.getPoint(), this.combo);
+							this.shipsDestroyed += this.enemyShipFormation.getDistroyedship();
+							this.combo++;
+							this.hitBullets++;
+							if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+							timer.cancel();
+							isExecuted = false;
+							recyclable.add(bullet);
 
-						if (enemyShip.getHealth() < 0 && itemManager.dropItem()) {
-							this.itemBoxes.add(new ItemBox((int) (enemyShip.getPositionX() + 6), (int) (enemyShip.getPositionY() + 1), balance));
-							logger.info("Item box dropped");
+							if (enemyShip.getHealth() < 0 && itemManager.dropItem() && !bossLevels.contains(level)) {
+								this.itemBoxes.add(new ItemBox((int) (enemyShip.getPositionX() + 6), (int) (enemyShip.getPositionY() + 1), balance));
+								logger.info("Item box dropped");
+							}
 						}
-					}
+				}
 
 				//중력 적들과 충돌했을 때 로직
 				if(this.physicsEnemyShips != null) {
@@ -1322,7 +1674,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				}
 
 				//check the collision between the obstacle and the bullet
-				if (!bonusBossLevels.contains(level)) {
+				if (!bonusBossLevels.contains(level) && !bossLevels.contains(level)) {
 					for (Block block : this.block) {
 						if (checkCollision(bullet, block)) {
 							recyclable.add(bullet);
@@ -1338,16 +1690,27 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					recyclable.add(bullet);
 					this.score++;
 				}
+
+				if (boss != null && !boss.isDestroyed() && checkFirstBossCollusion(boss,bullet)) {
+					boss.HealthManageDestroy();
+					hpBarWidth -= widthMinus;
+					if (boss.getHealth() <= 0) hpBarWidth = 0;
+					timer.cancel();
+					isExecuted = false;
+					recyclable.add(bullet);
+				}
 			}
 		}
 
 		//check the collision between the obstacle and the enemyship
 		Set<Block> removableBlocks = new HashSet<>();
-		for (EnemyShip enemyShip : this.enemyShipFormation) {
-			if (enemyShip != null && !enemyShip.isDestroyed()) {
-				for (Block block : block) {
-					if (checkCollision(enemyShip, block)) {
-						removableBlocks.add(block);
+		if (enemyShipFormation != null) {
+			for (EnemyShip enemyShip : this.enemyShipFormation) {
+				if (enemyShip != null && !enemyShip.isDestroyed() && block != null) {
+					for (Block block : block) {
+						if (checkCollision(enemyShip, block)) {
+							removableBlocks.add(block);
+						}
 					}
 				}
 			}
@@ -1356,7 +1719,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		//check the collision between the obstacle and the physics enemy
 		if (physicsEnemyShips != null) {
 			for (PhysicsEnemyShip physicsEnemyShip : this.physicsEnemyShips) {
-				if (physicsEnemyShip != null && !physicsEnemyShip.isDestroyed()) {
+				if (physicsEnemyShip != null && !physicsEnemyShip.isDestroyed() && block != null) {
 					for (Block block : block) {
 						if (checkCollision(physicsEnemyShip, block)) {
 							removableBlocks.add(block);
@@ -1366,8 +1729,32 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			}
 		}
 
+		if (bossBullets != null && !bossBullets.isEmpty()) {
+			for (int i = 0; i < bossBullets.size(); i++) {
+				if (bossBullets.get(i).getAttackType() != 3) {
+					if (checkBossAttackCollusion(ship, bossBullets.get(i))) {
+						this.ship.destroy(balance);
+						lvdamage();
+						this.logger.info("Hit on player ship, " + this.lives + " lives remaining.");
+						bossBullets.remove(bossBullets.get(i));
+					}
+				} else {
+					if (laserCollision()) {
+//						this.ship.destroy(balance);
+//						lvdamage();
+//						this.logger.info("Hit on player ship, " + this.lives + " lives remaining.");
+//						bossBullets.remove(bossBullets.get(i));
+						lvdamage();
+						itemManager.useItem(ItemManager.ItemType.Ghost);
+						this.logger.info("Hit on player ship, " + this.lives + " lives remaining.");
+					}
+				}
+			}
+		}
+
+
 		// remove crashed obstacle
-		if (!bonusBossLevels.contains(level)) block.removeAll(removableBlocks);
+		if (!bonusBossLevels.contains(level) && !bossLevels.contains(level)) block.removeAll(removableBlocks);
 		this.bullets.removeAll(recyclable);
 		BulletPool.recycle(recyclable);
 	}
@@ -1413,6 +1800,82 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		return distanceSquared <= radius * radius;
 	}
 
+	private boolean checkFirstBossCollusion(final Boss entity, final Entity bullet) {
+		int bulletCenterX = (int) (bullet.getPositionX() + bullet.getWidth() / 2);
+		int bulletCenterY = (int) (bullet.getPositionY() + bullet.getHeight() / 2);
+
+		int relativeX = bulletCenterX - (int) entity.getPositionX();
+		int relativeY = bulletCenterY - (int) entity.getPositionY();
+
+		if (relativeX < 0 || relativeX >= entity.getWidth() || relativeY < 0 || relativeY >= entity.getHeight()) {
+			return false;
+		}
+
+		int pixel = entity.getBossShipImage().getRGB(relativeX, relativeY);
+		int alpha = (pixel >> 24) & 0xff;
+
+		return alpha > 0;
+	}
+
+	private boolean checkBossAttackCollusion(final Entity player, final BossBullet bullet) {
+		if (itemManager.isGhostActive()) return false;
+		int bulletStartX = (int) bullet.getPositionX();
+		int bulletStartY = (int) bullet.getPositionY();
+
+		int bulletWidth = bullet.getBulletImage().getWidth();
+		int bulletHeight = bullet.getBulletImage().getHeight();
+
+		int playerStartX = (int) player.getPositionX();
+		int playerStartY = (int) player.getPositionY();
+		int playerWidth = player.getWidth();
+		int playerHeight = player.getHeight();
+
+		// 총알의 모든 픽셀을 순회
+		for (int x = 0; x < bulletWidth; x++) {
+			for (int y = 0; y < bulletHeight; y++) {
+				int pixel = bullet.getBulletImage().getRGB(x, y);
+				int alpha = (pixel >> 24) & 0xff;
+
+				if (alpha == 0) {
+					continue; // 투명한 부분은 건너뜀
+				}
+
+				int actualX = bulletStartX + x;
+				int actualY = bulletStartY + y;
+
+				if (actualX >= playerStartX && actualX < playerStartX + playerWidth &&
+						actualY >= playerStartY && actualY < playerStartY + playerHeight) {
+					return true; // 충돌 발생
+				}
+			}
+		}
+
+		return false; // 충돌 없음
+	}
+
+	public boolean laserCollision() {
+		if (itemManager.isGhostActive()) return false;
+		if (left && boss.getPositionX() - 50  <= ship.getPositionX() && boss.getPositionX()+4 >= ship.getPositionX()
+				&& boss.getPositionY() + laserHeight + 40 >= ship.getPositionY()) return true;
+		else if (!left && boss.getPositionX() + boss.getWidth() + 50 >= ship.getPositionX() && boss.getPositionX() + boss.getWidth() - 4 <= ship.getPositionX()
+				&& boss.getPositionY() + laserHeight + 40 >= ship.getPositionY()) return true;
+		else return false;
+	}
+
+
+
+	private void bossRandomMove(Boss boss) {
+		int currentX = (int) boss.getPositionX() + boss.getBossShipImage().getWidth() / 2;
+		int currentY = (int) boss.getPositionY() + boss.getBossShipImage().getHeight() / 2;
+
+		int deltaX = random.nextInt(21) - 10; // -10 ~ 10
+		int deltaY = random.nextInt(9) - 4; // -4 ~ 4
+
+		int gotoX = currentX + deltaX; // x축 도착할 곳
+		int gotoY = currentY + deltaY; // y축 도착할 곳
+
+	}
+
 	/**
 	 * Returns a GameState object representing the status of the game.
 	 *
@@ -1436,7 +1899,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	}
 	//Enemy bullet damage increases depending on stage level
 	public void lvdamage(){
-		for(int i=0; i<=level/3;i++){
+		if (!bossLevels.contains(level)) {
+			for(int i=0; i<=level/3;i++){
+				this.lives--;
+			}
+		} else {
 			this.lives--;
 		}
 		if(this.lives < 0){
