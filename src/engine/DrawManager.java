@@ -996,7 +996,8 @@ public final class DrawManager {
 
 		// "Game Over" 텍스트 그리기
 		backBufferGraphics.setColor(Color.GREEN);
-		drawCenteredBigString(screen, gameOverString, screen.getHeight() / height - fontBigMetrics.getHeight() * 2);
+		drawCenteredBigString(screen, gameOverString, screen.getHeight()
+				/ height - fontBigMetrics.getHeight() * 2);
 
 		if (acceptsInput) {
 			// "Continue" 항목 그리기 (선택되었을 때는 초록색, 그렇지 않으면 흰색)
