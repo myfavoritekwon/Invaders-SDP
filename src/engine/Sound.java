@@ -42,5 +42,9 @@ public enum Sound {
     BGM_LV4,
     BGM_LV5,
     BGM_LV6,
-    BGM_LV7
+    BGM_LV7,
+    BGM_STORY,
+    BGM_STORY2,
+    BGM_BONUS,
+    BGM_ENDSTORY2
 }

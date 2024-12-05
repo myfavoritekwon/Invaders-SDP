@@ -99,18 +99,20 @@ public class ItemManager {
         return null;
     }
 
-    public void swapItems() {
+    public boolean swapItems() {
         if (!swapCooldown.checkFinished()) {
             System.out.println("아이템 스왑 대기 중입니다.");
-            return;
+            return false;
         }
 
         if (storedItems.size() == 2) {
             Collections.swap(storedItems, 0, 1);
             swapCooldown.reset();
             System.out.println("아이템이 스왑되었습니다: " + storedItems);
+            return true;
         } else {
             System.out.println("스왑할 아이템이 충분하지 않습니다.");
+            return false;
         }
     }
 

@@ -69,11 +69,12 @@ public final class DrawManager {
 	private static BufferedImage img_coin;
 	private static BufferedImage img_coingain;
 	private static BufferedImage img_shotinterval;
-
-
 	private static BufferedImage img_saturn;
 	private static BufferedImage img_saturn_destroyed;
 	private static BufferedImage img_timelimit;
+
+	private final Object bufferLock = new Object();
+	private BufferedImage[] tempBuffers = new BufferedImage[2];
 
 	private static BufferedImage img_bossHPbar;
 	private static BufferedImage img_hacking;
@@ -325,19 +326,21 @@ public final class DrawManager {
 	 *            Screen to draw in.
 	 */
 	public void initDrawing(final Screen screen) {
-		backBuffer = new BufferedImage(screen.getWidth(), screen.getHeight(),
-				BufferedImage.TYPE_INT_RGB);
+		synchronized(bufferLock) {
+			backBuffer = new BufferedImage(screen.getWidth(), screen.getHeight(),
+					BufferedImage.TYPE_INT_RGB);
+			graphics = frame.getGraphics();
+			backBufferGraphics = backBuffer.getGraphics();
 
-		graphics = frame.getGraphics();
-		backBufferGraphics = backBuffer.getGraphics();
+			// Initialize background black
+			backBufferGraphics.setColor(Color.BLACK);
+			backBufferGraphics.fillRect(0, 0, screen.getWidth(), screen.getHeight());
 
-		backBufferGraphics.setColor(Color.BLACK);
-		backBufferGraphics
-				.fillRect(0, 0, screen.getWidth(), screen.getHeight());
-
-		fontSmallMetrics = backBufferGraphics.getFontMetrics(fontSmall);
-		fontRegularMetrics = backBufferGraphics.getFontMetrics(fontRegular);
-		fontBigMetrics = backBufferGraphics.getFontMetrics(fontBig);
+			// Initialize font metrics
+			fontSmallMetrics = backBufferGraphics.getFontMetrics(fontSmall);
+			fontRegularMetrics = backBufferGraphics.getFontMetrics(fontRegular);
+			fontBigMetrics = backBufferGraphics.getFontMetrics(fontBig);
+		}
 
 		//drawBorders(screen);
 		//drawGrid(screen);
@@ -353,11 +356,25 @@ public final class DrawManager {
 	 */
 
 	public void initThreadDrawing(final Screen screen, final int threadNumber) {
-		BufferedImage threadBuffer = new BufferedImage(screen.getWidth(),screen.getHeight(), BufferedImage.TYPE_INT_RGB);
-		Graphics threadGraphic = threadBuffer.getGraphics();
+		synchronized(bufferLock) {
+			// Create a new buffer per thread
+			BufferedImage threadBuffer = new BufferedImage(screen.getWidth(),
+					screen.getHeight(), BufferedImage.TYPE_INT_RGB);
+			Graphics threadGraphic = threadBuffer.getGraphics();
 
-		threadBuffers[threadNumber] = threadBuffer;
-		threadBufferGraphics[threadNumber] = threadGraphic;
+			// Initialize Buffer
+			threadGraphic.setColor(Color.BLACK);
+			threadGraphic.fillRect(0, 0, screen.getWidth() / 2, screen.getHeight());
+
+			threadBuffers[threadNumber] = threadBuffer;
+			threadBufferGraphics[threadNumber] = threadGraphic;
+
+			// Create temporary buffer
+			if (tempBuffers[threadNumber] == null) {
+				tempBuffers[threadNumber] = new BufferedImage(screen.getWidth(),
+						screen.getHeight(), BufferedImage.TYPE_INT_RGB);
+			}
+		}
 	}
 
 	/**
@@ -367,8 +384,10 @@ public final class DrawManager {
 	 *            Screen to draw on.
 	 */
 	public void completeDrawing(final Screen screen) {
-		graphics.drawImage(backBuffer, frame.getInsets().left,
-				frame.getInsets().top, frame);
+		synchronized(bufferLock) {
+			graphics.drawImage(backBuffer, frame.getInsets().left,
+					frame.getInsets().top, frame);
+		}
 	}
 
 	/**
@@ -378,8 +397,37 @@ public final class DrawManager {
 	 *            Screen to draw on.
 	 */
 	public void mergeDrawing(final Screen screen) {
-		backBufferGraphics.drawImage(threadBuffers[2], 0, 0, frame);
-		backBufferGraphics.drawImage(threadBuffers[3], screen.getWidth() / 2 + LINE_WIDTH, 0, frame);
+		synchronized(bufferLock) {
+			// Initialize main buffer
+			backBufferGraphics.setColor(Color.BLACK);
+			backBufferGraphics.fillRect(0, 0, screen.getWidth(), screen.getHeight());
+
+			// Copy thread buffer to temporary buffer
+			for (int i = 0; i < 2; i++) {
+				if (threadBuffers[i] != null) {
+					Graphics tempGraphics = tempBuffers[i].getGraphics();
+					tempGraphics.drawImage(threadBuffers[i], 0, 0, null);
+				}
+			}
+
+			// Merge temporary buffer to main buffer
+			if (tempBuffers[0] != null) {
+				backBufferGraphics.drawImage(tempBuffers[0],
+						0, 0,
+						screen.getWidth() / 2, screen.getHeight(),
+						0, 0,
+						screen.getWidth() / 2, screen.getHeight(),
+						null);
+			}
+			if (tempBuffers[1] != null) {
+				backBufferGraphics.drawImage(tempBuffers[1],
+						screen.getWidth() / 2 + LINE_WIDTH, 0,
+						screen.getWidth(), screen.getHeight(),
+						0, 0,
+						screen.getWidth() / 2, screen.getHeight(),
+						null);
+			}
+		}
 	}
 
 	/**
@@ -856,7 +904,6 @@ public final class DrawManager {
 	 *            Option selected.
 	 */
 	public void drawMenu(final Screen screen, final int option, final int coin) {
-		String Multi = "Multi";
 		String playString = "Play";
 		String shopString = "SHOP";
 		String coinString = "YOUR COIN: " + coin;
@@ -864,12 +911,6 @@ public final class DrawManager {
 		String settingString = "SETTING";
 		String exitString = "EXIT";
 
-		if(option == 9)//Multi
-			backBufferGraphics.setColor(Color.GREEN);
-		else
-			backBufferGraphics.setColor(Color.WHITE);
-		drawCenteredRegularString(screen, Multi,
-				screen.getHeight() / 7 * 4 - fontRegularMetrics.getHeight() * 2);
 		if (option == 6) /*option2 => Game Settings */
 			backBufferGraphics.setColor(Color.GREEN);
 		else
@@ -1761,8 +1802,6 @@ public final class DrawManager {
 		threadBufferGraphics[threadNumber].fillRect(0, screen.getHeight() / 2 - rectHeight / 2,
 				rectWidth, rectHeight);
 		threadBufferGraphics[threadNumber].setColor(Color.GREEN);
-		System.out.println(number);
-		System.out.println(level);
 		if (number >= 4)
 			if (!bonusLife) {
 				if (level == 3 || level == 6) {
@@ -2214,12 +2253,12 @@ public final class DrawManager {
 		Graphics2D g2d = (Graphics2D) backBufferGraphics;
 		g2d.setFont(fontRegular);
 
-		int sequenceY = (int) (ship.getPositionY() - 30);
-
 		String fullSequence = sequence.stream()
 				.map(i -> getDirectionSymbol(i, playerNumber))
 				.reduce("", (a, b) -> a + " " + b).trim();
+
 		int textWidth = fontRegularMetrics.stringWidth(fullSequence);
+		int sequenceY = (int) (ship.getCollisionY() - 30);
 		int textX = (int) (ship.getPositionX() + (ship.getWidth() - textWidth) / 2);
 
 		if (textX < 10) textX = 10;
@@ -2250,18 +2289,24 @@ public final class DrawManager {
 	 */
 	public void drawPuzzle(final Screen screen, final List<Integer> sequence,
 						   final List<Integer> playerInput, final int playerNumber,
-						   final int threadNumber, final int collisionX) {
+						   final int threadNumber, final int collisionX, final int collisionY) {
 		Graphics2D g2d = (Graphics2D) threadBufferGraphics[threadNumber];
 		g2d.setFont(fontRegular);
 
 		FontMetrics fm = g2d.getFontMetrics();
-		int textY = screen.getHeight() - 80;
 
 		String fullSequence = sequence.stream()
 				.map(i -> getDirectionSymbol(i, playerNumber))
 				.reduce("", (a, b) -> a + " " + b).trim();
 		int fullTextWidth = fm.stringWidth(fullSequence);
+
+		int textY = collisionY - 30;
 		int textX = collisionX - (fullTextWidth / 2);
+
+		if (textX < 10) textX = 10;
+		if (textX + fullTextWidth > screen.getWidth() - 10)
+			textX = screen.getWidth() - fullTextWidth - 10;
+		if (textY < 40) textY = 40;
 
 		int xOffset = textX;
 
@@ -2303,12 +2348,29 @@ public final class DrawManager {
 		}
 	}
 
-	public void drawMatching(final Screen screen){
-		//새로 방 만드는 칸
-		String makeNewRoom = "Matching...";
-		backBufferGraphics.setColor(Color.GREEN);
-		drawCenteredBigString(screen, makeNewRoom, screen.getHeight()/2);
+	public void drawPause(Screen screen, int set){
+		backBufferGraphics.setColor(new Color(0, 0,0, 70));
+		backBufferGraphics.fillRect(0, 0, 650, 600);
 
+		backBufferGraphics.setColor(Color.GREEN);
+		drawCenteredBigString(screen, "PAUSE", screen.getHeight()/3);
+
+		switch(set){
+			case 0:
+				backBufferGraphics.setColor(Color.GREEN);
+				drawCenteredBigString(screen, "CONTINUE", screen.getHeight()/2);
+				backBufferGraphics.setColor(Color.WHITE);
+				drawCenteredBigString(screen, "STOP", screen.getHeight()/2+100);
+				break;
+			case 1:
+				backBufferGraphics.setColor(Color.WHITE);
+				drawCenteredBigString(screen, "CONTINUE", screen.getHeight()/2);
+				backBufferGraphics.setColor(Color.GREEN);
+				drawCenteredBigString(screen, "STOP", screen.getHeight()/2+100);
+				break;
+			default:
+				break;
+		}
 	}
 
 	public void drawBoss(final Screen screen, Boss boss) {
@@ -2351,9 +2413,5 @@ public final class DrawManager {
 			backBufferGraphics.drawImage(img_laserShooter, positionX + bossBullet.getBulletImage().getWidth()+ 38, positionY , bossBullet.getBulletImage().getWidth(), bossBullet.getHeight(), null);
 			backBufferGraphics.drawImage(image, positionX + bossBullet.getBulletImage().getWidth()+ 38, positionY,null);
 		}
-	}
-
-	public void drawBoss2Pattern(final Screen screen, boolean left) {
-
 	}
 }
