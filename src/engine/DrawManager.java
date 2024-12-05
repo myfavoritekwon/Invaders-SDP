@@ -2414,12 +2414,12 @@ public final class DrawManager {
 	public void drawBossBullet(BossBullet bossBullet, int positionX, int positionY) {
 		if (bossBullet.getAttackType() >= 4 && bossBullet.getAttackType() <= 9) {
 			if (bossBullet.getAttackType() == 4 || bossBullet.getAttackType() == 5 || bossBullet.getAttackType() == 8) {
-				backBufferGraphics.drawImage(img_RblackHole, 500, bossBullet.getSAVED_Y(), img_RblackHole.getWidth(), img_RblackHole.getHeight(), null);
+				backBufferGraphics.drawImage(img_RblackHole, 500, bossBullet.getSAVED_Y() - 30, img_RblackHole.getWidth(), img_RblackHole.getHeight(), null);
 			} else {
-				backBufferGraphics.drawImage(img_LblackHole, 20, bossBullet.getSAVED_Y(), img_LblackHole.getWidth(), img_LblackHole.getHeight(), null);
+				backBufferGraphics.drawImage(img_LblackHole, 20, bossBullet.getSAVED_Y()- 30, img_LblackHole.getWidth(), img_LblackHole.getHeight(), null);
 			}
 		}
-		backBufferGraphics.drawImage(bossBullet.getBulletImage(), positionX, positionY + 30, bossBullet.getBulletImage().getWidth(), bossBullet.getBulletImage().getHeight(), null);
+		backBufferGraphics.drawImage(bossBullet.getBulletImage(), positionX, positionY, bossBullet.getBulletImage().getWidth(), bossBullet.getBulletImage().getHeight(), null);
 	}
 
 	public void drawHackedState(final Screen screen) {

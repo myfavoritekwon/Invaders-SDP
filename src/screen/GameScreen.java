@@ -560,7 +560,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 									break;
 								case 3:
 									int x = Math.random() < 0.5 ? 20 : 500;
-									int y = random.nextInt(450) + 250;
+									int y = random.nextInt(400) + 100;
 
 									int starType;
 									if (x == 20) {
@@ -871,13 +871,16 @@ public class GameScreen extends Screen implements Callable<GameState> {
 						boolean isLeftBorder = this.ship.getPositionX()
 								- this.ship.getSpeed() < 1;
 						// 적군 아래에서만 이동 가능하도록 변경
-						boolean isUpBorder = this.ship.getPositionY()
-								- this.ship.getSpeed() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight() + 2;
+						boolean isUpBorder = false;
+						if (enemyShipFormation != null) {
+							isUpBorder = this.ship.getPositionY()
+									- this.ship.getSpeed() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight() + 2;
+						}
 						boolean isDownBorder = this.ship.getPositionY()
 								+ this.ship.getHeight() + this.ship.getSpeed() > this.height - 1;
 
 						// 가장 아래 적군보다 위로 올라갈 경우 강제로 아래로 이동
-						if(this.ship.getPositionY() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight()){
+						if(enemyShipFormation != null && this.ship.getPositionY() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight()){
 							this.ship.moveDown(this.enemyShipFormation.getHeight());
 						}
 
