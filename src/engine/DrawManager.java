@@ -999,25 +999,22 @@ public final class DrawManager {
 		drawCenteredBigString(screen, gameOverString, screen.getHeight()
 				/ height - fontBigMetrics.getHeight() * 2);
 
-		if (acceptsInput) {
-			// "Continue" 항목 그리기 (선택되었을 때는 초록색, 그렇지 않으면 흰색)
-			if (menuOptionSelected == 0) {
-				backBufferGraphics.setColor(Color.GREEN); // 선택된 항목은 초록색
-			} else {
-				backBufferGraphics.setColor(Color.WHITE); // 선택되지 않은 항목은 흰색
-			}
-			drawCenteredRegularString(screen, continueString,
-					screen.getHeight() / 2 + fontRegularMetrics.getHeight() * 11);
-
-			// "Exit" 항목 그리기 (선택되었을 때는 초록색, 그렇지 않으면 흰색)
-			if (menuOptionSelected == 1) {
-				backBufferGraphics.setColor(Color.GREEN); // 선택된 항목은 초록색
-			} else {
-				backBufferGraphics.setColor(Color.WHITE); // 선택되지 않은 항목은 흰색
-			}
-			drawCenteredRegularString(screen, exitString,
-					screen.getHeight() / 2 + fontRegularMetrics.getHeight() * 13);
+		// "Continue" 항목 그리기 (선택되었을 때는 초록색, 그렇지 않으면 흰색)
+		if (menuOptionSelected == 0) {
+			backBufferGraphics.setColor(Color.GREEN); // 선택된 항목은 초록색
+		} else {
+			backBufferGraphics.setColor(Color.WHITE); // 선택되지 않은 항목은 흰색
 		}
+		drawCenteredRegularString(screen, continueString,
+				screen.getHeight() / 2 + fontRegularMetrics.getHeight() * 11);
+		// "Exit" 항목 그리기 (선택되었을 때는 초록색, 그렇지 않으면 흰색)
+		if (menuOptionSelected == 1) {
+			backBufferGraphics.setColor(Color.GREEN); // 선택된 항목은 초록색
+		} else {
+			backBufferGraphics.setColor(Color.WHITE); // 선택되지 않은 항목은 흰색
+		}
+		drawCenteredRegularString(screen, exitString,
+				screen.getHeight() / 2 + fontRegularMetrics.getHeight() * 13);
 	}
 
 
