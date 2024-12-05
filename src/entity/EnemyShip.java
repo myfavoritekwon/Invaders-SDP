@@ -63,6 +63,7 @@ public class EnemyShip extends Entity {
 		for(int i =1; i<=gameState.getLevel()/3;i++){
 			this.health++;
 		}
+		if (gameState.getLevel() == 3) this.health = 0;
 
 		switch (this.spriteType) {
 		case EnemyShipA1:
