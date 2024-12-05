@@ -13,9 +13,9 @@ import engine.DrawManager.SpriteType;
 public class Entity {
 
 	/** Position in the x-axis of the upper left corner of the entity. */
-	protected int positionX;
+	protected double positionX;
 	/** Position in the y-axis of the upper left corner of the entity. */
-	protected int positionY;
+	protected double positionY;
 	/** Width of the entity. */
 	protected int width;
 	/** Height of the entity. */
@@ -39,7 +39,7 @@ public class Entity {
 	 * @param color
 	 *            Color of the entity.
 	 */
-	public Entity(final int positionX, final int positionY, final int width,
+	public Entity(final double positionX, final double positionY, final int width,
 			final int height, final Color color) {
 		this.positionX = positionX;
 		this.positionY = positionY;
@@ -72,16 +72,16 @@ public class Entity {
 	 * 
 	 * @return Position of the entity in the X axis.
 	 */
-	public final int getPositionX() {
+	public final double getPositionX() {
 		return this.positionX;
 	}
 
 	/**
 	 * Getter for the Y axis position of the entity.
-	 * 
+	 *
 	 * @return Position of the entity in the Y axis.
 	 */
-	public final int getPositionY() {
+	public final double getPositionY() {
 		return this.positionY;
 	}
 
@@ -91,7 +91,7 @@ public class Entity {
 	 * @param positionX
 	 *            New position of the entity in the X axis.
 	 */
-	public final void setPositionX(final int positionX) {
+	public final void setPositionX(final double positionX) {
 		this.positionX = positionX;
 	}
 
@@ -101,7 +101,7 @@ public class Entity {
 	 * @param positionY
 	 *            New position of the entity in the Y axis.
 	 */
-	public final void setPositionY(final int positionY) {
+	public final void setPositionY(final double positionY) {
 		this.positionY = positionY;
 	}
 

@@ -1,10 +1,13 @@
 package screen;
 
+import engine.Cooldown;
 import engine.Core;
 import engine.GameSettings;
 import engine.GameState;
+import entity.Ship;
 import entity.Wallet;
 
+import java.awt.event.KeyEvent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -33,6 +36,12 @@ public class TwoPlayerScreen extends Screen {
     /** Player 2's number**/
     private final int PLAYER2_NUMBER = 1;
 
+    private final PuzzleScreen[] puzzleScreens = new PuzzleScreen[2];
+    private final boolean[] puzzleActive = new boolean[2];
+    private final Cooldown[] webCooldowns = new Cooldown[2];
+
+    private final Ship ship;
+
     /**
      * Constructor, establishes the properties of the screen.
      *
@@ -58,9 +67,14 @@ public class TwoPlayerScreen extends Screen {
             this.gameSettings[playerNumber] = new GameSettings(gameSettings);
             this.gameStates[playerNumber] = new GameState(gameState);
             gameFinished[playerNumber] = false;
+            puzzleActive[playerNumber] = false;
+            puzzleScreens[playerNumber] = null;
+            webCooldowns[playerNumber] = Core.getCooldown(3000);
+            webCooldowns[playerNumber].reset();
         }
 
         this.wallet = wallet;
+        this.ship = null;
         executor = Executors.newFixedThreadPool(2);
         this.returnCode = 1;
     }
@@ -88,6 +102,18 @@ public class TwoPlayerScreen extends Screen {
      */
     private void draw() {
         drawManager.initDrawing(this);
+
+        for (int i = 0; i < 2; i++) {
+            if (puzzleActive[i] && puzzleScreens[i] != null) {
+                drawManager.drawPuzzle(this,
+                        puzzleScreens[i].getDirectionSequence(),
+                        puzzleScreens[i].getPlayerInput(),
+                        i, i,
+                        this.ship != null ? this.ship.getCollisionX() : this.width / 4,
+                        this.ship != null ? this.ship.getCollisionY() : this.height / 2);
+            }
+        }
+
         drawManager.mergeDrawing(this);
         drawManager.drawVerticalLine(this);
         drawManager.completeDrawing(this);
@@ -98,6 +124,12 @@ public class TwoPlayerScreen extends Screen {
      */
     protected final void update() {
         try {
+            for (int i = 0; i < 2; i++) {
+                if (puzzleActive[i] && puzzleScreens[i] != null) {
+                    updatePuzzle(i);
+                }
+            }
+
             if (players[PLAYER1_NUMBER].isDone()) {
                 gameStates[PLAYER1_NUMBER] = players[PLAYER1_NUMBER].get();
                 gameStates[PLAYER1_NUMBER] = new GameState(gameStates[PLAYER1_NUMBER], gameStates[PLAYER1_NUMBER].getLevel() + 1);
@@ -119,6 +151,58 @@ public class TwoPlayerScreen extends Screen {
             e.printStackTrace();
         }
     }
+
+    private void updatePuzzle(final int playerNumber) {
+        if (!webCooldowns[playerNumber].checkFinished()) {
+            return;
+        }
+
+        if (puzzleScreens[playerNumber] == null && !puzzleActive[playerNumber]) {
+            resetPuzzle(playerNumber);
+            puzzleScreens[playerNumber] = new PuzzleScreen(playerNumber);
+            puzzleActive[playerNumber] = true;
+            return;
+        }
+
+        boolean keyPressed = false;
+        if (playerNumber == 0) {
+            keyPressed = inputManager.isKeyDown(KeyEvent.VK_W) ||
+                    inputManager.isKeyDown(KeyEvent.VK_A) ||
+                    inputManager.isKeyDown(KeyEvent.VK_S) ||
+                    inputManager.isKeyDown(KeyEvent.VK_D);
+        } else {
+            keyPressed = inputManager.isKeyDown(KeyEvent.VK_UP) ||
+                    inputManager.isKeyDown(KeyEvent.VK_DOWN) ||
+                    inputManager.isKeyDown(KeyEvent.VK_LEFT) ||
+                    inputManager.isKeyDown(KeyEvent.VK_RIGHT);
+        }
+
+        if (keyPressed && puzzleScreens[playerNumber] != null) {
+            int keyCode = inputManager.getLastKeyPressed();
+            if (puzzleScreens[playerNumber].handleInput(keyCode)) {
+                completePuzzle(playerNumber);
+            } else {
+                resetPuzzle(playerNumber);
+            }
+            inputManager.resetLastKeyPressed();
+        }
+    }
+
+    private void completePuzzle(int playerNumber) {
+        puzzleScreens[playerNumber] = null;
+        puzzleActive[playerNumber] = false;
+        webCooldowns[playerNumber].reset();
+    }
+
+    private void resetPuzzle(int playerNumber) {
+        if (puzzleScreens[playerNumber] == null) {
+            puzzleScreens[playerNumber] = new PuzzleScreen(playerNumber);
+        } else {
+            puzzleScreens[playerNumber].reset();
+        }
+        puzzleActive[playerNumber] = true;
+    }
+
     /**
      * Progression logic each games.
      */
@@ -131,12 +215,12 @@ public class TwoPlayerScreen extends Screen {
                     && gameState.getLivesRemaining() < Core.MAX_LIVES;
             logger.info("difficulty is " + Core.getLevelSetting());
             gameSettings[playerNumber] = gameSettings[playerNumber].LevelSettings(
-                gameSettings[playerNumber].getFormationWidth(),
-                gameSettings[playerNumber].getFormationHeight(),
-                gameSettings[playerNumber].getBaseSpeed(),
-                gameSettings[playerNumber].getShootingFrecuency(),
-                gameState.getLevel(),
-                Core.getLevelSetting()
+                    gameSettings[playerNumber].getFormationWidth(),
+                    gameSettings[playerNumber].getFormationHeight(),
+                    gameSettings[playerNumber].getBaseSpeed(),
+                    gameSettings[playerNumber].getShootingFrecuency(),
+                    gameState.getLevel(),
+                    Core.getLevelSetting()
             );
             GameScreen gameScreen = new GameScreen(gameState, gameSettings[playerNumber],
                     bonusLife, width / 2, height, fps / 2, wallet, playerNumber);

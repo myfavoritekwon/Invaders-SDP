@@ -42,10 +42,29 @@ public final class BulletPool {
 			pool.remove(bullet);
 			bullet.setPositionX(positionX - bullet.getWidth() / 2);
 			bullet.setPositionY(positionY);
+			bullet.setCosSpeed(0); // 적군 총알은 직선으로만
 			bullet.setSpeed(speed);
 			bullet.setSprite();
 		} else {
 			bullet = new Bullet(positionX, positionY, speed);
+			bullet.setPositionX(positionX - bullet.getWidth() / 2);
+		}
+		return bullet;
+	}
+	// 각속도값 추가하여 BulletPool 생성
+	public static Bullet getBullet(final int positionX,
+								   final int positionY, final int cos_speed , final int sin_speed) {
+		Bullet bullet;
+		if (!pool.isEmpty()) {
+			bullet = pool.iterator().next();
+			pool.remove(bullet);
+			bullet.setPositionX(positionX - bullet.getWidth() / 2);
+			bullet.setPositionY(positionY);
+			bullet.setCosSpeed(cos_speed);
+			bullet.setSpeed(sin_speed);
+			bullet.setSprite();
+		} else {
+			bullet = new Bullet(positionX, positionY, cos_speed , sin_speed);
 			bullet.setPositionX(positionX - bullet.getWidth() / 2);
 		}
 		return bullet;

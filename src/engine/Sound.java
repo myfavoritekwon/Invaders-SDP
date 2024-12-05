@@ -31,6 +31,7 @@ public enum Sound {
     ITEM_SPAWN,
     ITEM_TIMESTOP_ON,
     ITEM_TIMESTOP_OFF,
+    ITEM_shooting_laser,
     BULLET_BLOCKING,
     BGM_MAIN,
     BGM_GAMEOVER,
@@ -41,5 +42,9 @@ public enum Sound {
     BGM_LV4,
     BGM_LV5,
     BGM_LV6,
-    BGM_LV7
+    BGM_LV7,
+    BGM_STORY,
+    BGM_STORY2,
+    BGM_BONUS,
+    BGM_ENDSTORY2
 }

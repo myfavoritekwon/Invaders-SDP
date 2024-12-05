@@ -38,7 +38,7 @@ public class SoundManager {
     private static final Set<Sound> POSITIONAL_SOUNDS = Set.of(
             Sound.ALIEN_HIT, Sound.ALIEN_LASER, Sound.PLAYER_HIT, Sound.PLAYER_MOVE, Sound.PLAYER_LASER, Sound.ITEM_BOMB,
             Sound.ITEM_SPAWN, Sound.ITEM_BARRIER_ON, Sound.ITEM_BARRIER_OFF, Sound.ITEM_TIMESTOP_ON, Sound.ITEM_TIMESTOP_OFF,
-            Sound.ITEM_2SHOT, Sound.ITEM_3SHOT, Sound.ITEM_GHOST, Sound.BULLET_BLOCKING
+            Sound.ITEM_2SHOT, Sound.ITEM_3SHOT, Sound.ITEM_GHOST, Sound.ITEM_shooting_laser,Sound.BULLET_BLOCKING
     );
 
     /**
@@ -62,7 +62,7 @@ public class SoundManager {
             loadSound(Sound.ALIEN_LASER, "res/sound/SFX/alienLaser.wav");
             loadSound(Sound.PLAYER_HIT, "res/sound/SFX/playerHit.wav");
             loadSound(Sound.PLAYER_LASER, "res/sound/SFX/playerLaser.wav");
-            loadSound(Sound.PLAYER_MOVE, "res/sound/SFX/playerMove.wav");
+            //loadSound(Sound.PLAYER_MOVE, "res/sound/SFX/playerMove.wav");
             loadSound(Sound.COIN_INSUFFICIENT, "res/sound/SFX/coinInsufficient.wav");
             loadSound(Sound.COIN_USE, "res/sound/SFX/coinUse.wav");
             loadSound(Sound.GAME_END, "res/sound/SFX/gameEnd.wav");
@@ -76,17 +76,21 @@ public class SoundManager {
             loadSound(Sound.ITEM_GHOST, "res/sound/SFX/item_ghost.wav");
             loadSound(Sound.ITEM_TIMESTOP_ON, "res/sound/SFX/item_timestopOn.wav");
             loadSound(Sound.ITEM_TIMESTOP_OFF, "res/sound/SFX/item_timestopOff.wav");
+            loadSound(Sound.ITEM_shooting_laser, "res/sound/SFX/shooting_Laser.wav");
             loadSound(Sound.ITEM_SPAWN, "res/sound/SFX/item_spawn.wav");
-            loadSound(Sound.BGM_MAIN, "res/sound/BGM/MainTheme.wav");
+            loadSound(Sound.BGM_MAIN, "res/sound/BGM/mainBGM.wav");
             loadSound(Sound.BGM_GAMEOVER, "res/sound/BGM/GameOver.wav");
             loadSound(Sound.BGM_SHOP, "res/sound/BGM/Shop.wav");
             loadSound(Sound.BGM_LV1, "res/sound/BGM/Lv1.wav");
             loadSound(Sound.BGM_LV2, "res/sound/BGM/Lv2.wav");
             loadSound(Sound.BGM_LV3, "res/sound/BGM/Lv3.wav");
-            loadSound(Sound.BGM_LV4, "res/sound/BGM/Lv4.wav");
+            loadSound(Sound.BGM_BONUS, "res/sound/BGM/BonusLevelTheme.wav");
             loadSound(Sound.BGM_LV5, "res/sound/BGM/Lv5.wav");
             loadSound(Sound.BGM_LV6, "res/sound/BGM/Lv6.wav");
             loadSound(Sound.BGM_LV7, "res/sound/BGM/Lv7.wav");
+            loadSound(Sound.BGM_STORY, "res/sound/BGM/BossTheme.wav");
+            loadSound(Sound.BGM_STORY2, "res/sound/BGM/Boss2Theme.wav");
+            loadSound(Sound.BGM_ENDSTORY2, "res/sound/BGM/EndStoryTheme.wav");
 
             setVolume(currentVolume);
             logger.info("Finished loading all sounds.");
@@ -284,7 +288,7 @@ public class SoundManager {
             if (clips != null && clips.isRunning()) {
                 clips.stop();
             } else {
-            logger.warning("Sound not playing or not found: " + sound);
+                logger.warning("Sound not playing or not found: " + sound);
             }
 
             List<Clip> clipPool = soundPools.get(sound);

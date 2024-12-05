@@ -116,12 +116,12 @@ public class TitleScreen extends Screen {
 	/*
 	  TODO: Refactor returnCode & Core Logic
 	 */
-		if (this.returnCode == 0)
-			this.returnCode = 5;
+		if (this.returnCode == 3)
+			this.returnCode = 6;
 		else if (this.returnCode == 6)
 			this.returnCode = 0;
-		else if (this.returnCode == 3)
-			this.returnCode = 6;
+		else if (this.returnCode == 0)
+			this.returnCode = 5;
 		else
 			this.returnCode--;
 	}
