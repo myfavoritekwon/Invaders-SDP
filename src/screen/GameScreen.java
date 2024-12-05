@@ -1030,7 +1030,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					drawThread();
 				else
 					draw();
-				if(inputManager.isKeyDown((KeyEvent.VK_SPACE))){
+				if(inputManager.isKeyDown((KeyEvent.VK_SPACE)) && inputDelay.checkFinished()){
 					if(checkPauseClick == 1){
 						returnCode = 1;
 						soundManager.playSound(Sound.MENU_MOVE);
