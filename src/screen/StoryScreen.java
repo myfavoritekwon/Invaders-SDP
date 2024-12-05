@@ -246,8 +246,8 @@ public class StoryScreen extends Screen{
                 this.imageCooldown.reset();
             }
 
-            String[] t = {"Is this all you’ve got? Pathetic!", "You cannot stop me! ", "I’ve grown tired of this game. Time to end this, once and for all!"};
-            String[] r = {"","You’re only delaying the inevitable."," Time to end this, once and for all!"};
+            String[] t = {"Is this all you’ve got? Pathetic!", "You cannot stop me! ", "I’ve grown tired of this game. Time to end this, once "};
+            String[] r = {"","You’re only delaying the inevitable."," and for all! Time to end this, once and for all!"};
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){
