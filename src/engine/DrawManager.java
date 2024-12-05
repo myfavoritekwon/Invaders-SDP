@@ -10,14 +10,11 @@ import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.*;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 import entity.*;
-import screen.GameScreen;
-import screen.GameSettingScreen;
 import screen.Screen;
 
 /**
@@ -990,23 +987,36 @@ public final class DrawManager {
 	 *            If the score is a new high score.
 	 */
 	public void drawGameOver(final Screen screen, final boolean acceptsInput,
-							 final boolean isNewRecord) {
+							 final boolean isNewRecord, final int menuOptionSelected) {
 		String gameOverString = "Game Over";
-		String continueOrExitString =
-				"Press Space to play again, Escape to exit";
+		String continueString = "Continue";
+		String exitString = "Exit";
 
 		int height = isNewRecord ? 4 : 2;
 
+		// "Game Over" 텍스트 그리기
 		backBufferGraphics.setColor(Color.GREEN);
-		drawCenteredBigString(screen, gameOverString, screen.getHeight()
-				/ height - fontBigMetrics.getHeight() * 2);
+		drawCenteredBigString(screen, gameOverString, screen.getHeight() / height - fontBigMetrics.getHeight() * 2);
 
-		if (acceptsInput)
-			backBufferGraphics.setColor(Color.GREEN);
-		else
-			backBufferGraphics.setColor(Color.GRAY);
-		drawCenteredRegularString(screen, continueOrExitString,
-				screen.getHeight() / 2 + fontRegularMetrics.getHeight() * 10);
+		if (acceptsInput) {
+			// "Continue" 항목 그리기 (선택되었을 때는 초록색, 그렇지 않으면 흰색)
+			if (menuOptionSelected == 0) {
+				backBufferGraphics.setColor(Color.GREEN); // 선택된 항목은 초록색
+			} else {
+				backBufferGraphics.setColor(Color.WHITE); // 선택되지 않은 항목은 흰색
+			}
+			drawCenteredRegularString(screen, continueString,
+					screen.getHeight() / 2 + fontRegularMetrics.getHeight() * 11);
+
+			// "Exit" 항목 그리기 (선택되었을 때는 초록색, 그렇지 않으면 흰색)
+			if (menuOptionSelected == 1) {
+				backBufferGraphics.setColor(Color.GREEN); // 선택된 항목은 초록색
+			} else {
+				backBufferGraphics.setColor(Color.WHITE); // 선택되지 않은 항목은 흰색
+			}
+			drawCenteredRegularString(screen, exitString,
+					screen.getHeight() / 2 + fontRegularMetrics.getHeight() * 13);
+		}
 	}
 
 
@@ -2323,10 +2333,10 @@ public final class DrawManager {
 
 		backBufferGraphics.setColor(Color.GREEN);
 		drawCenteredRegularString(screen, newRecordString, screen.getHeight()
-				/ 4 + fontRegularMetrics.getHeight() * 10);
+				/ 4 + fontRegularMetrics.getHeight() * 11);
 		backBufferGraphics.setColor(Color.WHITE);
 		drawCenteredRegularString(screen, introduceNameString,
-				screen.getHeight() / 4 + fontRegularMetrics.getHeight() * 12);
+				screen.getHeight() / 4 + fontRegularMetrics.getHeight() * 13);
 
 		// 3 letters name.
 		int positionX = screen.getWidth()

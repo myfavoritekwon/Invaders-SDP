@@ -55,6 +55,8 @@ public class ScoreScreen extends Screen {
 	private String name1, name2;
 	/** Two player mode flags*/
 	private boolean isMultiplay;
+	//선택
+	private int menuOptionSelected = 0;
 
 	// Set ratios for each coin_lv - placed in an array in the order of lv1, lv2, lv3, lv4, and will be used accordingly,
 	// e.g., lv1; score 100 * 0.1
@@ -139,90 +141,86 @@ public class ScoreScreen extends Screen {
 		super.update();
 
 		draw();
-		if (this.inputDelay.checkFinished()) {
-			if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
-				// Return to main menu.
-				this.returnCode = 1;
-				this.isRunning = false;
-				soundManager.stopSound(Sound.BGM_GAMEOVER);
-				soundManager.playSound(Sound.MENU_BACK);
-				saveScore();
-			} else if (inputManager.isKeyDown(KeyEvent.VK_SPACE)) {
-				// Play again.
-				this.returnCode = isMultiplay ? 8 : 2;
-				this.isRunning = false;
-				soundManager.stopSound(Sound.BGM_GAMEOVER);
-				soundManager.playSound(Sound.MENU_CLICK);
-				saveScore();
-			}
 
-			if (this.isNewRecord && this.selectionCooldown.checkFinished()) {
+		// 입력이 가능할 때 실행
+		if (this.inputDelay.checkFinished() && this.selectionCooldown.checkFinished()) {
+
+			if (this.isNewRecord) {
+				// 최고 기록을 세웠을 때 닉네임 편집
 				if (inputManager.isKeyDown(KeyEvent.VK_RIGHT)) {
-					this.nameCharSelected = this.nameCharSelected == 2 ? 0
-							: this.nameCharSelected + 1;
+					// 선택된 문자를 오른쪽으로 이동
+					this.nameCharSelected = (this.nameCharSelected + 1) % this.name.length;
+					this.selectionCooldown.reset();
+				} else if (inputManager.isKeyDown(KeyEvent.VK_LEFT)) {
+					// 선택된 문자를 왼쪽으로 이동
+					this.nameCharSelected = (this.nameCharSelected - 1 + this.name.length) % this.name.length;
 					this.selectionCooldown.reset();
 				}
-				if (inputManager.isKeyDown(KeyEvent.VK_LEFT)) {
-					this.nameCharSelected = this.nameCharSelected == 0 ? 2
-							: this.nameCharSelected - 1;
-					this.selectionCooldown.reset();
-				}
+
+				// 선택된 문자의 값을 위/아래로 변경
 				if (inputManager.isKeyDown(KeyEvent.VK_UP)) {
 					this.name[this.nameCharSelected] =
-							(char) (this.name[this.nameCharSelected]
-									== LAST_CHAR ? FIRST_CHAR
-									: this.name[this.nameCharSelected] + 1);
+							(char) (this.name[this.nameCharSelected] == LAST_CHAR ? FIRST_CHAR : this.name[this.nameCharSelected] + 1);
+					this.selectionCooldown.reset();
+				} else if (inputManager.isKeyDown(KeyEvent.VK_DOWN)) {
+					this.name[this.nameCharSelected] =
+							(char) (this.name[this.nameCharSelected] == FIRST_CHAR ? LAST_CHAR : this.name[this.nameCharSelected] - 1);
 					this.selectionCooldown.reset();
 				}
-				if (inputManager.isKeyDown(KeyEvent.VK_DOWN)) {
-					this.name[this.nameCharSelected] =
-							(char) (this.name[this.nameCharSelected]
-									== FIRST_CHAR ? LAST_CHAR
-									: this.name[this.nameCharSelected] - 1);
+
+				// 스페이스 바를 눌러 편집 완료하고 메뉴로 이동
+				if (inputManager.isKeyDown(KeyEvent.VK_SPACE)) {
+					this.isNewRecord = false; // 닉네임 입력을 완료하고 일반 메뉴 모드로 전환
 					this.selectionCooldown.reset();
+					soundManager.playSound(Sound.MENU_CLICK);
+				}
+
+			} else {
+				// 메뉴 선택 전환 (위/아래 방향 키로 선택)
+				if (inputManager.isKeyDown(KeyEvent.VK_UP)) {
+					// 선택된 행을 위로 이동 (총 두 가지 메뉴 선택 가능: Continue, Exit)
+					this.menuOptionSelected = (this.menuOptionSelected - 1 + 2) % 2;
+					this.selectionCooldown.reset();
+					soundManager.playSound(Sound.MENU_MOVE);
+				} else if (inputManager.isKeyDown(KeyEvent.VK_DOWN)) {
+					// 선택된 행을 아래로 이동
+					this.menuOptionSelected = (this.menuOptionSelected + 1) % 2;
+					this.selectionCooldown.reset();
+					soundManager.playSound(Sound.MENU_MOVE);
+				}
+
+				// 현재 선택된 메뉴 처리
+				if (inputManager.isKeyDown(KeyEvent.VK_SPACE)) {
+					if (this.menuOptionSelected == 0) { // Continue 선택
+						// 스페이스 바를 눌렀을 때 게임을 다시 시작
+						this.returnCode = isMultiplay ? 8 : 2; // 멀티플레이 모드일 경우 코드 8, 싱글플레이 모드일 경우 코드 2.
+						this.isRunning = false;
+						soundManager.stopSound(Sound.BGM_GAMEOVER);
+						soundManager.playSound(Sound.MENU_CLICK);
+						saveScore(); // 새로운 최고 점수일 경우 기록 저장
+					} else if (this.menuOptionSelected == 1) { // Exit 선택
+						// 스페이스 바를 눌렀을 때 메인 메뉴로 돌아가기
+						this.returnCode = 1; // 메인 메뉴로 이동
+						this.isRunning = false;
+						soundManager.stopSound(Sound.BGM_GAMEOVER);
+						soundManager.playSound(Sound.MENU_BACK);
+						saveScore(); // 새로운 최고 점수일 경우 기록 저장
+					}
 				}
 			}
-
 		}
-
 	}
+
 
 	/**
 	 * Saves the score as a high score.
-	 * 중복 방지를 위한 로직 추가.
 	 */
 	private void saveScore() {
-		if (highScores.size() > MAX_HIGH_SCORE_NUM) {
-			int index = 0;
-			for (Score loadScore : highScores) {
-				if (name1.equals(loadScore.getName())) {
-					if (score > loadScore.getScore()) {
-						highScores.remove(index);
-						highScores.add(new Score(name1, score));
-						break;
-					}
-				}
-				index += 1;
-			}
-		} else {
-			boolean checkDuplicate = false;
-			int index = 0;
-			for (Score loadScore : highScores) {
-				if (name1.equals(loadScore.getName())) {
-					checkDuplicate = true;
-					if (score > loadScore.getScore()) {
-						highScores.remove(index);
-						highScores.add(new Score(name1, score));
-						break;
-					}
-				}
-				index += 1;
-			}
-			if (!checkDuplicate) {
-				highScores.add(new Score(name1, score));
-			}
-		}
+		highScores.add(new Score(new String(this.name), score));
 		Collections.sort(highScores);
+		if (highScores.size() > MAX_HIGH_SCORE_NUM)
+			highScores.remove(highScores.size() - 1);
+
 		try {
 			Core.getFileManager().saveHighScores(highScores);
 		} catch (IOException e) {
@@ -237,7 +235,7 @@ public class ScoreScreen extends Screen {
 		drawManager.initDrawing(this);
 
 		drawManager.drawGameOver(this, this.inputDelay.checkFinished(),
-				this.isNewRecord);
+				this.isNewRecord,this.menuOptionSelected);
 		drawManager.drawResults(this, this.score, this.livesRemaining,
 				this.shipsDestroyed, this.accuracy, this.isNewRecord, this.coinsEarned);
 
