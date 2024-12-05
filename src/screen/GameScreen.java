@@ -714,11 +714,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
                     }
                 }
 
-                if (enemyShipFormation != null) {
-                    this.enemyShipFormation.update();
-                    this.enemyShipFormation.shoot(this.bullets, this.level, balance);
-                }
-
                 if (this.enemyShipSpecial != null) {
                     // special 함선돠 만나면 아래로 강제 이동
                     if (checkCollision(ship, enemyShipSpecial)) ship.moveDown(5);
@@ -1034,6 +1029,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					if(checkPauseClick == 1){
 						returnCode = 1;
 						soundManager.playSound(Sound.MENU_MOVE);
+						soundManager.stopSound(soundManager.getCurrentBGM());
 						this.isRunning = false;
 					}else{
 						checkPause = !checkPause;
