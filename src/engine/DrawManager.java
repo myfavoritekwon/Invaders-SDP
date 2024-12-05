@@ -69,9 +69,18 @@ public final class DrawManager {
 	private static BufferedImage img_coin;
 	private static BufferedImage img_coingain;
 	private static BufferedImage img_shotinterval;
+
+
 	private static BufferedImage img_saturn;
 	private static BufferedImage img_saturn_destroyed;
 	private static BufferedImage img_timelimit;
+
+	private static BufferedImage img_bossHPbar;
+	private static BufferedImage img_hacking;
+	private static BufferedImage img_laserShooter;
+	private static BufferedImage img_LblackHole;
+	private static BufferedImage img_RblackHole;
+
 	/** For item image */
 	private static final Map<ItemManager.ItemType, BufferedImage> itemImages = new HashMap<>();
 
@@ -273,6 +282,18 @@ public final class DrawManager {
 			logger.info("Bonus Boss image loading failed.");
 		}
 
+
+		/* Boss Stage image load*/
+		try {
+			img_bossHPbar = ImageIO.read(new File("res/image/bossHPbar.png"));
+			img_hacking = ImageIO.read(new File("res/image/404.png"));
+			img_laserShooter = ImageIO.read(new File("res/image/laserShooter.png"));
+			img_LblackHole = ImageIO.read(new File("res/image/blackhole01.png"));
+			img_RblackHole = ImageIO.read(new File("res/image/blackhole02.png"));
+
+		} catch (IOException e) {
+			logger.info("Boss image loading failed.");
+		}
 	}
 
 	/**
@@ -2113,7 +2134,11 @@ public final class DrawManager {
 				}
 				break;
 			case 4:
-				backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+				if (!bonusBoss.isDestroyed()) {
+					backBufferGraphics.drawImage(img_saturn, (screen.getWidth() - img_saturn.getWidth()) / 2, 50, img_saturn.getWidth(), img_saturn.getHeight(), null);
+				} else {
+					backBufferGraphics.drawImage(img_saturn_destroyed, (screen.getWidth() - img_saturn_destroyed.getWidth()) / 2, 50, img_saturn_destroyed.getWidth(), img_saturn_destroyed.getHeight(), null);
+				}
 				break;
 			// 위에꺼 다른 보너스 보스로 바꾸기 나중에 그리고 나면
 			default:
@@ -2237,6 +2262,52 @@ public final class DrawManager {
 		String makeNewRoom = "Matching...";
 		backBufferGraphics.setColor(Color.GREEN);
 		drawCenteredBigString(screen, makeNewRoom, screen.getHeight()/2);
+
+	}
+
+	public void drawBoss(final Screen screen, Boss boss) {
+		backBufferGraphics.drawImage(boss.getBossShipImage(), (int) boss.getPositionX(), (int) boss.getPositionY(), boss.getBossShipImage().getWidth(), boss.getBossShipImage().getHeight(), null);
+	}
+
+	public void drawTopInterfaceBox (final Screen screen) {
+		backBufferGraphics.setColor(Color.black);
+		backBufferGraphics.fillRect(0, 0, screen.getWidth(), 40);
+	}
+
+	public void drawBossHPBar(final Screen screen, int x, int y, int width, int height) {
+		backBufferGraphics.setColor(Color.RED);
+		backBufferGraphics.fillRect(x, y, width, height);
+		backBufferGraphics.drawImage(img_bossHPbar, (screen.getWidth() - img_bossHPbar.getWidth() * 2) / 2, 50, img_bossHPbar.getWidth() * 2, img_bossHPbar.getHeight() * 2, null);
+	}
+
+	public void drawBossBullet(BossBullet bossBullet, int positionX, int positionY) {
+		if (bossBullet.getAttackType() >= 4 && bossBullet.getAttackType() <= 9) {
+			if (bossBullet.getAttackType() == 4 || bossBullet.getAttackType() == 5 || bossBullet.getAttackType() == 8) {
+				backBufferGraphics.drawImage(img_RblackHole, 500, bossBullet.getSAVED_Y(), img_RblackHole.getWidth(), img_RblackHole.getHeight(), null);
+			} else {
+				backBufferGraphics.drawImage(img_LblackHole, 20, bossBullet.getSAVED_Y(), img_LblackHole.getWidth(), img_LblackHole.getHeight(), null);
+			}
+		}
+		backBufferGraphics.drawImage(bossBullet.getBulletImage(), positionX, positionY + 30, bossBullet.getBulletImage().getWidth(), bossBullet.getBulletImage().getHeight(), null);
+	}
+
+	public void drawHackedState(final Screen screen) {
+		backBufferGraphics.drawImage(img_hacking, (screen.getWidth() - img_bossHPbar.getWidth() * 2) / 2 + 40, 200, img_hacking.getWidth(), img_hacking.getHeight(), null);
+	}
+
+	public void drawBossLaser(BossBullet bossBullet, int positionX, int positionY, int height, boolean left) {
+		if (height > bossBullet.getBulletImage().getHeight()) height = bossBullet.getBulletImage().getHeight();
+		BufferedImage image = bossBullet.getBulletImage().getSubimage(0, 0, bossBullet.getWidth(), height);
+		if (left) {
+			backBufferGraphics.drawImage(img_laserShooter, positionX - 84, positionY , bossBullet.getBulletImage().getWidth(), bossBullet.getHeight(), null);
+			backBufferGraphics.drawImage(image, positionX - 84, positionY,null);
+		} else {
+			backBufferGraphics.drawImage(img_laserShooter, positionX + bossBullet.getBulletImage().getWidth()+ 38, positionY , bossBullet.getBulletImage().getWidth(), bossBullet.getHeight(), null);
+			backBufferGraphics.drawImage(image, positionX + bossBullet.getBulletImage().getWidth()+ 38, positionY,null);
+		}
+	}
+
+	public void drawBoss2Pattern(final Screen screen, boolean left) {
 
 	}
 }

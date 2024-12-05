@@ -49,7 +49,7 @@ public class ItemManager {
     /** Player's ship. */
     private final Ship ship;
     /** Formation of enemy ships. */
-    private final EnemyShipFormation enemyShipFormation;
+    private EnemyShipFormation enemyShipFormation;
     /** Set of Barriers in game screen. */
     private final Set<Barrier> barriers;
     /** Application logger. */
@@ -429,6 +429,8 @@ public class ItemManager {
         return this.shotNum;
     }
 
-
+    public void setEnemyShipFormation(EnemyShipFormation e) {
+        this.enemyShipFormation = e;
+    }
 
 }

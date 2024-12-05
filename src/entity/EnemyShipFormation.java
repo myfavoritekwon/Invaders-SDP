@@ -133,6 +133,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		this.movementSpeed = this.baseSpeed;
 		this.positionX = INIT_POS_X;
 		this.positionY = INIT_POS_Y;
+		if (gameState.getLevel() == 3) this.positionY = 300;
 		this.shooters = new ArrayList<EnemyShip>();
 		this.gameState = gameState;
 		SpriteType spriteType;
@@ -144,7 +145,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		for (int i = 0; i < this.nShipsWide; i++)
 			this.enemyShips.add(new ArrayList<EnemyShip>());
 
-		if (gameState.getLevel() != 2 && gameState.getLevel() != 4) {
+		if (gameState.getLevel() != 2 && gameState.getLevel() != 4 ) { // 2,4는 보너스 임시, 3은 보스 임시
 			for (List<EnemyShip> column : this.enemyShips) {
 				for (int i = 0; i < this.nShipsHigh; i++) {
 					if (i / (float) this.nShipsHigh < PROPORTION_E)
@@ -379,6 +380,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		// Increasing the number of projectiles per level 3 (levels 1 to 3, 4 to 6, 2, 7 to 9, etc.)
 		int numberOfShooters = Math.min((level / 3) + 1, this.shooters.size());
 		int numberOfBullets = (level / 3) + 1;
+		if (level == 3) numberOfBullets = 1;
 
 		// Randomly select enemy to fire in proportion to the level
 		List<EnemyShip> selectedShooters = new ArrayList<>();

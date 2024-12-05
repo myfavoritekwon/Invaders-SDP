@@ -13,7 +13,7 @@ public class BonusBoss extends Entity {
     public BonusBoss(int positionX, int positionY, int width, int height) {
         super(positionX, positionY, width, height, Color.WHITE);
         isDestroyed = false;
-        health = 5;
+        health = 2;
         radius = 127;
     }
 
