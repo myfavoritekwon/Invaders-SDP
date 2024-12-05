@@ -208,7 +208,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.blockerCooldown = Core.getVariableCooldown(10000, 14000);
 		this.blockerCooldown.reset();
 		this.blockerVisibleCooldown = Core.getCooldown(20000);
-		this.pauseESCCooldown = Core.getCooldown(1000);
+		this.pauseESCCooldown = Core.getCooldown(500);
 
 		try {
 			this.highScores = Core.getFileManager().loadHighScores();
@@ -732,27 +732,30 @@ public class GameScreen extends Screen implements Callable<GameState> {
 			}
 		}else{
 			if(pauseESCCooldown.checkFinished()){
-				if(inputManager.isKeyDown(KeyEvent.VK_ESCAPE)){
+				if(inputManager.isKeyDown(KeyEvent.VK_ESCAPE) && inputDelay.checkFinished()){
 					checkPause = !checkPause;
 					this.pauseESCCooldown.reset();
 				}
 				if(inputManager.isKeyDown(KeyEvent.VK_DOWN)){
 					if(checkPauseClick == 1) checkPauseClick = 0;
 					else checkPauseClick++;
+					soundManager.playSound(Sound.MENU_MOVE);
 					this.pauseESCCooldown.reset();
 				}
 				if(inputManager.isKeyDown(KeyEvent.VK_UP)){
 					if(checkPauseClick == 0) checkPauseClick = 1;
 					else checkPauseClick--;
+					soundManager.playSound(Sound.MENU_MOVE);
 					this.pauseESCCooldown.reset();
 				}
 				if (playerNumber >= 0)
 					drawThread();
 				else
 					draw();
-				if(inputManager.isKeyDown((KeyEvent.VK_ENTER))){
+				if(inputManager.isKeyDown((KeyEvent.VK_SPACE))){
 					if(checkPauseClick == 1){
 						returnCode = 1;
+						soundManager.playSound(Sound.MENU_MOVE);
 						this.isRunning = false;
 					}else{
 						checkPause = !checkPause;
