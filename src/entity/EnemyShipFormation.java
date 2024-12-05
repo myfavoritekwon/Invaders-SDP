@@ -586,4 +586,6 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 
 	public List<List<EnemyShip>> getEnemyShips() {return enemyShips; }
 	public List<EnemyShip> getListEnemies(){return listEnemies;}
+	public int getPositionY(){return positionY;}
+	public int getHeight(){return height;}
 }
