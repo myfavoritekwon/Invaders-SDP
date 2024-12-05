@@ -714,7 +714,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
                     }
                 }
 
-                if (this.enemyShipSpecial != null) {
+                if (this.enemyShipSpecial != null)  {
                     // special 함선돠 만나면 아래로 강제 이동
                     if (checkCollision(ship, enemyShipSpecial)) ship.moveDown(5);
                     if (!this.enemyShipSpecial.isDestroyed())
@@ -1170,11 +1170,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
 		drawManager.drawItemHud(this, this.height, itemManager.getStoredItems());
 
-
-		if(checkPause){
-			drawManager.drawPause(this, checkPauseClick);
-		}
-
 		//draw Gravity Enemy
         if (physicsEnemyShips != null) {
             for (int i = 0; i < physicsEnemyShips.size(); i++) {
@@ -1334,6 +1329,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					puzzleScreen.getPlayerInput(),
 					playerNumber);
 		}
+
+		if(checkPause){
+			drawManager.drawPause(this, checkPauseClick);
+		}
+
 		drawManager.completeDrawing(this);
 	}
 
