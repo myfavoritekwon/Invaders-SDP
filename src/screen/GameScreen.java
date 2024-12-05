@@ -153,7 +153,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 	private boolean checkPause = false;
 	private int checkPauseClick = 0;
-
 	/**
 	 * Constructor, establishes the properties of the screen.
 	 *
@@ -209,7 +208,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		this.blockerCooldown = Core.getVariableCooldown(10000, 14000);
 		this.blockerCooldown.reset();
 		this.blockerVisibleCooldown = Core.getCooldown(20000);
-		this.pauseESCCooldown = Core.getCooldown(10000);
+		this.pauseESCCooldown = Core.getCooldown(1000);
 
 		try {
 			this.highScores = Core.getFileManager().loadHighScores();
@@ -414,7 +413,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 	protected final void update() {
 		super.update();
 		if(!checkPause && this.inputDelay.checkFinished()) {
-			pauseESCCooldown.reset();
 			//swap item N
 			if (inputManager.isKeyDown(KeyEvent.VK_N)) {
 				itemManager.swapItems();
@@ -728,35 +726,37 @@ public class GameScreen extends Screen implements Callable<GameState> {
 				this.isRunning = false;
 			}
 
-			if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE)) {
+			if (inputManager.isKeyDown(KeyEvent.VK_ESCAPE) && pauseESCCooldown.checkFinished()) {
 				checkPause = !checkPause;
 				this.pauseESCCooldown.reset();
 			}
 		}else{
-			if(inputManager.isKeyDown(KeyEvent.VK_ESCAPE)){
-				checkPause = !checkPause;
-				this.pauseESCCooldown.reset();
-			}
-			if(inputManager.isKeyDown(KeyEvent.VK_DOWN)){
-				if(checkPauseClick == 1) checkPauseClick = 0;
-				else checkPauseClick++;
-				this.pauseESCCooldown.reset();
-			}
-			if(inputManager.isKeyDown(KeyEvent.VK_UP)){
-				if(checkPauseClick == 0) checkPauseClick = 1;
-				else checkPauseClick--;
-				this.pauseESCCooldown.reset();
-			}
-			if (playerNumber >= 0)
-				drawThread();
-			else
-				draw();
-			if(inputManager.isKeyDown((KeyEvent.VK_ENTER))){
-				if(checkPauseClick == 1){
-					returnCode = 1;
-					this.isRunning = false;
-				}else{
+			if(pauseESCCooldown.checkFinished()){
+				if(inputManager.isKeyDown(KeyEvent.VK_ESCAPE)){
 					checkPause = !checkPause;
+					this.pauseESCCooldown.reset();
+				}
+				if(inputManager.isKeyDown(KeyEvent.VK_DOWN)){
+					if(checkPauseClick == 1) checkPauseClick = 0;
+					else checkPauseClick++;
+					this.pauseESCCooldown.reset();
+				}
+				if(inputManager.isKeyDown(KeyEvent.VK_UP)){
+					if(checkPauseClick == 0) checkPauseClick = 1;
+					else checkPauseClick--;
+					this.pauseESCCooldown.reset();
+				}
+				if (playerNumber >= 0)
+					drawThread();
+				else
+					draw();
+				if(inputManager.isKeyDown((KeyEvent.VK_ENTER))){
+					if(checkPauseClick == 1){
+						returnCode = 1;
+						this.isRunning = false;
+					}else{
+						checkPause = !checkPause;
+					}
 				}
 			}
 		}
