@@ -51,10 +51,6 @@ public class ScoreScreen extends Screen {
 	private Cooldown selectionCooldown;
 	/** Number of coins earned in the game */
 	private int coinsEarned;
-	/** Player's name */
-	private String name1, name2;
-	/** Two player mode flags*/
-	private boolean isMultiplay;
 	//선택
 	private int menuOptionSelected = 0;
 
@@ -74,13 +70,10 @@ public class ScoreScreen extends Screen {
 	 * @param gameState
 	 *            Current game state.
 	 */
-	public ScoreScreen(final String name1, final int width, final int height, final int fps,
-			final GameState gameState, final Wallet wallet, final AchievementManager achievementManager,
-		    final boolean isMultiplay) {
-		super(width, height, fps);
+	public ScoreScreen(final int width, final int height, final int fps,
+			final GameState gameState, final Wallet wallet, final AchievementManager achievementManager) {
 
-		this.name1 = name1;
-		this.name2 = name2;
+		super(width, height, fps);
 
 		//record
 		this.isNewRecord = false;
@@ -93,7 +86,6 @@ public class ScoreScreen extends Screen {
 		this.livesRemaining = gameState.getLivesRemaining();
 		this.bulletsShot = gameState.getBulletsShot();
 		this.shipsDestroyed = gameState.getShipsDestroyed();
-		this.isMultiplay = isMultiplay;
 
 		// Get the user's coin_lv
 		int coin_lv = wallet.getCoin_lv();
@@ -193,7 +185,7 @@ public class ScoreScreen extends Screen {
 				if (inputManager.isKeyDown(KeyEvent.VK_SPACE)) {
 					if (this.menuOptionSelected == 0) { // Continue 선택
 						// 스페이스 바를 눌렀을 때 게임을 다시 시작
-						this.returnCode = isMultiplay ? 8 : 2; // 멀티플레이 모드일 경우 코드 8, 싱글플레이 모드일 경우 코드 2.
+						this.returnCode = 2;
 						this.isRunning = false;
 						soundManager.stopSound(Sound.BGM_GAMEOVER);
 						soundManager.playSound(Sound.MENU_CLICK);

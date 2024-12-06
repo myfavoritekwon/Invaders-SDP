@@ -965,10 +965,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
             manageCollisions();
             cleanBullets();
-            if (playerNumber >= 0)
-                drawThread();
-            else
-                draw();
+			draw();
 
             if ((enemyShipFormation != null && this.enemyShipFormation.isEmpty() && !bonusBossLevels.contains(level) && !bossLevels.contains(level) || this.lives <= 0)
                     && !this.levelFinished) {
@@ -1027,10 +1024,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					soundManager.playSound(Sound.MENU_MOVE);
 					this.pauseESCCooldown.reset();
 				}
-				if (playerNumber >= 0)
-					drawThread();
-				else
-					draw();
+				draw();
 				if(inputManager.isKeyDown((KeyEvent.VK_SPACE)) && inputDelay.checkFinished()){
 					if(checkPauseClick == 1){
 						returnCode = 1;
@@ -1396,124 +1390,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		// Remove from the blocker list that goes off screen
 		blockers.removeAll(toRemove);
-	}
-
-	/**
-	 * Draws the elements associated with the screen to thread buffer.
-	 */
-	private void drawThread() {
-		drawManager.initThreadDrawing(this, playerNumber);
-		drawManager.drawGameTitle(this, playerNumber);
-		// 2인모드 총알 각도
-		drawManager.drawLaunchTrajectory( this, (int)this.ship.getPositionX(), (int)this.ship.getPositionY(),playerNumber , this.ship.getAngle());
-
-		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(),
-                (int) this.ship.getPositionY(), playerNumber);
-
-		//draw Gravity Enemy
-		if (physicsEnemyShips != null) {
-			for (int i = 0; i < physicsEnemyShips.size(); i++) {
-				drawManager.drawEntity(this.physicsEnemyShips.get(i), (int) this.physicsEnemyShips.get(i).getPositionX(),
-						(int) this.physicsEnemyShips.get(i).getPositionY(), playerNumber);
-			}
-		}
-
-		//draw Spider Web
-		if (!bonusBossLevels.contains(level)) {
-			for (int i = 0; i < web.size(); i++) {
-				drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
-						(int) this.web.get(i).getPositionY(), playerNumber);
-			}
-		}
-		//draw Blocks
-		if (!bonusBossLevels.contains(level)) {
-			for (Block block : block)
-				drawManager.drawEntity(block, (int) block.getPositionX(),
-						(int) block.getPositionY(), playerNumber);
-		}
-
-		if (this.enemyShipSpecial != null)
-			drawManager.drawEntity(this.enemyShipSpecial,
-                    (int) this.enemyShipSpecial.getPositionX(),
-                    (int) this.enemyShipSpecial.getPositionY(), playerNumber);
-
-		enemyShipFormation.draw(playerNumber);
-
-		if (!bonusBossLevels.contains(level) && !bossLevels.contains(level)) {
-			for (ItemBox itemBox : this.itemBoxes)
-				drawManager.drawEntity(itemBox, (int) itemBox.getPositionX(), (int) itemBox.getPositionY(), playerNumber);
-
-			for (Barrier barrier : this.barriers)
-				drawManager.drawEntity(barrier, (int) barrier.getPositionX(), (int) barrier.getPositionY(), playerNumber);
-
-			for (Bullet bullet : this.bullets)
-				drawManager.drawEntity(bullet, (int) bullet.getPositionX(),
-                        (int) bullet.getPositionY(), playerNumber);
-		}
-
-		// Interface.
-		drawManager.drawScore(this, this.score, playerNumber);
-		drawManager.drawElapsedTime(this, this.elapsedTime, playerNumber);
-		drawManager.drawAlertMessage(this, this.alertMessage, playerNumber);
-		drawManager.drawLives(this, this.lives, this.shipType, playerNumber);
-		drawManager.drawLevel(this, this.level, playerNumber);
-		drawManager.drawHorizontalLine(this, SEPARATION_LINE_HEIGHT - 1, playerNumber);
-		drawManager.drawReloadTimer(this,this.ship,ship.getRemainingReloadTime(), playerNumber);
-		drawManager.drawCombo(this,this.combo, playerNumber);
-
-		// Show GameOver if one player ends first
-		if (this.levelFinished && this.screenFinishedCooldown.checkFinished() && this.lives <= 0) {
-			drawManager.drawInGameOver(this, this.height, playerNumber);
-			drawManager.drawHorizontalLine(this, this.height / 2 - this.height
-					/ 12, playerNumber);
-			drawManager.drawHorizontalLine(this, this.height / 2 + this.height
-					/ 12, playerNumber);
-		}
-
-		// Countdown to game start.
-		if (!this.inputDelay.checkFinished()) {
-			int countdown = (int) ((INPUT_DELAY - (System.currentTimeMillis() - this.gameStartTime)) / 1000);
-			drawManager.drawCountDown(this, this.level, countdown,
-					this.bonusLife, playerNumber);
-			drawManager.drawHorizontalLine(this, this.height / 2 - this.height
-					/ 12, playerNumber);
-			drawManager.drawHorizontalLine(this, this.height / 2 + this.height
-					/ 12, playerNumber);
-
-			//Intermediate aggregation
-			if (this.level > 1){
-				if (countdown == 0) {
-					//Reset mac combo and edit temporary values
-					this.lapTime = this.elapsedTime;
-					this.tempScore = this.score;
-					this.maxCombo = 0;
-				} else {
-					// Don't show it just before the game starts, i.e. when the countdown is zero.
-					drawManager.interAggre(this, this.level - 1, this.maxCombo, this.elapsedTime, this.lapTime, this.score, this.tempScore, playerNumber);
-				}
-			}
-		}
-
-		//add drawRecord method for drawing
-		drawManager.drawRecord(highScores,this, playerNumber);
-
-		// Blocker drawing part
-		if (!blockers.isEmpty()) {
-			for (Blocker blocker : blockers) {
-				drawManager.drawRotatedEntity(blocker, (int) blocker.getPositionX(), (int) blocker.getPositionY(), blocker.getAngle(), playerNumber);
-			}
-		}
-
-		// draw puzzle screen
-		if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
-			drawManager.drawPuzzle(this,
-					this.puzzleScreen.getDirectionSequence(),
-					this.puzzleScreen.getPlayerInput(),
-					playerNumber,
-					playerNumber,
-					this.ship.getCollisionX(),
-					this.ship.getCollisionY());
-		}
 	}
 
 	/**
