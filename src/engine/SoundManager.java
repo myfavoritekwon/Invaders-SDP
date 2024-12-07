@@ -62,7 +62,7 @@ public class SoundManager {
             loadSound(Sound.ALIEN_LASER, "res/sound/SFX/alienLaser.wav");
             loadSound(Sound.PLAYER_HIT, "res/sound/SFX/playerHit.wav");
             loadSound(Sound.PLAYER_LASER, "res/sound/SFX/playerLaser.wav");
-            loadSound(Sound.PLAYER_MOVE, "res/sound/SFX/playerMove.wav");
+            //loadSound(Sound.PLAYER_MOVE, "res/sound/SFX/playerMove.wav");
             loadSound(Sound.COIN_INSUFFICIENT, "res/sound/SFX/coinInsufficient.wav");
             loadSound(Sound.COIN_USE, "res/sound/SFX/coinUse.wav");
             loadSound(Sound.GAME_END, "res/sound/SFX/gameEnd.wav");

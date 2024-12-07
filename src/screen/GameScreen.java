@@ -427,10 +427,10 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		switch (this.level) {
 			case 1: soundManager.loopSound(Sound.BGM_LV1); break;
 			case 2: soundManager.loopSound(Sound.BGM_LV2); break;
-			case 3: soundManager.loopSound(Sound.BGM_LV3); break;
+			case 3: break;
 			case 4: soundManager.loopSound(Sound.BGM_BONUS); break;
 			case 5: soundManager.loopSound(Sound.BGM_LV5); break;
-			case 6: soundManager.loopSound(Sound.BGM_LV6); break;
+			case 6: break;
 			case 7: soundManager.loopSound(Sound.BGM_BONUS); break;
 				// From level 7 and above, it continues to play at BGM_LV7.
 			default: soundManager.loopSound(Sound.BGM_LV7); break;
@@ -714,12 +714,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
                     }
                 }
 
-                if (enemyShipFormation != null) {
-                    this.enemyShipFormation.update();
-                    this.enemyShipFormation.shoot(this.bullets, this.level, balance);
-                }
-
-                if (this.enemyShipSpecial != null) {
+                if (this.enemyShipSpecial != null)  {
                     // special 함선돠 만나면 아래로 강제 이동
                     if (checkCollision(ship, enemyShipSpecial)) ship.moveDown(5);
                     if (!this.enemyShipSpecial.isDestroyed())
@@ -871,12 +866,18 @@ public class GameScreen extends Screen implements Callable<GameState> {
 							isUpBorder = this.ship.getPositionY()
 									- this.ship.getSpeed() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight() + 2;
 						}
+						if(boss != null){
+							isUpBorder = this.ship.getPositionY()
+									- this.ship.getSpeed() < this.boss.getPositionY() + this.boss.getHeight() ;
+						}
 						boolean isDownBorder = this.ship.getPositionY()
 								+ this.ship.getHeight() + this.ship.getSpeed() > this.height - 1;
 
 						// 가장 아래 적군보다 위로 올라갈 경우 강제로 아래로 이동
-						if(enemyShipFormation != null && this.ship.getPositionY() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight()){
-							this.ship.moveDown(this.enemyShipFormation.getHeight());
+						if((enemyShipFormation != null && this.ship.getPositionY() < this.enemyShipFormation.getPositionY() + this.enemyShipFormation.getHeight())
+							||
+							(boss != null && this.ship.getPositionY() < this.boss.getPositionY() + this.boss.getHeight())){
+							this.ship.moveDown(1);
 						}
 
 						if (moveDown && !isDownBorder
@@ -888,7 +889,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 								|| checkCollision(this.ship, this.barriers, "down")) ship.moveUp(5);
 
                         if (moveUp && !isUpBorder
-                                && !checkCollision(this.ship, this.block, "up")) {
+                                && !checkCollision(this.ship, this.block, "up") && bonusBoss == null) {
                             if (playerNumber == -1) this.ship.moveUp();
                             else this.ship.moveUp(balance);
                         }
@@ -964,10 +965,7 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
             manageCollisions();
             cleanBullets();
-            if (playerNumber >= 0)
-                drawThread();
-            else
-                draw();
+			draw();
 
             if ((enemyShipFormation != null && this.enemyShipFormation.isEmpty() && !bonusBossLevels.contains(level) && !bossLevels.contains(level) || this.lives <= 0)
                     && !this.levelFinished) {
@@ -1026,14 +1024,12 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					soundManager.playSound(Sound.MENU_MOVE);
 					this.pauseESCCooldown.reset();
 				}
-				if (playerNumber >= 0)
-					drawThread();
-				else
-					draw();
+				draw();
 				if(inputManager.isKeyDown((KeyEvent.VK_SPACE)) && inputDelay.checkFinished()){
 					if(checkPauseClick == 1){
 						returnCode = 1;
 						soundManager.playSound(Sound.MENU_MOVE);
+						soundManager.stopSound(soundManager.getCurrentBGM());
 						this.isRunning = false;
 					}else{
 						checkPause = !checkPause;
@@ -1167,11 +1163,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 		drawManager.drawLaunchTrajectory( this, (int) this.ship.getPositionX(), (int) this.ship.getPositionY(), this.ship.getAngle());
 		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(), (int) this.ship.getPositionY());
 		drawManager.drawItemHud(this, this.height, itemManager.getStoredItems());
-
-
-		if(checkPause){
-			drawManager.drawPause(this, checkPauseClick);
-		}
 
 		//draw Gravity Enemy
         if (physicsEnemyShips != null) {
@@ -1332,6 +1323,11 @@ public class GameScreen extends Screen implements Callable<GameState> {
 					puzzleScreen.getPlayerInput(),
 					playerNumber);
 		}
+
+		if(checkPause){
+			drawManager.drawPause(this, checkPauseClick);
+		}
+
 		drawManager.completeDrawing(this);
 	}
 
@@ -1394,124 +1390,6 @@ public class GameScreen extends Screen implements Callable<GameState> {
 
 		// Remove from the blocker list that goes off screen
 		blockers.removeAll(toRemove);
-	}
-
-	/**
-	 * Draws the elements associated with the screen to thread buffer.
-	 */
-	private void drawThread() {
-		drawManager.initThreadDrawing(this, playerNumber);
-		drawManager.drawGameTitle(this, playerNumber);
-		// 2인모드 총알 각도
-		drawManager.drawLaunchTrajectory( this, (int)this.ship.getPositionX(), (int)this.ship.getPositionY(),playerNumber , this.ship.getAngle());
-
-		drawManager.drawEntity(this.ship, (int) this.ship.getPositionX(),
-                (int) this.ship.getPositionY(), playerNumber);
-
-		//draw Gravity Enemy
-		if (physicsEnemyShips != null) {
-			for (int i = 0; i < physicsEnemyShips.size(); i++) {
-				drawManager.drawEntity(this.physicsEnemyShips.get(i), (int) this.physicsEnemyShips.get(i).getPositionX(),
-						(int) this.physicsEnemyShips.get(i).getPositionY(), playerNumber);
-			}
-		}
-
-		//draw Spider Web
-		if (!bonusBossLevels.contains(level)) {
-			for (int i = 0; i < web.size(); i++) {
-				drawManager.drawEntity(this.web.get(i), (int) this.web.get(i).getPositionX(),
-						(int) this.web.get(i).getPositionY(), playerNumber);
-			}
-		}
-		//draw Blocks
-		if (!bonusBossLevels.contains(level)) {
-			for (Block block : block)
-				drawManager.drawEntity(block, (int) block.getPositionX(),
-						(int) block.getPositionY(), playerNumber);
-		}
-
-		if (this.enemyShipSpecial != null)
-			drawManager.drawEntity(this.enemyShipSpecial,
-                    (int) this.enemyShipSpecial.getPositionX(),
-                    (int) this.enemyShipSpecial.getPositionY(), playerNumber);
-
-		enemyShipFormation.draw(playerNumber);
-
-		if (!bonusBossLevels.contains(level) && !bossLevels.contains(level)) {
-			for (ItemBox itemBox : this.itemBoxes)
-				drawManager.drawEntity(itemBox, (int) itemBox.getPositionX(), (int) itemBox.getPositionY(), playerNumber);
-
-			for (Barrier barrier : this.barriers)
-				drawManager.drawEntity(barrier, (int) barrier.getPositionX(), (int) barrier.getPositionY(), playerNumber);
-
-			for (Bullet bullet : this.bullets)
-				drawManager.drawEntity(bullet, (int) bullet.getPositionX(),
-                        (int) bullet.getPositionY(), playerNumber);
-		}
-
-		// Interface.
-		drawManager.drawScore(this, this.score, playerNumber);
-		drawManager.drawElapsedTime(this, this.elapsedTime, playerNumber);
-		drawManager.drawAlertMessage(this, this.alertMessage, playerNumber);
-		drawManager.drawLives(this, this.lives, this.shipType, playerNumber);
-		drawManager.drawLevel(this, this.level, playerNumber);
-		drawManager.drawHorizontalLine(this, SEPARATION_LINE_HEIGHT - 1, playerNumber);
-		drawManager.drawReloadTimer(this,this.ship,ship.getRemainingReloadTime(), playerNumber);
-		drawManager.drawCombo(this,this.combo, playerNumber);
-
-		// Show GameOver if one player ends first
-		if (this.levelFinished && this.screenFinishedCooldown.checkFinished() && this.lives <= 0) {
-			drawManager.drawInGameOver(this, this.height, playerNumber);
-			drawManager.drawHorizontalLine(this, this.height / 2 - this.height
-					/ 12, playerNumber);
-			drawManager.drawHorizontalLine(this, this.height / 2 + this.height
-					/ 12, playerNumber);
-		}
-
-		// Countdown to game start.
-		if (!this.inputDelay.checkFinished()) {
-			int countdown = (int) ((INPUT_DELAY - (System.currentTimeMillis() - this.gameStartTime)) / 1000);
-			drawManager.drawCountDown(this, this.level, countdown,
-					this.bonusLife, playerNumber);
-			drawManager.drawHorizontalLine(this, this.height / 2 - this.height
-					/ 12, playerNumber);
-			drawManager.drawHorizontalLine(this, this.height / 2 + this.height
-					/ 12, playerNumber);
-
-			//Intermediate aggregation
-			if (this.level > 1){
-				if (countdown == 0) {
-					//Reset mac combo and edit temporary values
-					this.lapTime = this.elapsedTime;
-					this.tempScore = this.score;
-					this.maxCombo = 0;
-				} else {
-					// Don't show it just before the game starts, i.e. when the countdown is zero.
-					drawManager.interAggre(this, this.level - 1, this.maxCombo, this.elapsedTime, this.lapTime, this.score, this.tempScore, playerNumber);
-				}
-			}
-		}
-
-		//add drawRecord method for drawing
-		drawManager.drawRecord(highScores,this, playerNumber);
-
-		// Blocker drawing part
-		if (!blockers.isEmpty()) {
-			for (Blocker blocker : blockers) {
-				drawManager.drawRotatedEntity(blocker, (int) blocker.getPositionX(), (int) blocker.getPositionY(), blocker.getAngle(), playerNumber);
-			}
-		}
-
-		// draw puzzle screen
-		if (this.ship.isPuzzleActive() && this.puzzleScreen != null) {
-			drawManager.drawPuzzle(this,
-					this.puzzleScreen.getDirectionSequence(),
-					this.puzzleScreen.getPlayerInput(),
-					playerNumber,
-					playerNumber,
-					this.ship.getCollisionX(),
-					this.ship.getCollisionY());
-		}
 	}
 
 	/**
