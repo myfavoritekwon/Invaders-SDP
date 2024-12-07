@@ -89,7 +89,7 @@ public final class DrawManager {
 	public static void initializeItemImages() {
 		try {
 			itemImages.put(ItemManager.ItemType.Bomb, loadImage("res/image/bomb.png"));
-			itemImages.put(ItemManager.ItemType.LineBomb, loadImage("res/image/bomb.png"));
+			itemImages.put(ItemManager.ItemType.LineBomb, loadImage("res/image/linebomb.png"));
 			itemImages.put(ItemManager.ItemType.Barrier, loadImage("res/image/barrier.png"));
 			itemImages.put(ItemManager.ItemType.Ghost, loadImage("res/image/ghost.png"));
 			itemImages.put(ItemManager.ItemType.TimeStop, loadImage("res/image/timestop.png"));
