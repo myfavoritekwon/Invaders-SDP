@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
@@ -80,6 +81,11 @@ public final class DrawManager {
 	private static BufferedImage img_laserShooter;
 	private static BufferedImage img_LblackHole;
 	private static BufferedImage img_RblackHole;
+
+	private static BufferedImage img_upArrow;
+	private static BufferedImage img_downArrow;
+	private static BufferedImage img_leftArrow;
+	private static BufferedImage img_rightArrow;
 
 	/** For item image */
 	private static final Map<ItemManager.ItemType, BufferedImage> itemImages = new HashMap<>();
@@ -295,6 +301,16 @@ public final class DrawManager {
 
 		} catch (IOException e) {
 			logger.info("Boss image loading failed.");
+		}
+
+		/** Puzzle image load */
+		try {
+			img_upArrow = ImageIO.read(new File("res/image/upArrow.png"));
+			img_downArrow = ImageIO.read(new File("res/image/downArrow.png"));
+			img_leftArrow = ImageIO.read(new File("res/image/leftArrow.png"));
+			img_rightArrow = ImageIO.read(new File("res/image/rightArrow.png"));
+		} catch (IOException e) {
+			logger.info("Puzzle image loading failed.");
 		}
 	}
 
@@ -1703,37 +1719,31 @@ public final class DrawManager {
 	public void drawPuzzle(final Screen screen, final Ship ship,
 						   final List<Integer> sequence,
 						   final List<Integer> playerInput, final int playerNumber) {
-		Graphics2D g2d = (Graphics2D) backBufferGraphics;
-		g2d.setFont(fontRegular);
-
-		String fullSequence = sequence.stream()
-				.map(i -> getDirectionSymbol(i, playerNumber))
-				.reduce("", (a, b) -> a + " " + b).trim();
-
-		int textWidth = fontRegularMetrics.stringWidth(fullSequence);
-		int sequenceY = (int) (ship.getCollisionY() - 30);
-		int textX = (int) (ship.getPositionX() + (ship.getWidth() - textWidth) / 2);
-
-		if (textX < 10) textX = 10;
-		if (textX + textWidth > screen.getWidth() - 10) {
-			textX = screen.getWidth() - textWidth - 10;
-		}
-		if (sequenceY < 40) sequenceY = 40;
-
-		int xOffset = textX;
+		int arrowSize = 50;
+		int spacing = 10;
+		int startX = screen.getWidth() / 2 - ((arrowSize + spacing) * sequence.size()) / 2;
+		int startY = 50;
 
 		for (int i = 0; i < sequence.size(); i++) {
-			String symbol = getDirectionSymbol(sequence.get(i), playerNumber);
-			boolean isCorrectInput = i < playerInput.size() && sequence.get(i).equals(playerInput.get(i));
-
-			if (isCorrectInput) {
-				g2d.setColor(Color.GREEN);
-			} else {
-				g2d.setColor(Color.WHITE);
+			if (i >= playerInput.size()) {
+				BufferedImage arrowImage = getArrowImage(sequence.get(i), playerNumber);
+				if (arrowImage != null) {
+					backBufferGraphics.drawImage(arrowImage,
+							startX + i * (arrowSize + spacing),
+							startY,
+							arrowSize, arrowSize, null);
+				}
 			}
+		}
+	}
 
-			g2d.drawString(symbol, xOffset, sequenceY);
-			xOffset += fontRegularMetrics.stringWidth(symbol + " ");
+	private BufferedImage getArrowImage(int keyCode, int playerNumber) {
+		switch (keyCode) {
+			case KeyEvent.VK_UP: return img_upArrow;
+			case KeyEvent.VK_DOWN: return img_downArrow;
+			case KeyEvent.VK_LEFT: return img_leftArrow;
+			case KeyEvent.VK_RIGHT: return img_rightArrow;
+			default: return null;
 		}
 	}
 
