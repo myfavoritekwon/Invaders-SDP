@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ItemManagerTest{
     private ItemManager itemManager;
+
     @BeforeEach
     void setUp(){
         EnemyShipFormation enemyShips = new EnemyShipFormation(new GameSettings(650, 600, 3, 1),
