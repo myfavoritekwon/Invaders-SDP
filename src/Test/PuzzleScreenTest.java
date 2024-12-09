@@ -14,6 +14,7 @@ class PuzzleScreenTest {
         puzzleScreen = new PuzzleScreen(0);
     }
 
+
     //모든 값이 정확하게 들어갔을 때
     @org.junit.jupiter.api.Test
     public void handleInputTrue() {
