@@ -6,9 +6,6 @@ import screen.PuzzleScreen;
 
 import java.util.List;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 class PuzzleScreenTest {
     private PuzzleScreen puzzleScreen;
 
