@@ -159,8 +159,8 @@ public class EndingStoryScreen extends Screen{
                 this.imageCooldown.reset();
             }
 
-            String[] s = {"Nice to meet you, dear brother. You've managed ", "But this is the end of the line for you!", "this is story 1 ending simulation"};
-            String[] m = {"to climb all the way to the fourth floor of this tower.","desanghyuksungbehabnida", "dopamindoctor"};
+            String[] s = {"My ultimate masterpiece... falling apart like this...", "I won’t beg for my life, ", "If I die, she will grieve for me...", "I'm begging you."};
+            String[] m = {"This is my defeat.","but I hope you understand that I had my reasons.", "Let me get to her alive...",""};
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){
