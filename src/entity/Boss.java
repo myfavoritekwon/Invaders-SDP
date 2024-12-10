@@ -30,7 +30,7 @@ public class Boss extends Entity {
         nextMoveCool = Core.getCooldown(1000);
         switch (who) {
             case 1:
-                health = 2;
+                health = 50;
                 try {
                     bossShipImage = ImageIO.read(new File("res/image/bossShip1.png"));
                     this.width = bossShipImage.getWidth();
