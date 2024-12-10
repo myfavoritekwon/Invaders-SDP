@@ -163,8 +163,8 @@ public class StoryScreen extends Screen{
                 this.imageCooldown.reset();
             }
 
-            String[] s = {"You dare step into my domain? Foolish  ", "So, you think you’re worthy of challenging", "Bravery, or foolishness? You "};
-            String[] m = {"mortals, prepare to face annihilation!"," me? Very well, I shall oblige!","shall soon see the cost of your arrogance." };
+            String[] s = {"So, we meet again, Earthlings.", "Why am I fighting on the side of the Zyrathians,", "Heheh... Well, perhaps you should be more worried ","I have no intention of letting you leave alive. Hahaha!", "This is the perfect opportunity to test my beauties."};
+            String[] m = {""," you ask?","about your own situation right now.", "", " Good luck." };
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){
@@ -246,8 +246,8 @@ public class StoryScreen extends Screen{
                 this.imageCooldown.reset();
             }
 
-            String[] t = {"Is this all you’ve got? Pathetic!", "You cannot stop me! ", "I’ve grown tired of this game. Time to end this, once "};
-            String[] r = {"","You’re only delaying the inevitable."," and for all! Time to end this, once and for all!"};
+            String[] t = {"The fact that you’ve come this far… ", "I will never forgive you... "};
+            String[] r = {"you’re ruthless beings.","I won’t let you go unpunished!"};
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){

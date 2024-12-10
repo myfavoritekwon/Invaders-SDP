@@ -34,13 +34,6 @@ public class EndingStoryScreen extends Screen{
     private int imagewidth=500;
     private int imageheight = 380;
     private static BufferedImage img_story11;
-    private static BufferedImage img_story12;
-    private static BufferedImage img_story13;
-    private static BufferedImage img_story14;
-    private static BufferedImage img_story15;
-    private static BufferedImage img_story16;
-    private static BufferedImage img_story17;
-    private static BufferedImage img_story18;
     private static BufferedImage img_story21;
     private static BufferedImage img_story22;
     private static BufferedImage img_story23;
@@ -57,6 +50,7 @@ public class EndingStoryScreen extends Screen{
     private static BufferedImage img_story214;
     private static BufferedImage img_story215;
     private static BufferedImage img_story216;
+    private static BufferedImage img_story217;
 
 
 
@@ -74,31 +68,26 @@ public class EndingStoryScreen extends Screen{
         num = 1;
         // story image
         try{
-            img_story11 = ImageIO.read(new File("res/image/boss01/보스 디자인1.png"));
-            img_story12 = ImageIO.read(new File("res/image/boss01/보스 디자인2.png"));
-            img_story13 = ImageIO.read(new File("res/image/boss01/보스 디자인3.png"));
-            img_story14 = ImageIO.read(new File("res/image/boss01/보스 디자인4.png"));
-            img_story15 = ImageIO.read(new File("res/image/boss01/보스 디자인5.png"));
-            img_story16 = ImageIO.read(new File("res/image/boss01/보스 디자인6.png"));
-            img_story17 = ImageIO.read(new File("res/image/boss01/보스 디자인7.png"));
-            img_story18 = ImageIO.read(new File("res/image/boss01/보스 디자인8.png"));
+            img_story11 = ImageIO.read(new File("res/image/boss01/afterclear/boss1Clear.png"));
 
-            img_story21 = ImageIO.read(new File("res/image/boss02/보스 디자인2.png"));
-            img_story22 = ImageIO.read(new File("res/image/boss02/보스 디자인3.png"));
-            img_story23 = ImageIO.read(new File("res/image/boss02/보스 디자인4.png"));
-            img_story24 = ImageIO.read(new File("res/image/boss02/보스 디자인5.png"));
-            img_story25 = ImageIO.read(new File("res/image/boss02/보스 디자인6.png"));
-            img_story26 = ImageIO.read(new File("res/image/boss02/보스 디자인7.png"));
-            img_story27 = ImageIO.read(new File("res/image/boss02/보스 디자인8.png"));
-            img_story28 = ImageIO.read(new File("res/image/boss02/보스 디자인9.png"));
-            img_story29 = ImageIO.read(new File("res/image/boss02/보스 디자인10.png"));
-            img_story210 = ImageIO.read(new File("res/image/boss02/보스 디자인11.png"));
-            img_story211 = ImageIO.read(new File("res/image/boss02/보스 디자인12.png"));
-            img_story212 = ImageIO.read(new File("res/image/boss02/보스 디자인13.png"));
-            img_story213 = ImageIO.read(new File("res/image/boss02/보스 디자인14.png"));
-            img_story214 = ImageIO.read(new File("res/image/boss02/보스 디자인15.png"));
-            img_story215 = ImageIO.read(new File("res/image/boss02/보스 디자인16.png"));
-            img_story216 = ImageIO.read(new File("res/image/boss02/보스 디자인17.png"));
+
+            img_story21 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)1.png"));
+            img_story22 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)2.png"));
+            img_story23 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)3.png"));
+            img_story24 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)4.png"));
+            img_story25 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)5.png"));
+            img_story26 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)6.png"));
+            img_story27 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)7.png"));
+            img_story28 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)8.png"));
+            img_story29 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)9.png"));
+            img_story210 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)10.png"));
+            img_story211 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)11.png"));
+            img_story212 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)12.png"));
+            img_story213 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)13.png"));
+            img_story214 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)14.png"));
+            img_story215 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)15.png"));
+            img_story216 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)16.png"));
+            img_story217 = ImageIO.read(new File("res/image/boss02/afterclear/보스 디자인2 (crying)17.png"));
         } catch (IOException e){
             logger.info("Story image loading failed");
         }
@@ -134,33 +123,10 @@ public class EndingStoryScreen extends Screen{
 
         if(level == 3){
             //이미지 띄우기
-            if(num == 1){
-                DrawManager.getBackBufferGraphics().drawImage(img_story11, imagex, imagey , imagewidth, imageheight,null);
-            }else if(num == 2){
-                DrawManager.getBackBufferGraphics().drawImage(img_story12,imagex, imagey , imagewidth, imageheight,null);
-            }else if(num == 3){
-                DrawManager.getBackBufferGraphics().drawImage(img_story13,imagex, imagey , imagewidth, imageheight,null);
-            }else if(num == 4){
-                DrawManager.getBackBufferGraphics().drawImage(img_story14,imagex, imagey , imagewidth, imageheight,null);
-            }else if(num == 5){
-                DrawManager.getBackBufferGraphics().drawImage(img_story15,imagex, imagey , imagewidth, imageheight,null);
-            }else if(num == 6){
-                DrawManager.getBackBufferGraphics().drawImage(img_story16,imagex, imagey , imagewidth, imageheight,null);
-            }else if(num == 7){
-                DrawManager.getBackBufferGraphics().drawImage(img_story17,imagex, imagey , imagewidth, imageheight,null);
-            }else if(num == 8){
-                DrawManager.getBackBufferGraphics().drawImage(img_story18,imagex, imagey , imagewidth, imageheight,null);
-            }
-            if(this.imageCooldown.checkFinished()) { // 이미지 출력속도 조절
-                if (num == 8) {
-                    num = 0;
-                }
-                num++;
-                this.imageCooldown.reset();
-            }
+            DrawManager.getBackBufferGraphics().drawImage(img_story11, imagex, imagey , imagewidth, imageheight,null);
 
-            String[] s = {"Nice to meet you, dear brother. You've managed ", "But this is the end of the line for you!", "this is story 1 ending simulation"};
-            String[] m = {"to climb all the way to the fourth floor of this tower.","desanghyuksungbehabnida", "dopamindoctor"};
+            String[] s = {"My ultimate masterpiece... ", "Without these, I can't protect her...", "(It seems they have lost consciousness.)", "(They look human. Let’s bring them aboard "};
+            String[] m = {"falling apart like this...","", "","our ship and monitor their condition.)"};
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){
@@ -234,17 +200,19 @@ public class EndingStoryScreen extends Screen{
                 DrawManager.getBackBufferGraphics().drawImage(img_story215,imagex, imagey , imagewidth, imageheight,null);
             }else if(num == 16){
                 DrawManager.getBackBufferGraphics().drawImage(img_story216,imagex, imagey , imagewidth, imageheight,null);
+            }else if(num == 17){
+                DrawManager.getBackBufferGraphics().drawImage(img_story217,imagex, imagey , imagewidth, imageheight,null);
             }
             if(this.imageCooldown.checkFinished()) { // 이미지 출력속도 조절
-                if (num == 16) {
+                if (num == 17) {
                     num = 0;
                 }
                 num++;
                 this.imageCooldown.reset();
             }
 
-            String[] t = {"endingendingendingending", "show me", "dopamin"};
-            String[] r = {"ddd", "", ""};
+            String[] t = {"No... I must avenge the doctor...!", "(Wait, if you’re looking for the doctor,", "What...? If that’s the case, thank you so much.","The truth is, the doctor rescued me when I was a ", "But both of us were forced to work for the Zyrathians ", "Thanks to you, we survived. I’m truly grateful!"};
+            String[] r = {"", " we have him safe and sound.)", "","captive and took care of me like a father.","under threat.", ""};
 
             if(this.skipCooldown.checkFinished() && this.inputDelay.checkFinished()){
                 if(inputManager.isKeyDown(KeyEvent.VK_SPACE)){
